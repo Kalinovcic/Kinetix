@@ -16,13 +16,17 @@ public class Renderer
 	public Window window;
 	public State state;
 	
+	public AtomCountGraph atomCountGraph;
+	
 	public Renderer(Window window, State state)
 	{
 		this.window = window;
 		this.state = state;
+		
+		atomCountGraph = new AtomCountGraph(this);
 	}
 	
-	public void render()
+	public void render(double deltaTime)
 	{
 		Insets insets = window.getInsets();
 		int top = insets.top;
@@ -48,9 +52,13 @@ public class Renderer
 		for (Atom atom : state.atoms)
 		{
 			g2D.setColor(atom.getColor());
+			
 			Shape shape = atom.toShape(left, right, top, bottom);
 			g2D.fill(shape);
 		}
+		
+		atomCountGraph.update(deltaTime);
+		atomCountGraph.render(g2D);
 		
 		renderVelocities(g2D);
 		
@@ -84,7 +92,7 @@ public class Renderer
 			if (amount[i] == 0) continue;
 			
 			int width = 32;
-			int height = amount[i] * 16;
+			int height = amount[i] * 1;
 
 			g2D.setColor(Color.ORANGE);
 			g2D.fillRect(left + i * width, bottom - height, width, height);

@@ -17,35 +17,51 @@ public class KinetixStartup
 		Renderer renderer = new Renderer(window, state);
 
 		Random random = new Random();
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 1000; i++)
 		{
-			double radius = 10.0;
+			double radius = 2.0;
 			double mass = 20.0;
 
 			double x = random.nextDouble()*(State.SIMULATION_WIDTH - 2*radius) + radius;
 			double y = random.nextDouble()*(State.SIMULATION_HEIGHT - 2*radius) + radius;
 
-			double vx = (random.nextDouble() - 0.5) * 600.0;
-			double vy = (random.nextDouble() - 0.5) * 600.0;
+			double vx = (random.nextDouble() - 0.5) * 400.0;
+			double vy = (random.nextDouble() - 0.5) * 400.0;
 
 			Vector2 position = new Vector2(x, y);
 			Vector2 velocity = new Vector2(vx, vy);
 			
-			int type = random.nextBoolean() ? Atom.ATOM_RED : Atom.ATOM_GREEN;
+			int type = ((i % 2) == 0) ? Atom.ATOM_RED : Atom.ATOM_GREEN;
 			state.addAtom(new Atom(type, position, velocity, radius, mass));
 		}
 		
 		long previousNano = System.nanoTime();
 		while (true)
 		{
+			long frameBeginNano = System.nanoTime();
+			
 			long currentNano = System.nanoTime();
 			long deltaNano = currentNano - previousNano;
 			double deltaTime = deltaNano / 1000000000.0;
 			previousNano = currentNano;
 			
+			if (window.pause) deltaTime = 0;
+			
 			state.update(deltaTime);
-
-			renderer.render();
+			renderer.render(deltaTime);
+			
+			long frameEndNano = System.nanoTime();
+			long deltaFrameNano = frameEndNano - frameBeginNano;
+			long targetFrameNano = 1000000000 / 60;
+			if (deltaFrameNano < targetFrameNano)
+			{
+				long remainingFrameNano = targetFrameNano - deltaFrameNano;
+				try
+				{
+					Thread.sleep(remainingFrameNano / 1000000, (int) (remainingFrameNano % 1000000));
+				}
+				catch (InterruptedException e) {}
+			}
 		}
 	}
 }

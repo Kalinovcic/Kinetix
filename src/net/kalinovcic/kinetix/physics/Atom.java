@@ -11,6 +11,7 @@ public class Atom
 	public static int ATOM_RED = 0;
 	public static int ATOM_GREEN = 1;
 	public static int ATOM_BLACK = 2;
+	public static int ATOM_TYPE_COUNT = 3;
 	
 	public int type;
 	
@@ -19,8 +20,13 @@ public class Atom
 	public double radius;
 	public double mass;
 	
+	public double collisionTime;
+	public Atom collisionPartner;
+	
 	public double wallTime;
 	public boolean wallHorizontal;
+	
+	public boolean toRemove = false;
 	
 	public Atom(int type, Vector2 position, Vector2 velocity, double radius, double mass)
 	{
@@ -29,6 +35,23 @@ public class Atom
 		this.velocity = velocity;
 		this.radius = radius;
 		this.mass = mass;
+	}
+	
+	public void updateCollisionTime(State state)
+	{
+		collisionTime = -1.0;
+		
+		for (Atom other : state.atoms)
+		{
+			if (other == this || other.toRemove) continue;
+			
+			double time = Collision.getTime(this, other);
+			if (time >= 0 && (collisionTime < 0 || time < collisionTime))
+			{
+				collisionTime = time;
+				collisionPartner = other;
+			}
+		}
 	}
 	
 	public void updateWallTime()
@@ -69,12 +92,17 @@ public class Atom
 			velocity.x *= -1;
 	}
 	
-	public Color getColor()
+	public static Color getColor(int type)
 	{
 		if (type == ATOM_RED) return Color.RED;
 		if (type == ATOM_GREEN) return Color.GREEN;
 		if (type == ATOM_BLACK) return Color.BLACK;
-		return Color.BLACK;
+		return Color.GRAY;
+	}
+	
+	public Color getColor()
+	{
+		return getColor(type);
 	}
 	
 	public Shape toShape(int left, int right, int top, int bottom)
@@ -90,15 +118,22 @@ public class Atom
 		return new Ellipse2D.Double(sx - sw, sy - sh, sw * 2, sh * 2);
 	}
 	
-	public boolean attemptMerge(Atom other)
+	public void attemptMerge(State state, Atom other)
 	{
 		if ((type == ATOM_RED && other.type == ATOM_GREEN) ||
 			(type == ATOM_GREEN && other.type == ATOM_RED))
 		{
-			type = ATOM_BLACK;
-			mass += other.mass;
-			return true;
+			state.removeAtom(this);
+			state.removeAtom(other);
+			
+			int mergedType = ATOM_BLACK;
+			Vector2 mergedPosition = position;
+			Vector2 mergedVelocity = velocity.clone().mul(mass / (mass + other.mass)).add(other.velocity.clone().mul(other.mass / (mass + other.mass)));
+			double mergedRadius = radius;
+			double mergedMass = mass + other.mass;
+			
+			Atom merged = new Atom(mergedType, mergedPosition, mergedVelocity, mergedRadius, mergedMass);
+			state.addAtom(merged);
 		}
-		return false;
 	}
 }
