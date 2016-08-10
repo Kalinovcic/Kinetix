@@ -2,8 +2,9 @@ package net.kalinovcic.kinetix;
 
 import java.util.Random;
 
-import net.kalinovcic.kinetix.display.Renderer;
-import net.kalinovcic.kinetix.display.Window;
+import net.kalinovcic.kinetix.display.AtomRenderer;
+import net.kalinovcic.kinetix.display.MainWindow;
+import net.kalinovcic.kinetix.display.AtomWindow;
 import net.kalinovcic.kinetix.math.Vector2;
 import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.State;
@@ -12,14 +13,19 @@ public class KinetixStartup
 {
 	public static void main(String[] args)
 	{
+		MainWindow mainWindow = new MainWindow();
+		
 		State state = new State();
-		Window window = new Window();
-		Renderer renderer = new Renderer(window, state);
+		AtomWindow window = new AtomWindow(mainWindow, state);
+		
+		
+		AtomRenderer atomRenderer = new AtomRenderer(window, state);
 
 		Random random = new Random();
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < 100; i++)
 		{
-			double radius = 2.0;
+			int type = ((i % 2) == 0) ? Atom.ATOM_RED : Atom.ATOM_GREEN;
+			double radius = 5 * ((type == Atom.ATOM_GREEN) ? 2 : 1);
 			double mass = 20.0;
 
 			double x = random.nextDouble()*(State.SIMULATION_WIDTH - 2*radius) + radius;
@@ -31,7 +37,6 @@ public class KinetixStartup
 			Vector2 position = new Vector2(x, y);
 			Vector2 velocity = new Vector2(vx, vy);
 			
-			int type = ((i % 2) == 0) ? Atom.ATOM_RED : Atom.ATOM_GREEN;
 			state.addAtom(new Atom(type, position, velocity, radius, mass));
 		}
 		
@@ -48,7 +53,7 @@ public class KinetixStartup
 			if (window.pause) deltaTime = 0;
 			
 			state.update(deltaTime);
-			renderer.render(deltaTime);
+			atomRenderer.render(deltaTime);
 			
 			long frameEndNano = System.nanoTime();
 			long deltaFrameNano = frameEndNano - frameBeginNano;

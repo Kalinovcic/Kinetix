@@ -7,7 +7,7 @@ import net.kalinovcic.kinetix.physics.Atom;
 
 public class AtomCountGraph
 {
-	public Renderer renderer;
+	public AtomRenderer renderer;
 	
 	public static final double UPDATE_INTERVAL = 0.02;
 	public static double countdown;
@@ -18,7 +18,7 @@ public class AtomCountGraph
 	public int maximumAtomCount;
 	public int[][] countOverTime;
 	
-	public AtomCountGraph(Renderer renderer)
+	public AtomCountGraph(AtomRenderer renderer)
 	{
 		this.renderer = renderer;
 

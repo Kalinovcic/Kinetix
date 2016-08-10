@@ -11,14 +11,14 @@ import java.awt.image.BufferStrategy;
 import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.State;
 
-public class Renderer
+public class AtomRenderer
 {
-	public Window window;
+	public AtomWindow window;
 	public State state;
 	
 	public AtomCountGraph atomCountGraph;
 	
-	public Renderer(Window window, State state)
+	public AtomRenderer(AtomWindow window, State state)
 	{
 		this.window = window;
 		this.state = state;
@@ -26,7 +26,7 @@ public class Renderer
 		atomCountGraph = new AtomCountGraph(this);
 	}
 	
-	public void render(double deltaTime)
+	public void render(Graphics g, double deltaTime)
 	{
 		Insets insets = window.getInsets();
 		int top = insets.top;
@@ -34,10 +34,10 @@ public class Renderer
 		int right = window.getWidth() - insets.right;
 		int bottom = window.getHeight() - insets.bottom;
 		
-		BufferStrategy bs = window.getBufferStrategy();
+		BufferStrategy bs = window.mainWindow.getBufferStrategy();
 		if (bs == null)
 		{
-			window.createBufferStrategy(4);
+			window.mainWindow.createBufferStrategy(4);
 			return;
 		}
 		

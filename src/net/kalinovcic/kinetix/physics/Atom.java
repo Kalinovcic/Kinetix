@@ -129,7 +129,7 @@ public class Atom
 			int mergedType = ATOM_BLACK;
 			Vector2 mergedPosition = position;
 			Vector2 mergedVelocity = velocity.clone().mul(mass / (mass + other.mass)).add(other.velocity.clone().mul(other.mass / (mass + other.mass)));
-			double mergedRadius = radius;
+			double mergedRadius = radius + other.radius;
 			double mergedMass = mass + other.mass;
 			
 			Atom merged = new Atom(mergedType, mergedPosition, mergedVelocity, mergedRadius, mergedMass);
