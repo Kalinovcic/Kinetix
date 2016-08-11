@@ -3,6 +3,8 @@ package net.kalinovcic.kinetix.profile.velocity;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.util.Locale;
 
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.KinetixWindow;
@@ -49,8 +51,9 @@ public class ProfileVelocityRenderer
     public void render(SimulationState state, double deltaTime)
     {
         update(state);
-        
-        Graphics2D g2D = window.canvas.createGraphics();
+
+        BufferedImage buffer = window.getBuffer(0);
+        Graphics2D g2D = buffer.createGraphics();
         KinetixUI.setHints(g2D);
 
         g2D.setColor(Color.WHITE);
@@ -58,7 +61,7 @@ public class ProfileVelocityRenderer
 
         int headerHeight = 0;
         g2D.setColor(Color.BLACK);
-        g2D.drawString("Velocity interval: " + ((int) (settings.velocityInterval * 100) / 100.0), 4, headerHeight += g2D.getFontMetrics().getHeight());
+        g2D.drawString("Velocity interval: " + String.format(Locale.US, "%.2f", settings.velocityInterval), 4, headerHeight += g2D.getFontMetrics().getHeight());
         g2D.drawString("Maximum velocity: " + (settings.maximumVelocity), 4, headerHeight += g2D.getFontMetrics().getHeight());
         g2D.drawString("# columns: " + (settings.columnCount), 4, headerHeight += g2D.getFontMetrics().getHeight());
         headerHeight += g2D.getFontMetrics().getHeight();
@@ -88,7 +91,6 @@ public class ProfileVelocityRenderer
         
         g2D.dispose();
 
-        window.revalidate();
-        window.repaint();
+        window.swapBuffers();
     }
 }

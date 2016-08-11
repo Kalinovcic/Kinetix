@@ -43,7 +43,7 @@ public class Atom
 		
 		for (Atom other : state.atoms)
 		{
-			if (other == this || other.toRemove) continue;
+            if (other == this || other.toRemove) continue;
 			
 			double time = Collision.getTime(this, other);
 			if (time >= 0 && (collisionTime < 0 || time < collisionTime))
@@ -118,6 +118,12 @@ public class Atom
 	
 	public void attemptMerge(SimulationState state, Atom other)
 	{
+	    if (other.radius > radius)
+	    {
+	        other.attemptMerge(state, this);
+	        return;
+	    }
+	    
 		if ((type == ATOM_RED && other.type == ATOM_GREEN) ||
 			(type == ATOM_GREEN && other.type == ATOM_RED))
 		{

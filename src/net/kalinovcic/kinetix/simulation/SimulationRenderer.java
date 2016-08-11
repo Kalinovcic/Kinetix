@@ -3,6 +3,7 @@ package net.kalinovcic.kinetix.simulation;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
+import java.awt.image.BufferedImage;
 
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.KinetixWindow;
@@ -20,7 +21,8 @@ public class SimulationRenderer
     
 	public void render(SimulationState state, double deltaTime)
 	{
-	    Graphics2D g2D = window.canvas.createGraphics();
+	    BufferedImage buffer = window.getBuffer(0);
+	    Graphics2D g2D = buffer.createGraphics();
 	    KinetixUI.setHints(g2D);
 
 		g2D.setColor(Color.WHITE);
@@ -36,7 +38,6 @@ public class SimulationRenderer
 		
 		g2D.dispose();
 
-        window.revalidate();
-        window.repaint();
+        window.swapBuffers();
 	}
 }

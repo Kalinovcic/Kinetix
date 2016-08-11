@@ -2,6 +2,8 @@ package net.kalinovcic.kinetix.profile.typecount;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.util.Locale;
 
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.KinetixWindow;
@@ -13,6 +15,7 @@ public class ProfileTypeCountRenderer
     public KinetixWindow window;
     public ProfileTypeCountSettings settings;
     
+    public boolean paused = false;
     public int maximumAtomCount = 0;
     public int[][] countOverTime = null;
     
@@ -24,6 +27,9 @@ public class ProfileTypeCountRenderer
     
     public void update(SimulationState state)
     {
+        if (!state.paused) paused = false;
+        if (paused) return;
+        
         if (countOverTime == null)
         {
             maximumAtomCount = state.atoms.size();
@@ -37,20 +43,25 @@ public class ProfileTypeCountRenderer
             for (Atom atom : state.atoms) countOverTime[settings.iteration][atom.type]++;
             settings.iteration++;
         }
+        
+        if (state.paused) paused = true;
     }
     
     public void render(SimulationState state, double deltaTime)
     {
         update(state);
-        
-        Graphics2D g2D = window.canvas.createGraphics();
+
+        BufferedImage buffer = window.getBuffer(0);
+        Graphics2D g2D = buffer.createGraphics();
         KinetixUI.setHints(g2D);
 
         g2D.setColor(Color.WHITE);
         g2D.fillRect(0, 0, window.getWidth(), window.getHeight());
 
+        int yOffset = 0;
         g2D.setColor(Color.BLACK);
-        g2D.drawString("# atoms: " + state.atoms.size(), 4, g2D.getFontMetrics().getHeight());
+        g2D.drawString("# atoms: " + state.atoms.size(), 4, yOffset += g2D.getFontMetrics().getHeight());
+        g2D.drawString("Time: " + String.format(Locale.US, "%.2f", state.simulationTime) + "s", 4, yOffset += g2D.getFontMetrics().getHeight());
         
         for (int i = 1; i < settings.iteration; i++)
         {
@@ -76,7 +87,6 @@ public class ProfileTypeCountRenderer
         
         g2D.dispose();
 
-        window.revalidate();
-        window.repaint();
+        window.swapBuffers();
     }
 }

@@ -16,7 +16,8 @@ public class KinetixWindow extends JInternalFrame
     public int targetWidth;
     public int targetHeight;
     
-    public BufferedImage canvas;
+    private int currentBuffer = 0;
+    private BufferedImage[] buffers = new BufferedImage[2];
     
     public KinetixWindow(MainWindow mainWindow, String title, int x, int y, int targetWidth, int targetHeight, boolean resizable, boolean closable)
     {
@@ -34,7 +35,8 @@ public class KinetixWindow extends JInternalFrame
         getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         setUI(new KinetixUI(this));
 
-        canvas = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+        buffers[0] = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+        buffers[1] = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
         setContentPane(new CanvasComponent(this));
         setFocusable(true);
 
@@ -45,6 +47,24 @@ public class KinetixWindow extends JInternalFrame
     {
         this.targetWidth = targetWidth;
         this.targetHeight = targetHeight;
+    }
+    
+    public BufferedImage getBuffer(int offset)
+    {
+        synchronized (buffers)
+        {
+            return buffers[(currentBuffer + offset) % buffers.length];
+        }
+    }
+    
+    public void swapBuffers()
+    {
+        synchronized (buffers)
+        {
+            currentBuffer = (currentBuffer + 1) % buffers.length;
+        }
+        revalidate();
+        repaint();
     }
     
     public static class CanvasComponent extends JComponent
@@ -78,7 +98,8 @@ public class KinetixWindow extends JInternalFrame
                 window.setMaximumSize(size);
             }
             
-            g.drawImage(window.canvas, 0, 0, getWidth(), getHeight(), 0, 0, window.canvas.getWidth(), window.canvas.getHeight(), null);
+            BufferedImage buffer = window.getBuffer(1);
+            g.drawImage(buffer, 0, 0, getWidth(), getHeight(), 0, 0, buffer.getWidth(), buffer.getHeight(), null);
         }
     }
 }

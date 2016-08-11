@@ -1,10 +1,7 @@
 package net.kalinovcic.kinetix.physics;
 
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
-
-import net.kalinovcic.kinetix.math.Vector2;
 
 public class SimulationState
 {
@@ -13,27 +10,8 @@ public class SimulationState
 	
 	public Set<Atom> atoms = new HashSet<Atom>();
 	
-	public SimulationState()
-	{
-	    Random random = new Random();
-        for (int i = 0; i < 500; i++)
-        {
-            int type = ((i % 2) == 0) ? Atom.ATOM_RED : Atom.ATOM_GREEN;
-            double radius = 2 * ((type == Atom.ATOM_GREEN) ? 2 : 1);
-            double mass = 20.0;
-
-            double x = random.nextDouble()*(SimulationState.SIMULATION_WIDTH - 2*radius) + radius;
-            double y = random.nextDouble()*(SimulationState.SIMULATION_HEIGHT - 2*radius) + radius;
-
-            double vx = (random.nextDouble() - 0.5) * 400.0;
-            double vy = (random.nextDouble() - 0.5) * 400.0;
-
-            Vector2 position = new Vector2(x, y);
-            Vector2 velocity = new Vector2(vx, vy);
-            
-            addAtom(new Atom(type, position, velocity, radius, mass));
-        }
-	}
+	public double simulationTime = 0.0;
+    public boolean paused = false;
 	
 	public void addAtom(Atom atom)
 	{
@@ -83,11 +61,19 @@ public class SimulationState
 	private static final int EVENT_COLLISION = 1;
 	private static final int EVENT_WALL = 2;
 	
-	public void update(double deltaTime)
+	public void update(double deltaTime, double timeout)
 	{
+	    long beginTime = System.nanoTime();
+	    
 		double remaining = deltaTime;
 		while (remaining > 0)
 		{
+		    long currentTime = System.nanoTime();
+		    long runningTime = currentTime - beginTime;
+		    double runningTimeS = runningTime / 1000000000.0;
+		    if (runningTimeS > timeout)
+		        break;
+		    
 			int nextEvent = EVENT_NONE;
 			
 			Atom eventCollision = null;
@@ -109,6 +95,7 @@ public class SimulationState
 					deltaTime = atom.wallTime;
 				}
 			remaining -= deltaTime;
+			simulationTime += deltaTime;
 			
 			moveAtoms(deltaTime);
 			

@@ -1,45 +1,55 @@
 package net.kalinovcic.kinetix.physics;
 
-import net.kalinovcic.kinetix.Kinetix;
+import java.util.Random;
 
-public class PhysicsThread extends Thread
+import net.kalinovcic.kinetix.KinetixThread;
+import net.kalinovcic.kinetix.math.Vector2;
+
+public class PhysicsThread extends KinetixThread
 {
     public static final int MINIMUM_UPS = 60;
     
-    @Override
-    public void run()
+    public PhysicsThread()
     {
-        long previousNano = System.nanoTime();
-        while (true)
+        super(60);
+    }
+    
+    @Override
+    public void initialize()
+    {
+    }
+    
+    @Override
+    public void synchronizedInitialize(SimulationState state)
+    {
+        Random random = new Random();
+        for (int i = 0; i < 1000; i++)
         {
-            long frameBeginNano = System.nanoTime();
+            int type = ((i % 2) == 0) ? Atom.ATOM_RED : Atom.ATOM_GREEN;
+            double radius = 1 * ((type == Atom.ATOM_GREEN) ? 2 : 1);
+            double mass = 20.0;
+
+            double x = random.nextDouble()*(SimulationState.SIMULATION_WIDTH - 2*radius) + radius;
+            double y = random.nextDouble()*(SimulationState.SIMULATION_HEIGHT - 2*radius) + radius;
+
+            double vx = (random.nextDouble() - 0.5) * 400.0;
+            double vy = (random.nextDouble() - 0.5) * 400.0;
+
+            Vector2 position = new Vector2(x, y);
+            Vector2 velocity = new Vector2(vx, vy);
             
-            long currentNano = System.nanoTime();
-            long deltaNano = currentNano - previousNano;
-            previousNano = currentNano;
-            
-            synchronized (Kinetix.STATE)
-            {
-                final double MAXIMUM_DELTA = 0.2;
-                double deltaTime = deltaNano / 1000000000.0;
-                if (deltaTime > MAXIMUM_DELTA)
-                    deltaTime = MAXIMUM_DELTA;
-                
-                Kinetix.STATE.update(deltaTime);
-            }
-            
-            long frameEndNano = System.nanoTime();
-            long deltaFrameNano = frameEndNano - frameBeginNano;
-            long targetFrameNano = 1000000000 / MINIMUM_UPS;
-            if (deltaFrameNano < targetFrameNano)
-            {
-                long remainingFrameNano = targetFrameNano - deltaFrameNano;
-                try
-                {
-                    Thread.sleep(remainingFrameNano / 1000000, (int) (remainingFrameNano % 1000000));
-                }
-                catch (InterruptedException e) {}
-            }
+            state.addAtom(new Atom(type, position, velocity, radius, mass));
         }
+        
+        state.paused = true;
+    }
+    
+    @Override
+    public void synchronizedUpdate(SimulationState state, double deltaTime)
+    {
+        if (state.paused) return;
+        
+        final double TIMEOUT = 1.0 / targetUPS;
+        state.update(deltaTime, TIMEOUT);
     }
 }

@@ -15,6 +15,10 @@ public abstract class KinetixThread extends Thread
     public void run()
     {
         initialize();
+        synchronized (Kinetix.STATE)
+        {
+            synchronizedInitialize(Kinetix.STATE);
+        }
 
         long previousNano = System.nanoTime();
         while (true)
@@ -48,5 +52,6 @@ public abstract class KinetixThread extends Thread
     }
     
     public abstract void initialize();
+    public void synchronizedInitialize(SimulationState state) {}
     public abstract void synchronizedUpdate(SimulationState state, double deltaTime);
 }

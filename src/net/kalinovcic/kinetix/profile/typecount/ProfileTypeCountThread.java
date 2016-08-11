@@ -17,7 +17,7 @@ public class ProfileTypeCountThread extends KinetixThread
     
     public ProfileTypeCountThread(MainWindow mainWindow)
     {
-        super(60);
+        super(20);
         this.mainWindow = mainWindow;
     }
     
