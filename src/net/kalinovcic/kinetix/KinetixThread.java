@@ -5,6 +5,7 @@ import net.kalinovcic.kinetix.physics.SimulationState;
 public abstract class KinetixThread extends Thread
 {
     public int targetUPS;
+    public boolean terminate = false;
     
     public KinetixThread(int targetUPS)
     {
@@ -21,7 +22,7 @@ public abstract class KinetixThread extends Thread
         }
 
         long previousNano = System.nanoTime();
-        while (true)
+        while (!terminate)
         {
             long currentNano = System.nanoTime();
             long deltaNano = currentNano - previousNano;
@@ -49,9 +50,12 @@ public abstract class KinetixThread extends Thread
                 }
             }
         }
+        
+        cleanup();
     }
     
     public abstract void initialize();
     public void synchronizedInitialize(SimulationState state) {}
     public abstract void synchronizedUpdate(SimulationState state, double deltaTime);
+    public void cleanup() {}
 }

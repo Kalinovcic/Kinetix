@@ -1,11 +1,10 @@
 package net.kalinovcic.kinetix.profile.typecount;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
-
-import com.sun.glass.events.KeyEvent;
 
 import net.kalinovcic.kinetix.KinetixWindow;
 import net.kalinovcic.kinetix.MainWindow;
