@@ -32,7 +32,7 @@ public class Collision
 		return t2;
 	}
 	
-	public static void collide(State state, Atom atom1, Atom atom2)
+	public static void collide(SimulationState state, Atom atom1, Atom atom2)
 	{
 		Vector2 n = atom2.position.clone().sub(atom1.position);
 		Vector2 un = n.normal();

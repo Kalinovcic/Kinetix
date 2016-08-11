@@ -37,7 +37,7 @@ public class Atom
 		this.mass = mass;
 	}
 	
-	public void updateCollisionTime(State state)
+	public void updateCollisionTime(SimulationState state)
 	{
 		collisionTime = -1.0;
 		
@@ -62,7 +62,7 @@ public class Atom
 		{
 			double time = (velocity.x < 0.0) ?
 				((position.x - radius) / -velocity.x) :
-				((State.SIMULATION_WIDTH - position.x - radius) / velocity.x);
+				((SimulationState.SIMULATION_WIDTH - position.x - radius) / velocity.x);
 
 			if (time < wallTime)
 			{
@@ -74,7 +74,7 @@ public class Atom
 		{
 			double time = (velocity.y < 0.0) ?
 				((position.y - radius) / -velocity.y) :
-				((State.SIMULATION_HEIGHT - position.y - radius) / velocity.y);
+				((SimulationState.SIMULATION_HEIGHT - position.y - radius) / velocity.y);
 			
 			if (time < wallTime)
 			{
@@ -105,20 +105,18 @@ public class Atom
 		return getColor(type);
 	}
 	
-	public Shape toShape(int left, int right, int top, int bottom)
+	public Shape toShape(int targetWidth, int targetHeight)
 	{
-		int width = right - left;
-		int height = bottom - top;
-		double mw = width / State.SIMULATION_WIDTH;
-		double mh = height / State.SIMULATION_HEIGHT;
-		double sx = position.x * mw + left;
-		double sy = position.y * mh + top;
+		double mw = targetWidth / SimulationState.SIMULATION_WIDTH;
+		double mh = targetHeight / SimulationState.SIMULATION_HEIGHT;
+		double sx = position.x * mw;
+		double sy = position.y * mh;
 		double sw = radius * mw;
 		double sh = radius * mh;
 		return new Ellipse2D.Double(sx - sw, sy - sh, sw * 2, sh * 2);
 	}
 	
-	public void attemptMerge(State state, Atom other)
+	public void attemptMerge(SimulationState state, Atom other)
 	{
 		if ((type == ATOM_RED && other.type == ATOM_GREEN) ||
 			(type == ATOM_GREEN && other.type == ATOM_RED))
