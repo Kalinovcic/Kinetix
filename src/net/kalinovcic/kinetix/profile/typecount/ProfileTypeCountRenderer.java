@@ -32,15 +32,15 @@ public class ProfileTypeCountRenderer
         
         if (countOverTime == null)
         {
-            maximumAtomCount = state.atoms.size();
+            maximumAtomCount = 0;
             countOverTime = new int[ProfileTypeCountSettings.ITERATION_COUNT][Atom.ATOM_TYPE_COUNT];
         }
 
         if (settings.iteration < ProfileTypeCountSettings.ITERATION_COUNT)
         {
-            maximumAtomCount = Math.max(maximumAtomCount, state.atoms.size());
             for (int i = 0; i < Atom.ATOM_TYPE_COUNT; i++) countOverTime[settings.iteration][i] = 0;
             for (Atom atom : state.atoms) countOverTime[settings.iteration][atom.type]++;
+            for (int i = 0; i < Atom.ATOM_TYPE_COUNT; i++) maximumAtomCount = Math.max(maximumAtomCount, countOverTime[settings.iteration][i]);
             settings.iteration++;
         }
         
@@ -69,8 +69,8 @@ public class ProfileTypeCountRenderer
             double x2 = window.targetWidth * ((i - 0) / (double) (countOverTime.length - 1));
             for (int j = 0; j < Atom.ATOM_TYPE_COUNT; j++)
             {
-                double y1 = window.targetHeight * (1.0 - countOverTime[i - 1][j] / (double) maximumAtomCount);
-                double y2 = window.targetHeight * (1.0 - countOverTime[i - 0][j] / (double) maximumAtomCount);
+                double y1 = window.targetHeight * (1.0 - countOverTime[i - 1][j] / (double) maximumAtomCount) * 0.8 + window.targetHeight * 0.2;
+                double y2 = window.targetHeight * (1.0 - countOverTime[i - 0][j] / (double) maximumAtomCount) * 0.8 + window.targetHeight * 0.2;
 
                 g2D.setColor(Atom.getColor(j));
                 g2D.drawLine((int) x1, (int) y1, (int) x2, (int) y2);
