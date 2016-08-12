@@ -8,10 +8,10 @@ import net.kalinovcic.kinetix.math.Vector2;
 
 public class Atom
 {
-	public static int ATOM_RED = 0;
-	public static int ATOM_GREEN = 1;
-	public static int ATOM_BLACK = 2;
-	public static int ATOM_TYPE_COUNT = 3;
+	public static final int ATOM_RED = 0;
+	public static final int ATOM_GREEN = 1;
+	public static final int ATOM_BLACK = 2;
+	public static final int ATOM_TYPE_COUNT = 3;
 	
 	public int type;
 	
@@ -54,7 +54,7 @@ public class Atom
 		}
 	}
 	
-	public void updateWallTime()
+	public void updateWallTime(SimulationState state)
 	{
 		wallTime = Double.MAX_VALUE;
 		
@@ -62,7 +62,7 @@ public class Atom
 		{
 			double time = (velocity.x < 0.0) ?
 				((position.x - radius) / -velocity.x) :
-				((SimulationState.SIMULATION_WIDTH - position.x - radius) / velocity.x);
+				((state.settings.width - position.x - radius) / velocity.x);
 
 			if (time < wallTime)
 			{
@@ -74,7 +74,7 @@ public class Atom
 		{
 			double time = (velocity.y < 0.0) ?
 				((position.y - radius) / -velocity.y) :
-				((SimulationState.SIMULATION_HEIGHT - position.y - radius) / velocity.y);
+				((state.settings.height - position.y - radius) / velocity.y);
 			
 			if (time < wallTime)
 			{
@@ -94,9 +94,9 @@ public class Atom
 	
 	public static Color getColor(int type)
 	{
-		if (type == ATOM_RED) return Color.RED;
-		if (type == ATOM_GREEN) return Color.GREEN;
-		if (type == ATOM_BLACK) return Color.BLACK;
+		if (type == ATOM_RED) return new Color(242, 5, 33);
+		if (type == ATOM_GREEN) return new Color(21, 150, 23);
+		if (type == ATOM_BLACK) return new Color(51, 51, 51);
 		return Color.GRAY;
 	}
 	
@@ -105,24 +105,15 @@ public class Atom
 		return getColor(type);
 	}
 	
-	public Shape toShape(int targetWidth, int targetHeight)
+	public Shape toShape()
 	{
-		double mw = targetWidth / SimulationState.SIMULATION_WIDTH;
-		double mh = targetHeight / SimulationState.SIMULATION_HEIGHT;
-		double sx = position.x * mw;
-		double sy = position.y * mh;
-		double sw = radius * mw;
-		double sh = radius * mh;
-		return new Ellipse2D.Double(sx - sw, sy - sh, sw * 2, sh * 2);
+		return new Ellipse2D.Double(position.x - radius, position.y - radius, radius * 2, radius * 2);
 	}
 	
-	public void attemptMerge(SimulationState state, Atom other)
+	public boolean attemptMerge(SimulationState state, Atom other)
 	{
 	    if (other.radius > radius)
-	    {
-	        other.attemptMerge(state, this);
-	        return;
-	    }
+	    	return other.attemptMerge(state, this);
 	    
 		if ((type == ATOM_RED && other.type == ATOM_GREEN) ||
 			(type == ATOM_GREEN && other.type == ATOM_RED))
@@ -138,6 +129,10 @@ public class Atom
 			
 			Atom merged = new Atom(mergedType, mergedPosition, mergedVelocity, mergedRadius, mergedMass);
 			state.addAtom(merged);
+			
+			return true;
 		}
+		
+		return false;
 	}
 }

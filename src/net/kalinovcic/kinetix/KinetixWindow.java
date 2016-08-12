@@ -7,11 +7,15 @@ import java.awt.image.BufferedImage;
 import javax.swing.JComponent;
 import javax.swing.JInternalFrame;
 import javax.swing.JRootPane;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
+import javax.swing.event.InternalFrameListener;
 
 public class KinetixWindow extends JInternalFrame
 {
     private static final long serialVersionUID = 1L;
 
+    public KinetixThread thread;
     public MainWindow mainWindow;
     public int targetWidth;
     public int targetHeight;
@@ -19,10 +23,11 @@ public class KinetixWindow extends JInternalFrame
     private int currentBuffer = 0;
     private BufferedImage[] buffers = new BufferedImage[2];
     
-    public KinetixWindow(MainWindow mainWindow, String title, int x, int y, int targetWidth, int targetHeight, boolean resizable, boolean closable)
+    public KinetixWindow(KinetixThread thread, MainWindow mainWindow, String title, int x, int y, int targetWidth, int targetHeight, boolean resizable, boolean closable)
     {
         super(title, resizable, closable, resizable, false);
         
+        this.thread = thread;
         this.mainWindow = mainWindow;
         setTargetSize(targetWidth, targetHeight);
         
@@ -35,18 +40,39 @@ public class KinetixWindow extends JInternalFrame
         getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         setUI(new KinetixUI(this));
 
-        buffers[0] = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
-        buffers[1] = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
         setContentPane(new CanvasComponent(this));
         setFocusable(true);
+        
+        InternalFrameListener exitListener = new InternalFrameAdapter()
+        {
+        	public void internalFrameClosing(InternalFrameEvent e)
+        	{
+        		onClose();
+        	}
+        };
+        addInternalFrameListener(exitListener);
 
         mainWindow.desktop.add(this);
+    }
+    
+    public void onClose()
+    {
+    	thread.terminate = true;
     }
 
     public void setTargetSize(int targetWidth, int targetHeight)
     {
-        this.targetWidth = targetWidth;
-        this.targetHeight = targetHeight;
+    	synchronized (buffers)
+    	{
+    		if (this.targetWidth != targetWidth || this.targetHeight != targetHeight)
+    		{
+    	        buffers[0] = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+    	        buffers[1] = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+    		}
+    		
+	        this.targetWidth = targetWidth;
+	        this.targetHeight = targetHeight;
+    	}
     }
     
     public BufferedImage getBuffer(int offset)

@@ -34,6 +34,8 @@ public class VideoThread extends KinetixThread
 	@Override
     public void initialize()
     {
+    	KinetixThread thisThread = this;
+    	
     	JFileChooser chooser = new JFileChooser();
     	chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
     	chooser.setMultiSelectionEnabled(false);
@@ -68,14 +70,14 @@ public class VideoThread extends KinetixThread
     		terminate = true;
     		return;
     	}
-    	
+
         try
         {
             SwingUtilities.invokeAndWait(new Runnable()
             {
                 public void run()
                 {
-                    window = new VideoWindow(mainWindow, settings);
+                    window = new VideoWindow(thisThread, mainWindow, settings);
                 }
             });
         }

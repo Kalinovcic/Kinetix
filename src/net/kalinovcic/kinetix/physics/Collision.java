@@ -66,9 +66,9 @@ public class Collision
 		atom1.velocity.set(v1c);
 		atom2.velocity.set(v2c);
 
-		if (dvnc > 100.0)
-		{
-			atom1.attemptMerge(state, atom2);
-		}
+		boolean merged = false;
+		if (dvnc > state.settings.drs) merged = atom1.attemptMerge(state, atom2);
+		state.collisionInfo[atom1.type][atom2.type][merged ? 1 : 0]++;
+		state.collisionInfo[atom2.type][atom1.type][merged ? 1 : 0]++;
 	}
 }

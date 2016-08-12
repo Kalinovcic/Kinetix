@@ -23,13 +23,15 @@ public class SimulationThread extends KinetixThread
     @Override
     public void initialize()
     {
+    	KinetixThread thisThread = this;
+    	
         try
         {
             SwingUtilities.invokeAndWait(new Runnable()
             {
                 public void run()
                 {
-                    window = new SimulationWindow(mainWindow);
+                    window = new SimulationWindow(thisThread, mainWindow);
                 }
             });
         }

@@ -21,6 +21,8 @@ public class SimulationRenderer
     
 	public void render(SimulationState state, double deltaTime)
 	{
+		window.setTargetSize(state.settings.width, state.settings.height);
+		
 	    BufferedImage buffer = window.getBuffer(0);
 	    Graphics2D g2D = buffer.createGraphics();
 	    KinetixUI.setHints(g2D);
@@ -32,7 +34,7 @@ public class SimulationRenderer
 		{
 			g2D.setColor(atom.getColor());
 			
-			Shape shape = atom.toShape(window.targetWidth, window.targetHeight);
+			Shape shape = atom.toShape();
 			g2D.fill(shape);
 		}
 		

@@ -5,10 +5,10 @@ import java.util.Set;
 
 public class SimulationState
 {
-	public static double SIMULATION_WIDTH = 600.0;
-	public static double SIMULATION_HEIGHT = 600.0;
+	public SimulationSettings settings = new SimulationSettings();
 	
 	public Set<Atom> atoms = new HashSet<Atom>();
+	public int collisionInfo[][][] = new int[Atom.ATOM_TYPE_COUNT][Atom.ATOM_TYPE_COUNT][2];
 	
 	public double simulationTime = 0.0;
     public boolean paused = false;
@@ -17,7 +17,7 @@ public class SimulationState
 	{
 		atoms.add(atom);
 		atom.updateCollisionTime(this);
-		atom.updateWallTime();
+		atom.updateWallTime(this);
 	}
 	
 	public void removeAtom(Atom atom)
@@ -33,7 +33,7 @@ public class SimulationState
 		
 		updateAtomsThatCollideWith(atom);
 		atom.updateCollisionTime(this);
-		atom.updateWallTime();
+		atom.updateWallTime(this);
 	}
 	
 	public void updateAtomsThatCollideWith(Atom atom)
