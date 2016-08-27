@@ -8,8 +8,6 @@ import net.kalinovcic.kinetix.math.Vector2;
 
 public class PhysicsThread extends KinetixThread
 {
-    public static final int MINIMUM_UPS = 60;
-    
     public PhysicsThread()
     {
         super(60);
@@ -29,10 +27,8 @@ public class PhysicsThread extends KinetixThread
     private void initializeState(SimulationState state)
     {
         Random random = new Random();
-
-        state.atoms.clear();
-        state.simulationTime = 0;
-        state.collisionInfo = new int[Atom.ATOM_TYPE_COUNT][Atom.ATOM_TYPE_COUNT][2];
+        
+        state.reset();
         
         final int MAXIMUM_VELOCITY = 5000;
         

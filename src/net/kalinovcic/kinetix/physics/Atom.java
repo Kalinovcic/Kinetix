@@ -1,8 +1,6 @@
 package net.kalinovcic.kinetix.physics;
 
 import java.awt.Color;
-import java.awt.Shape;
-import java.awt.geom.Ellipse2D;
 
 import net.kalinovcic.kinetix.math.Vector2;
 
@@ -94,20 +92,10 @@ public class Atom
 	
 	public static Color getColor(int type)
 	{
-		if (type == ATOM_RED) return new Color(242, 5, 33);
-		if (type == ATOM_GREEN) return new Color(21, 150, 23);
-		if (type == ATOM_BLACK) return new Color(51, 51, 51);
+		if (type == Atom.ATOM_RED) return new Color(242, 5, 33);
+		if (type == Atom.ATOM_GREEN) return new Color(21, 150, 23);
+		if (type == Atom.ATOM_BLACK) return new Color(51, 51, 51);
 		return Color.GRAY;
-	}
-	
-	public Color getColor()
-	{
-		return getColor(type);
-	}
-	
-	public Shape toShape()
-	{
-		return new Ellipse2D.Double(position.x - radius, position.y - radius, radius * 2, radius * 2);
 	}
 	
 	public boolean attemptMerge(SimulationState state, Atom other)

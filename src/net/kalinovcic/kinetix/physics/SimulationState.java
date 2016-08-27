@@ -12,6 +12,41 @@ public class SimulationState
 	
 	public double simulationTime = 0.0;
     public boolean paused = false;
+    
+    public SimulationSnapshot[] snapshots;
+    public double nextSnapshotDelta;
+    public int nextSnapshotIndex;
+    
+    public double lookback = 0.0;
+    
+    {
+    	snapshots = new SimulationSnapshot[1024];
+    	for (int i = 0; i < snapshots.length; i++)
+    		snapshots[i] = new SimulationSnapshot();
+    }
+    
+    public void reset()
+    {
+        atoms.clear();
+        simulationTime = 0;
+        collisionInfo = new int[Atom.ATOM_TYPE_COUNT][Atom.ATOM_TYPE_COUNT][2];
+    	
+    	for (int i = 0; i < snapshots.length; i++)
+    		snapshots[i].valid = false;
+    	
+    	nextSnapshotIndex = 0;
+    	nextSnapshotDelta = 0;
+    	takeSnapshot();
+    }
+    
+    public void takeSnapshot()
+    {
+    	int guardIndex = (nextSnapshotIndex + 1) % snapshots.length; 
+    	snapshots[nextSnapshotIndex].set(this, nextSnapshotDelta);
+    	snapshots[guardIndex].valid = false;
+    	nextSnapshotIndex = guardIndex;
+    	nextSnapshotDelta = 0;
+    }
 	
 	public void addAtom(Atom atom)
 	{
@@ -46,8 +81,11 @@ public class SimulationState
 		}
 	}
 	
-	public void moveAtoms(double deltaTime)
+	public void passTime(double deltaTime)
 	{
+		simulationTime += deltaTime;
+		nextSnapshotDelta += deltaTime;
+		
 		for (Atom atom : atoms)
 		{
 			atom.position.add(atom.velocity.clone().mul(deltaTime));
@@ -57,9 +95,54 @@ public class SimulationState
 		}
 	}
 	
-	private static final int EVENT_NONE = 0;
-	private static final int EVENT_COLLISION = 1;
-	private static final int EVENT_WALL = 2;
+	public static final int EVENT_NONE = 0;
+	public static final int EVENT_COLLISION = 1;
+	public static final int EVENT_WALL = 2;
+	
+	public class Event
+	{
+		public Atom atom = null;
+		public Atom partner = null;
+		
+		public double time;
+		public int type = EVENT_NONE;
+		
+		public boolean invalidated()
+		{
+			switch (type)
+			{
+			case EVENT_NONE: return false;
+			case EVENT_COLLISION: return (atom.collisionPartner != partner) || (partner.collisionPartner != atom);
+			case EVENT_WALL: return false;
+			default: throw new IllegalStateException();
+			}
+		}
+	}
+	
+	public Event getNextEvent(double deltaTime)
+	{
+		Event nextEvent = new Event();
+		nextEvent.time = deltaTime;
+		
+		for (Atom atom : atoms)
+			if (atom.collisionTime >= 0.0 && atom.collisionTime < nextEvent.time)
+			{
+				nextEvent.atom = atom;
+				nextEvent.partner = nextEvent.atom.collisionPartner;
+				nextEvent.type = EVENT_COLLISION;
+				nextEvent.time = atom.collisionTime;
+			}
+		
+		for (Atom atom : atoms)
+			if (atom.wallTime < nextEvent.time)
+			{
+				nextEvent.atom = atom;
+				nextEvent.type = EVENT_WALL;
+				nextEvent.time = atom.wallTime;
+			}
+		
+		return nextEvent;
+	}
 	
 	public void update(double deltaTime, double timeout)
 	{
@@ -68,49 +151,36 @@ public class SimulationState
 		double remaining = deltaTime;
 		while (remaining > 0)
 		{
+			if (paused) return;
+			
 		    long currentTime = System.nanoTime();
 		    long runningTime = currentTime - beginTime;
 		    double runningTimeS = runningTime / 1000000000.0;
 		    if (runningTimeS > timeout)
 		        break;
 		    
-			int nextEvent = EVENT_NONE;
-			
-			Atom eventCollision = null;
-			Atom eventWall = null;
-			
-			deltaTime = remaining;
-			for (Atom atom : atoms)
-				if (atom.collisionTime >= 0.0 && atom.collisionTime < deltaTime)
-				{
-					eventCollision = atom;
-					nextEvent = EVENT_COLLISION;
-					deltaTime = atom.collisionTime;
-				}
-			for (Atom atom : atoms)
-				if (atom.wallTime < deltaTime)
-				{
-					eventWall = atom;
-					nextEvent = EVENT_WALL;
-					deltaTime = atom.wallTime;
-				}
+		    Event nextEvent = getNextEvent(remaining);
+			deltaTime = nextEvent.time;
 			remaining -= deltaTime;
-			simulationTime += deltaTime;
 			
-			moveAtoms(deltaTime);
+			passTime(deltaTime);
 			
-			if (nextEvent == EVENT_COLLISION)
+			if (nextEvent.type == EVENT_COLLISION)
 			{
-				Atom partner = eventCollision.collisionPartner;				
-				Collision.collide(this, eventCollision, partner);
+				Atom partner = nextEvent.atom.collisionPartner;				
+				Collision.collide(this, nextEvent.atom, partner);
 
-				atomPostUpdate(eventCollision);
+				atomPostUpdate(nextEvent.atom);
 				atomPostUpdate(partner);
+				
+				takeSnapshot();
 			}
-			else if (nextEvent == EVENT_WALL)
+			else if (nextEvent.type == EVENT_WALL)
 			{
-				eventWall.wallBounce();
-				atomPostUpdate(eventWall);
+				nextEvent.atom.wallBounce();
+				atomPostUpdate(nextEvent.atom);
+				
+				takeSnapshot();
 			}
 		}
 	}

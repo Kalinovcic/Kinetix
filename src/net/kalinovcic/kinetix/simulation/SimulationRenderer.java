@@ -4,10 +4,12 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.image.BufferedImage;
+import java.util.Locale;
 
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.KinetixWindow;
-import net.kalinovcic.kinetix.physics.Atom;
+import net.kalinovcic.kinetix.physics.AtomSnapshot;
+import net.kalinovcic.kinetix.physics.SimulationSnapshot;
 import net.kalinovcic.kinetix.physics.SimulationState;
 
 public class SimulationRenderer
@@ -30,13 +32,43 @@ public class SimulationRenderer
 		g2D.setColor(Color.WHITE);
 		g2D.fillRect(0, 0, window.getWidth(), window.getHeight());
 		
-		for (Atom atom : state.atoms)
+		g2D.setColor(Color.BLACK);
+		g2D.drawString("Lookback: " + String.format(Locale.US, "%.2fs", state.lookback), 0, 20);
+		
+		double history = state.lookback;
+		double availableTime = state.nextSnapshotDelta;
+		
+		int currentIndex = state.nextSnapshotIndex;
+		while (true)
 		{
-			g2D.setColor(atom.getColor());
-			
-			Shape shape = atom.toShape();
-			g2D.fill(shape);
+			currentIndex--;
+	    	if (currentIndex < 0) currentIndex += state.snapshots.length;
+	    	if (!state.snapshots[currentIndex].valid) break;
+
+	    	if (availableTime >= history)
+	    	{
+	    		availableTime -= history;
+	    		break;
+	    	}
+	    	history -= availableTime;
+	    	
+	    	availableTime = state.snapshots[currentIndex].deltaTime;
 		}
+    	
+    	SimulationSnapshot currentSnapshot = state.snapshots[currentIndex];
+    	if (currentSnapshot.valid)
+    	{
+    		for (int i = 0; i < currentSnapshot.atomCount; i++)
+    		{
+    			AtomSnapshot atom = currentSnapshot.atoms[i];
+    			
+				Color color = atom.getColor();
+				g2D.setColor(color);
+				
+				Shape shape = atom.toShape(availableTime);
+				g2D.fill(shape);
+			}
+    	}
 		
 		g2D.dispose();
 

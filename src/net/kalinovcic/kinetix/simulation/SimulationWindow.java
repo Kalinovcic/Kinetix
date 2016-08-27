@@ -29,5 +29,27 @@ public class SimulationWindow extends KinetixWindow
                 Kinetix.STATE.paused = !Kinetix.STATE.paused;
             }
         });
+
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, 0), "LookbackIncrease");
+        getActionMap().put("LookbackIncrease", new AbstractAction()
+        {
+            private static final long serialVersionUID = 1L;
+            public void actionPerformed(ActionEvent e)
+            {
+            	Kinetix.STATE.lookback += 0.01;
+            }
+        });
+
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 0), "LookbackDecrease");
+        getActionMap().put("LookbackDecrease", new AbstractAction()
+        {
+            private static final long serialVersionUID = 1L;
+            public void actionPerformed(ActionEvent e)
+            {
+            	Kinetix.STATE.lookback -= 0.01;
+            	if (Kinetix.STATE.lookback < 0.0)
+            		Kinetix.STATE.lookback = 0.0;
+            }
+        });
 	}
 }
