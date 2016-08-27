@@ -3,6 +3,8 @@ package net.kalinovcic.kinetix.physics;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.kalinovcic.kinetix.math.Vector2;
+
 public class SimulationState
 {
 	public SimulationSettings settings = new SimulationSettings();
@@ -12,6 +14,8 @@ public class SimulationState
 	
 	public double simulationTime = 0.0;
     public boolean paused = false;
+    public int pauseInSnapshots;
+    public Vector2 focusPoint;
     
     public SimulationSnapshot[] snapshots;
     public double nextSnapshotDelta;
@@ -20,7 +24,7 @@ public class SimulationState
     public double lookback = 0.0;
     
     {
-    	snapshots = new SimulationSnapshot[1024];
+    	snapshots = new SimulationSnapshot[8192];
     	for (int i = 0; i < snapshots.length; i++)
     		snapshots[i] = new SimulationSnapshot();
     }
@@ -41,6 +45,13 @@ public class SimulationState
     
     public void takeSnapshot()
     {
+    	if (pauseInSnapshots > 0)
+    	{
+    		pauseInSnapshots--;
+    		if (pauseInSnapshots == 0)
+    			paused = true;
+    	}
+    	
     	int guardIndex = (nextSnapshotIndex + 1) % snapshots.length; 
     	snapshots[nextSnapshotIndex].set(this, nextSnapshotDelta);
     	snapshots[guardIndex].valid = false;
@@ -102,21 +113,8 @@ public class SimulationState
 	public class Event
 	{
 		public Atom atom = null;
-		public Atom partner = null;
-		
 		public double time;
 		public int type = EVENT_NONE;
-		
-		public boolean invalidated()
-		{
-			switch (type)
-			{
-			case EVENT_NONE: return false;
-			case EVENT_COLLISION: return (atom.collisionPartner != partner) || (partner.collisionPartner != atom);
-			case EVENT_WALL: return false;
-			default: throw new IllegalStateException();
-			}
-		}
 	}
 	
 	public Event getNextEvent(double deltaTime)
@@ -128,7 +126,6 @@ public class SimulationState
 			if (atom.collisionTime >= 0.0 && atom.collisionTime < nextEvent.time)
 			{
 				nextEvent.atom = atom;
-				nextEvent.partner = nextEvent.atom.collisionPartner;
 				nextEvent.type = EVENT_COLLISION;
 				nextEvent.time = atom.collisionTime;
 			}

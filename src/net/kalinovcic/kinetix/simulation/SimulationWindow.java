@@ -27,6 +27,7 @@ public class SimulationWindow extends KinetixWindow
             public void actionPerformed(ActionEvent e)
             {
                 Kinetix.STATE.paused = !Kinetix.STATE.paused;
+                Kinetix.STATE.focusPoint = null;
             }
         });
 
@@ -36,7 +37,7 @@ public class SimulationWindow extends KinetixWindow
             private static final long serialVersionUID = 1L;
             public void actionPerformed(ActionEvent e)
             {
-            	Kinetix.STATE.lookback += 0.01;
+            	Kinetix.STATE.lookback += 0.0001;
             }
         });
 
@@ -46,7 +47,7 @@ public class SimulationWindow extends KinetixWindow
             private static final long serialVersionUID = 1L;
             public void actionPerformed(ActionEvent e)
             {
-            	Kinetix.STATE.lookback -= 0.01;
+            	Kinetix.STATE.lookback -= 0.0001;
             	if (Kinetix.STATE.lookback < 0.0)
             		Kinetix.STATE.lookback = 0.0;
             }

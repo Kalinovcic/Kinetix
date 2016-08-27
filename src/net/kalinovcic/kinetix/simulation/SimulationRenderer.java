@@ -33,7 +33,7 @@ public class SimulationRenderer
 		g2D.fillRect(0, 0, window.getWidth(), window.getHeight());
 		
 		g2D.setColor(Color.BLACK);
-		g2D.drawString("Lookback: " + String.format(Locale.US, "%.2fs", state.lookback), 0, 20);
+		g2D.drawString("Lookback: " + String.format(Locale.US, "%.3fs", state.lookback), 0, 20);
 		
 		double history = state.lookback;
 		double availableTime = state.nextSnapshotDelta;
@@ -58,6 +58,18 @@ public class SimulationRenderer
     	SimulationSnapshot currentSnapshot = state.snapshots[currentIndex];
     	if (currentSnapshot.valid)
     	{
+    		if (state.focusPoint != null)
+    		{
+    			double width = 30.0;
+    			double height = width * window.getHeight() / window.getWidth();
+    			double scale = window.getWidth() / width;
+    			g2D.scale(scale, scale);
+
+    			double x = state.focusPoint.x - width * 0.5;
+    			double y = state.focusPoint.y - height * 0.5;
+    			g2D.translate(-x, -y);
+    		}
+    		
     		for (int i = 0; i < currentSnapshot.atomCount; i++)
     		{
     			AtomSnapshot atom = currentSnapshot.atoms[i];
