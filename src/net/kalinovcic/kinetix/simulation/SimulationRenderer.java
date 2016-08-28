@@ -31,56 +31,37 @@ public class SimulationRenderer
 
 		g2D.setColor(Color.WHITE);
 		g2D.fillRect(0, 0, window.getWidth(), window.getHeight());
-		
-		g2D.setColor(Color.BLACK);
-		g2D.drawString("Lookback: " + String.format(Locale.US, "%.3fs", state.lookback), 0, 20);
-		
-		double history = state.lookback;
-		double availableTime = state.nextSnapshotDelta;
-		
-		int currentIndex = state.nextSnapshotIndex;
-		while (true)
+
+		if (state.paused && state.animation != null)
 		{
-			currentIndex--;
-	    	if (currentIndex < 0) currentIndex += state.snapshots.length;
-	    	if (!state.snapshots[currentIndex].valid) break;
-
-	    	if (availableTime >= history)
-	    	{
-	    		availableTime -= history;
-	    		break;
-	    	}
-	    	history -= availableTime;
-	    	
-	    	availableTime = state.snapshots[currentIndex].deltaTime;
+			state.animation.progress(state, deltaTime);
+			
+			g2D.setColor(Color.BLACK);
+			g2D.drawString("Lookback: " + String.format(Locale.US, "%.3fs", state.lookback), 0, 20);
+			
+			state.animation.preRender(state, window, g2D);
 		}
-    	
-    	SimulationSnapshot currentSnapshot = state.snapshots[currentIndex];
-    	if (currentSnapshot.valid)
+		
+		int snapshotIndex = LookbackUtil.getSnapshotIndexForLookback(state, state.lookback);
+		double snapshotTime = LookbackUtil.getSnapshotTimeForLookback(state, state.lookback);
+		
+    	SimulationSnapshot snapshot = state.snapshots[snapshotIndex];
+    	if (snapshot.valid)
     	{
-    		if (state.focusPoint != null)
+    		for (int i = 0; i < snapshot.atomCount; i++)
     		{
-    			double width = 30.0;
-    			double height = width * window.getHeight() / window.getWidth();
-    			double scale = window.getWidth() / width;
-    			g2D.scale(scale, scale);
-
-    			double x = state.focusPoint.x - width * 0.5;
-    			double y = state.focusPoint.y - height * 0.5;
-    			g2D.translate(-x, -y);
-    		}
-    		
-    		for (int i = 0; i < currentSnapshot.atomCount; i++)
-    		{
-    			AtomSnapshot atom = currentSnapshot.atoms[i];
+    			AtomSnapshot atom = snapshot.atoms[i];
     			
 				Color color = atom.getColor();
 				g2D.setColor(color);
 				
-				Shape shape = atom.toShape(availableTime);
+				Shape shape = atom.toShape(snapshotTime);
 				g2D.fill(shape);
 			}
     	}
+    	
+    	if (state.paused && state.animation != null)
+    		state.animation.render(state, window, g2D);
 		
 		g2D.dispose();
 

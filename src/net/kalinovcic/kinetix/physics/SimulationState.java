@@ -3,7 +3,7 @@ package net.kalinovcic.kinetix.physics;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.kalinovcic.kinetix.math.Vector2;
+import net.kalinovcic.kinetix.simulation.animation.Animation;
 
 public class SimulationState
 {
@@ -15,7 +15,7 @@ public class SimulationState
 	public double simulationTime = 0.0;
     public boolean paused = false;
     public int pauseInSnapshots;
-    public Vector2 focusPoint;
+    public Animation animation;
     
     public SimulationSnapshot[] snapshots;
     public double nextSnapshotDelta;

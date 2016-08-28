@@ -118,12 +118,6 @@ public class Atom
 			Atom merged = new Atom(mergedType, mergedPosition, mergedVelocity, mergedRadius, mergedMass);
 			state.addAtom(merged);
 			
-			if (state.simulationTime > 0.5)
-			{
-				state.pauseInSnapshots = 8;
-				state.focusPoint = merged.position.clone();
-			}
-			
 			return true;
 		}
 		

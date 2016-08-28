@@ -12,6 +12,7 @@ public class AtomSnapshot
 	public double vx;
 	public double vy;
 	public double radius;
+	public double mass;
 	
 	public void set(Atom atom)
 	{
@@ -21,6 +22,7 @@ public class AtomSnapshot
 		vx = atom.velocity.x;
 		vy = atom.velocity.y;
 		radius = atom.radius;
+		mass = atom.mass;
 	}
 	
 	public Color getColor()

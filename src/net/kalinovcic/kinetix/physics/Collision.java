@@ -1,6 +1,8 @@
 package net.kalinovcic.kinetix.physics;
 
 import net.kalinovcic.kinetix.math.Vector2;
+import net.kalinovcic.kinetix.simulation.animation.Animation;
+import net.kalinovcic.kinetix.simulation.animation.AnimationState;
 
 public class Collision
 {
@@ -34,6 +36,19 @@ public class Collision
 	
 	public static void collide(SimulationState state, Atom atom1, Atom atom2)
 	{
+		boolean madeAnimation = false;
+		if (state.simulationTime > 0.5 && state.pauseInSnapshots == 0)
+		{
+			state.pauseInSnapshots = 8;
+			state.animation = new Animation(state, AnimationState.COLLISION_APPROACH);
+			state.animation.collisionSnapshot = state.nextSnapshotIndex;
+			state.animation.snapshot1 = new AtomSnapshot();
+			state.animation.snapshot1.set(atom1);
+			state.animation.snapshot2 = new AtomSnapshot();
+			state.animation.snapshot2.set(atom2);
+			madeAnimation = true;
+		}
+		
 		Vector2 n = atom2.position.clone().sub(atom1.position);
 		Vector2 un = n.normal();
 		Vector2 ut = new Vector2(-un.y, un.x);
@@ -67,8 +82,15 @@ public class Collision
 		atom2.velocity.set(v2c);
 
 		boolean merged = false;
-		if (dvnc > state.settings.drs) merged = atom1.attemptMerge(state, atom2);
+		if (dvnc > state.settings.drs)
+			merged = atom1.attemptMerge(state, atom2);
 		state.collisionInfo[atom1.type][atom2.type][merged ? 1 : 0]++;
 		state.collisionInfo[atom2.type][atom1.type][merged ? 1 : 0]++;
+		
+		if (merged && madeAnimation)
+		{
+			state.pauseInSnapshots = 0;
+			state.animation = null;
+		}
 	}
 }
