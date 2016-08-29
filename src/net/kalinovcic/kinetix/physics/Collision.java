@@ -39,6 +39,7 @@ public class Collision
 		boolean madeAnimation = false;
 		if (state.simulationTime > 0.5 && state.pauseInSnapshots == 0)
 		{
+		    /*
 			state.pauseInSnapshots = 8;
 			state.animation = new Animation(state, AnimationState.COLLISION_APPROACH);
 			state.animation.collisionSnapshot = state.nextSnapshotIndex;
@@ -47,6 +48,7 @@ public class Collision
 			state.animation.snapshot2 = new AtomSnapshot();
 			state.animation.snapshot2.set(atom2);
 			madeAnimation = true;
+			*/
 		}
 		
 		Vector2 n = atom2.position.clone().sub(atom1.position);
