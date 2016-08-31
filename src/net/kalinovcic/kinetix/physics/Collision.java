@@ -41,11 +41,13 @@ public class Collision
 		boolean madeAnimation = false;
 		if (state.simulationTime > 0.5 && state.pauseInSnapshots == 0)
 		{
+		    /*
 			state.pauseInSnapshots = 8;
 			state.animation = new Animation(state, AnimationState.COLLISION_APPROACH);
 			state.animation.collisionSnapshot = state.nextSnapshotIndex;
 			state.animation.collision = data;
 			madeAnimation = true;
+			*/
 		}
 
 		atom1.velocity.set(data.v1c);
