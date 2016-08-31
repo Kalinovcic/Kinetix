@@ -4,15 +4,47 @@ import net.kalinovcic.kinetix.physics.SimulationState;
 
 public class LookbackUtil
 {
+	public static int previous(SimulationState state, int index)
+	{
+		index--;
+    	if (index < 0)
+    		index += state.snapshots.length;
+    	return index;
+	}
+
+	public static int next(SimulationState state, int index)
+	{
+		index++;
+    	if (index >= state.snapshots.length)
+    		index -= state.snapshots.length;
+    	return index;
+	}
+	
+	public static int getOldestSnapshotIndex(SimulationState state)
+	{
+		int currentIndex = state.nextSnapshotIndex;
+		
+		while (true)
+		{
+			int previousIndex = currentIndex;
+			currentIndex = previous(state, currentIndex);
+	    	
+	    	if (!state.snapshots[currentIndex].valid)
+	    	{
+	    		if (!state.snapshots[previousIndex].valid)
+	    			return state.nextSnapshotIndex;
+	    		return previousIndex;
+	    	}
+		}
+	}
+	
 	public static double getSnapshotTimeForIndex(SimulationState state, int index)
 	{
 		double availableTime = state.nextSnapshotDelta;
 		int currentIndex = state.nextSnapshotIndex;
 		while (true)
 		{
-			currentIndex--;
-	    	if (currentIndex < 0)
-	    		currentIndex += state.snapshots.length;
+			currentIndex = previous(state, currentIndex);
 	    	
 	    	if (currentIndex == index)
 	    		return availableTime;
@@ -36,9 +68,7 @@ public class LookbackUtil
 		while (true)
 		{
 			int previousIndex = currentIndex;
-			currentIndex--;
-	    	if (currentIndex < 0)
-	    		currentIndex += state.snapshots.length;
+			currentIndex = previous(state, currentIndex);
 	    	
 	    	if (!state.snapshots[currentIndex].valid)
 	    	{
@@ -62,9 +92,7 @@ public class LookbackUtil
 		
 		while (true)
 		{
-			currentIndex--;
-	    	if (currentIndex < 0)
-	    		currentIndex += state.snapshots.length;
+			currentIndex = previous(state, currentIndex);
 	    	
 	    	if (!state.snapshots[currentIndex].valid)
 	    		return 0.0;

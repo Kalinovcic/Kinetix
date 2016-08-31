@@ -3,6 +3,7 @@ package net.kalinovcic.kinetix.simulation;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
+import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.util.Locale;
 
@@ -40,6 +41,27 @@ public class SimulationRenderer
 			g2D.drawString("Lookback: " + String.format(Locale.US, "%.3fs", state.lookback), 0, 20);
 			
 			state.animation.preRender(state, window, g2D);
+		}
+
+		double availableTime = state.nextSnapshotDelta;
+		int currentIndex = state.nextSnapshotIndex;
+		while (true)
+		{
+			currentIndex = LookbackUtil.previous(state, currentIndex);
+	    	if (!state.snapshots[currentIndex].valid) break;
+	    	
+	    	AtomSnapshot highlight = state.snapshots[currentIndex].highlightAtom;
+	    	if (highlight != null)
+	    	{
+		    	double beginX = highlight.x;
+		    	double beginY = highlight.y;
+		    	double endX = beginX + highlight.vx * availableTime;
+		    	double endY = beginY + highlight.vy * availableTime;
+		    	g2D.setColor(highlight.getColor());
+		    	g2D.draw(new Line2D.Double(beginX, beginY, endX, endY));
+	    	}
+	    	
+	    	availableTime = state.snapshots[currentIndex].deltaTime;
 		}
 		
 		int snapshotIndex = LookbackUtil.getSnapshotIndexForLookback(state, state.lookback);

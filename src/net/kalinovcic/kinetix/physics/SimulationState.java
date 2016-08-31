@@ -3,6 +3,7 @@ package net.kalinovcic.kinetix.physics;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.kalinovcic.kinetix.simulation.LookbackUtil;
 import net.kalinovcic.kinetix.simulation.animation.Animation;
 
 public class SimulationState
@@ -16,6 +17,8 @@ public class SimulationState
     public boolean paused = false;
     public int pauseInSnapshots;
     public Animation animation;
+    
+    public Atom highlightAtom;
     
     public SimulationSnapshot[] snapshots;
     public double nextSnapshotDelta;
@@ -38,6 +41,8 @@ public class SimulationState
     	for (int i = 0; i < snapshots.length; i++)
     		snapshots[i].valid = false;
     	
+    	highlightAtom = null;
+    	
     	nextSnapshotIndex = 0;
     	nextSnapshotDelta = 0;
     	takeSnapshot();
@@ -52,7 +57,7 @@ public class SimulationState
     			paused = true;
     	}
     	
-    	int guardIndex = (nextSnapshotIndex + 1) % snapshots.length; 
+    	int guardIndex = LookbackUtil.next(this, nextSnapshotIndex); 
     	snapshots[nextSnapshotIndex].set(this, nextSnapshotDelta);
     	snapshots[guardIndex].valid = false;
     	nextSnapshotIndex = guardIndex;
@@ -61,6 +66,8 @@ public class SimulationState
 	
 	public void addAtom(Atom atom)
 	{
+		if (highlightAtom == null)
+			highlightAtom = atom;
 		atoms.add(atom);
 		atom.updateCollisionTime(this);
 		atom.updateWallTime(this);
@@ -68,6 +75,8 @@ public class SimulationState
 	
 	public void removeAtom(Atom atom)
 	{
+		if (atom == highlightAtom)
+			highlightAtom = null;
 		atom.toRemove = true;
 		updateAtomsThatCollideWith(atom);
 		atoms.remove(atom);

@@ -1,7 +1,7 @@
 package net.kalinovcic.kinetix.physics;
 
-import net.kalinovcic.kinetix.simulation.animation.Animation;
-import net.kalinovcic.kinetix.simulation.animation.AnimationState;
+import net.kalinovcic.kinetix.Kinetix;
+import net.kalinovcic.kinetix.reaction.Reaction;
 
 public class Collision
 {
@@ -41,18 +41,23 @@ public class Collision
 		boolean madeAnimation = false;
 		if (state.simulationTime > 0.5 && state.pauseInSnapshots == 0)
 		{
+			/*
 			state.pauseInSnapshots = 8;
 			state.animation = new Animation(state, AnimationState.COLLISION_APPROACH);
 			state.animation.collisionSnapshot = state.nextSnapshotIndex;
 			state.animation.collision = data;
 			madeAnimation = true;
+			*/
 		}
 
 		atom1.velocity.set(data.v1c);
 		atom2.velocity.set(data.v2c);
 
 		boolean merged = false;
-		if (data.dvnc > state.settings.drs)
+		
+		double drs = Kinetix.oneAndOnly.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
+		System.out.println(drs);
+		if (drs > Kinetix.oneAndOnly.activationEnergy)
 			merged = atom1.attemptMerge(state, atom2);
 		state.collisionInfo[atom1.type][atom2.type][merged ? 1 : 0]++;
 		state.collisionInfo[atom2.type][atom1.type][merged ? 1 : 0]++;

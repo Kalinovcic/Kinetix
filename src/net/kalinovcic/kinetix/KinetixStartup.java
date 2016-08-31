@@ -3,7 +3,6 @@ package net.kalinovcic.kinetix;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import net.kalinovcic.kinetix.commander.CommanderWindow;
 import net.kalinovcic.kinetix.physics.PhysicsThread;
 import net.kalinovcic.kinetix.simulation.SimulationThread;
 
@@ -24,7 +23,6 @@ public class KinetixStartup
             public void run()
             {
                 MainWindow mainWindow = new MainWindow();
-                new CommanderWindow(mainWindow);
                 new SimulationThread(mainWindow).start();
             }
         });
