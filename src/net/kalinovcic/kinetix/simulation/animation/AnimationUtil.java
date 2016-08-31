@@ -3,6 +3,7 @@ package net.kalinovcic.kinetix.simulation.animation;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.awt.geom.Line2D;
 
 import net.kalinovcic.kinetix.KinetixWindow;
@@ -10,6 +11,9 @@ import net.kalinovcic.kinetix.math.Vector2;
 
 public class AnimationUtil
 {
+    public static Stroke thinStroke = new BasicStroke(1.0f);
+    public static Stroke thickStroke = new BasicStroke(3.0f);
+    
 	public static void focusTransform(KinetixWindow window, Graphics2D g2D, double focusX, double focusY)
 	{
 		double width = 15.0;
@@ -20,8 +24,10 @@ public class AnimationUtil
 		double x = focusX - width * 0.5;
 		double y = focusY - height * 0.5;
 		g2D.translate(-x, -y);
-		
-		g2D.setStroke(new BasicStroke((float) (1.0 / scale)));
+
+        thinStroke = new BasicStroke((float) (1.0 / scale));
+        thickStroke = new BasicStroke((float) (3.0 / scale));
+		g2D.setStroke(thinStroke);
 		g2D.setFont(g2D.getFont().deriveFont((float) (12.0 / scale)));
 	}
 	
