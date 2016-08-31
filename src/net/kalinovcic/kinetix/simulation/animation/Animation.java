@@ -4,7 +4,8 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 
 import net.kalinovcic.kinetix.KinetixWindow;
-import net.kalinovcic.kinetix.physics.AtomSnapshot;
+import net.kalinovcic.kinetix.math.Vector2;
+import net.kalinovcic.kinetix.physics.CollisionData;
 import net.kalinovcic.kinetix.physics.SimulationState;
 import net.kalinovcic.kinetix.simulation.LookbackUtil;
 import static net.kalinovcic.kinetix.simulation.animation.AnimationUtil.*;
@@ -20,8 +21,7 @@ public class Animation
 	public boolean initialized = false;
 
 	public int collisionSnapshot;
-	public AtomSnapshot snapshot1;
-	public AtomSnapshot snapshot2;
+	public CollisionData collision;
 
 	public static final double TIME_SLOWDOWN = 0.01;
 	
@@ -54,7 +54,7 @@ public class Animation
 			double approachTime = beginLookback - collisionLookback;
 			state.lookback = beginLookback;
 			beginStateTime = approachTime / TIME_SLOWDOWN;
-			statePause = 1.0;
+			statePause = 0.0;
 		break;
 		
 		case COLLISION_LEAVING:
@@ -129,8 +129,8 @@ public class Animation
 	
 	public void preRender(SimulationState state, KinetixWindow window, Graphics2D g2D)
 	{
-		double focusX = (snapshot1.x + snapshot2.x) * 0.5;
-		double focusY = (snapshot1.y + snapshot2.y) * 0.5;
+		double focusX = (collision.p1.x + collision.p2.x) * 0.5;
+		double focusY = (collision.p1.y + collision.p2.y) * 0.5;
 		focusTransform(window, g2D, focusX, focusY);
 	}
 	
@@ -138,15 +138,47 @@ public class Animation
 	{
 		double progress = 1.0;
 		if (stateTime > 0.0) progress = 1.0 - stateTime / beginStateTime;
+
+		g2D.setColor(Color.BLACK);
 		
 		switch (animationState)
 		{
 		
-		case COLLISION_VT:
+		case COLLISION_FINAL_VELOCITIES:
 		{
-			g2D.setColor(Color.BLACK);
-			drawLine(g2D, snapshot1.x, snapshot1.y, snapshot2.x, snapshot2.y, getElementProgress(progress, 0.0, 0.5));
-		} break;
+			double maxVelocity = Math.max(collision.v1c.length(), collision.v2c.length());
+			double maxLength = Math.max(collision.r1, collision.r2) * 1.5;
+			double length1 = collision.v1c.length() / maxVelocity * maxLength;
+			double length2 = collision.v2c.length() / maxVelocity * maxLength;
+			drawLine(g2D, collision.p1, collision.p1.clone().add(collision.v1c.normal().mul(length1)), progress);
+			drawLine(g2D, collision.p2, collision.p2.clone().add(collision.v2c.normal().mul(length2)), progress);
+		}
+		
+		progress = 1.0;
+		fade(g2D);
+		
+		case COLLISION_NT:
+		{
+			drawLine(g2D, collision.p1, collision.p2, getElementProgress(progress, 0.0, 0.5));
+			
+			Vector2 collisionPoint = collision.p1.clone().add(collision.un.clone().mul(collision.r1));
+			Vector2 tLow = collisionPoint.clone().sub(collision.t.clone().mul(0.5));
+			Vector2 tHigh = collisionPoint.clone().add(collision.t.clone().mul(0.5));
+			drawLine(g2D, tLow, tHigh, getElementProgress(progress, 0.5, 1.0));
+		}
+		
+		progress = 1.0;
+		fade(g2D);
+		
+		case COLLISION_INITIAL_VELOCITIES:
+		{
+			double maxVelocity = Math.max(collision.v1.length(), collision.v2.length());
+			double maxLength = Math.max(collision.r1, collision.r2) * 1.5;
+			double length1 = collision.v1.length() / maxVelocity * maxLength;
+			double length2 = collision.v2.length() / maxVelocity * maxLength;
+			drawLine(g2D, collision.p1, collision.p1.clone().add(collision.v1.normal().mul(length1)), progress);
+			drawLine(g2D, collision.p2, collision.p2.clone().add(collision.v2.normal().mul(length2)), progress);
+		}
 		
 		default:
 		}

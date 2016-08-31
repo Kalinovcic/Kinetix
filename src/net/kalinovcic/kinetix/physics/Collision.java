@@ -1,6 +1,5 @@
 package net.kalinovcic.kinetix.physics;
 
-import net.kalinovcic.kinetix.math.Vector2;
 import net.kalinovcic.kinetix.simulation.animation.Animation;
 import net.kalinovcic.kinetix.simulation.animation.AnimationState;
 
@@ -36,53 +35,24 @@ public class Collision
 	
 	public static void collide(SimulationState state, Atom atom1, Atom atom2)
 	{
+		CollisionData data = new CollisionData(atom1.position, atom2.position, atom1.velocity, atom2.velocity,
+											   atom1.mass, atom2.mass, atom1.radius, atom2.radius);
+		
 		boolean madeAnimation = false;
 		if (state.simulationTime > 0.5 && state.pauseInSnapshots == 0)
 		{
 			state.pauseInSnapshots = 8;
 			state.animation = new Animation(state, AnimationState.COLLISION_APPROACH);
 			state.animation.collisionSnapshot = state.nextSnapshotIndex;
-			state.animation.snapshot1 = new AtomSnapshot();
-			state.animation.snapshot1.set(atom1);
-			state.animation.snapshot2 = new AtomSnapshot();
-			state.animation.snapshot2.set(atom2);
+			state.animation.collision = data;
 			madeAnimation = true;
 		}
-		
-		Vector2 n = atom2.position.clone().sub(atom1.position);
-		Vector2 un = n.normal();
-		Vector2 ut = new Vector2(-un.y, un.x);
-		
-		double v1n = atom1.velocity.dot(un);
-		double v1t = atom1.velocity.dot(ut);
-		
-		double v2n = atom2.velocity.dot(un);
-		double v2t = atom2.velocity.dot(ut);
 
-		double v1nc = (v1n*(atom1.mass - atom2.mass) + 2*atom2.mass*v2n) / (atom1.mass + atom2.mass);
-		double v1tc = v1t;
-
-		double v2nc = (v2n*(atom2.mass - atom1.mass) + 2*atom1.mass*v1n) / (atom1.mass + atom2.mass);
-		double v2tc = v2t;
-
-		double maxvnc = Math.max(v1nc, v2nc);
-		double minvnc = Math.min(v1nc, v2nc);
-		double dvnc = maxvnc - minvnc;
-
-		Vector2 v1ncv = un.clone().mul(v1nc);
-		Vector2 v1tcv = ut.clone().mul(v1tc);
-
-		Vector2 v2ncv = un.clone().mul(v2nc);
-		Vector2 v2tcv = ut.clone().mul(v2tc);
-
-		Vector2 v1c = v1ncv.clone().add(v1tcv);
-		Vector2 v2c = v2ncv.clone().add(v2tcv);
-
-		atom1.velocity.set(v1c);
-		atom2.velocity.set(v2c);
+		atom1.velocity.set(data.v1c);
+		atom2.velocity.set(data.v2c);
 
 		boolean merged = false;
-		if (dvnc > state.settings.drs)
+		if (data.dvnc > state.settings.drs)
 			merged = atom1.attemptMerge(state, atom2);
 		state.collisionInfo[atom1.type][atom2.type][merged ? 1 : 0]++;
 		state.collisionInfo[atom2.type][atom1.type][merged ? 1 : 0]++;
