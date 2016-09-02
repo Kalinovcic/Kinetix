@@ -1,7 +1,7 @@
 package net.kalinovcic.kinetix.physics;
 
 import net.kalinovcic.kinetix.Kinetix;
-import net.kalinovcic.kinetix.reaction.Reaction;
+import net.kalinovcic.kinetix.physics.reaction.Reaction;
 
 public class Collision
 {
@@ -55,9 +55,8 @@ public class Collision
 
 		boolean merged = false;
 		
-		double drs = Kinetix.oneAndOnly.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
-		System.out.println(drs);
-		if (drs > Kinetix.oneAndOnly.activationEnergy)
+		double drs = Kinetix.reaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
+		if (drs > Kinetix.reaction.activationEnergy)
 			merged = atom1.attemptMerge(state, atom2);
 		state.collisionInfo[atom1.type][atom2.type][merged ? 1 : 0]++;
 		state.collisionInfo[atom2.type][atom1.type][merged ? 1 : 0]++;

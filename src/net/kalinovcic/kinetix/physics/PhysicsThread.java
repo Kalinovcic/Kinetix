@@ -29,28 +29,25 @@ public class PhysicsThread extends KinetixThread
         Random random = new Random();
         
         state.reset();
-
-        state.settings.width = 600;
-        state.settings.height = 600;
         
         final int MAXIMUM_VELOCITY = 5000;
         
         double[] sumProbabilities = new double[2];
         double[][] probabilities = new double[MAXIMUM_VELOCITY][2];
         
-        double temperature = Kinetix.oneAndOnly.temperature;
+        double temperature = Kinetix.reaction.temperature;
         for (int velocity = 0; velocity < MAXIMUM_VELOCITY; velocity++)
         {
         	int velocitySq = velocity * velocity;
         	
         	for (int type = 0; type < 2; type++)
         	{
-        		double mass = (type == Atom.ATOM_RED) ? Kinetix.oneAndOnly.mass1 : Kinetix.oneAndOnly.mass2;
+        		double mass = (type == Atom.ATOM_RED) ? Kinetix.reaction.mass1 : Kinetix.reaction.mass2;
 
         		final double BOLTZMANN = 1.38064852;
         		final double DALTON = 1.660539040;
         		
-        		double a = Math.pow((mass * DALTON * 0.0001) / (2 * Math.PI * BOLTZMANN * Kinetix.oneAndOnly.temperature), 1.5);
+        		double a = Math.pow((mass * DALTON * 0.0001) / (2 * Math.PI * BOLTZMANN * Kinetix.reaction.temperature), 1.5);
         		double b = Math.exp(-mass * DALTON * 0.0001 * velocitySq / (2 * BOLTZMANN * temperature));
         		double probability = 4 * Math.PI * a * velocitySq * b;
         		
@@ -59,11 +56,11 @@ public class PhysicsThread extends KinetixThread
         	}
         }
         
-        for (int i = 0; i < 200; i++)
+        for (int i = 0; i < state.settings.redCount + state.settings.greenCount; i++)
         {
-        	int type = (i < 100) ? Atom.ATOM_RED : Atom.ATOM_GREEN;
-        	double radius = (type == Atom.ATOM_RED) ? Kinetix.oneAndOnly.radius1 : Kinetix.oneAndOnly.radius2;
-        	double mass = (type == Atom.ATOM_RED) ? Kinetix.oneAndOnly.mass1 : Kinetix.oneAndOnly.mass2;
+        	int type = (i < state.settings.redCount) ? Atom.ATOM_RED : Atom.ATOM_GREEN;
+        	double radius = (type == Atom.ATOM_RED) ? Kinetix.reaction.radius1 : Kinetix.reaction.radius2;
+        	double mass = (type == Atom.ATOM_RED) ? Kinetix.reaction.mass1 : Kinetix.reaction.mass2;
 
             double x = random.nextDouble()*(state.settings.width - 2*radius) + radius;
             double y = random.nextDouble()*(state.settings.height - 2*radius) + radius;

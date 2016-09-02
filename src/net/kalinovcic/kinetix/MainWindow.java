@@ -36,7 +36,20 @@ public class MainWindow extends JFrame
 		desktop = new KinetixDesktop();
 		setContentPane(desktop);
 
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0), "OpenVideo");
+		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0), "Restart");
+        getRootPane().getActionMap().put("Restart", new AbstractAction()
+        {
+            private static final long serialVersionUID = 1L;
+            public void actionPerformed(ActionEvent e)
+            {
+            	synchronized (Kinetix.STATE)
+            	{
+                    Kinetix.restart = true;
+				}
+            }
+        });
+
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0), "OpenVideo");
         getRootPane().getActionMap().put("OpenVideo", new AbstractAction()
         {
             private static final long serialVersionUID = 1L;
