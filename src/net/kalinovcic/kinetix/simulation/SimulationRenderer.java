@@ -43,6 +43,7 @@ public class SimulationRenderer
 			state.animation.preRender(state, window, g2D);
 		}
 
+		/*
 		double availableTime = state.nextSnapshotDelta;
 		int currentIndex = state.nextSnapshotIndex;
 		while (true)
@@ -63,6 +64,7 @@ public class SimulationRenderer
 	    	
 	    	availableTime = state.snapshots[currentIndex].deltaTime;
 		}
+		*/
 		
 		int snapshotIndex = LookbackUtil.getSnapshotIndexForLookback(state, state.lookback);
 		double snapshotTime = LookbackUtil.getSnapshotTimeForLookback(state, state.lookback);
