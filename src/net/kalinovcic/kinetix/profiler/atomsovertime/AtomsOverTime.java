@@ -7,7 +7,7 @@ public class AtomsOverTime extends Profiler
 {
     private static final long serialVersionUID = 1L;
 
-    public static final int ITERATION_COUNT = 600;
+    public static final int ITERATION_COUNT = 1500;
     public int iteration = 0;
     
     public boolean paused = false;
@@ -16,7 +16,7 @@ public class AtomsOverTime extends Profiler
     
     public AtomsOverTime(ProfilerWindow window)
     {
-        super(window, new AtomsOverTimeAction(), "Atoms over time", 600, 300);
+        super(window, new AtomsOverTimeAction(), "Atoms over time", 1500, 300);
         
         thread = new AtomsOverTimeThread(this);
         thread.start();
