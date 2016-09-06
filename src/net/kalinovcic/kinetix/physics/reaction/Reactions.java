@@ -48,14 +48,19 @@ public class Reactions
 				reaction.radius2 = Double.valueOf(tokens[7].replaceAll(",", "."));
 				if (!tokens[8].equals("-"))
 				{
+				    reaction.temperatureRange_known = true;
 					reaction.temperatureRange_low = Double.valueOf(tokens[8].split("-")[0].replaceAll(",", "."));
 					reaction.temperatureRange_high = Double.valueOf(tokens[8].split("-")[1].replaceAll(",", "."));
+				}
+				else
+				{
+				    reaction.temperatureRange_known = false;
 				}
 				reaction.preExponentialFactor_experimental = Double.valueOf(tokens[9].replaceAll(",", "."));
 				reaction.b = Double.valueOf(tokens[10].replaceAll(",", "."));
 				reaction.ratio = Double.valueOf(tokens[11].replaceAll(",", "."));
 				
-				reaction.temperature = 1000;
+				reaction.temperature = reaction.temperatureRange_known ? reaction.temperatureRange_high : 300;
 				reaction.concentration1 = 0.02;
 				reaction.concentration2 = 0.02;
 				reaction.recalculate();

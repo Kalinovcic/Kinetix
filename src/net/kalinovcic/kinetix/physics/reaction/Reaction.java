@@ -55,6 +55,7 @@ public class Reaction
 	public double radius2;							// r2
 	public double temperatureRange_low;				// T(raspon)
 	public double temperatureRange_high;			// T(raspon)
+    public boolean temperatureRange_known;
 	public double preExponentialFactor_experimental;// A(eksp)
 	public double b;								// B
 	public double ratio;							// Ea/R
@@ -128,7 +129,7 @@ public class Reaction
 		case 5:  return normal.format(mass2);
 		case 6:  return normal.format(radius1);
 		case 7:  return normal.format(radius2);
-		case 8:  return normal.format(temperatureRange_low) + "-" + normal.format(temperatureRange_high);
+		case 8:  return temperatureRange_known ? (normal.format(temperatureRange_low) + "-" + normal.format(temperatureRange_high)) : "-";
 		case 9:  return scientific.format(preExponentialFactor_experimental * akFactors[akUnit]);
 		case 10: return normal.format(b);
 		case 11: return normal.format(ratio);

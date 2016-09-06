@@ -32,7 +32,7 @@ public class ReactionChooserWindow extends JInternalFrame
 	{
         super("Reaction chooser", false, true, false, false);
 
-        Dimension size = new Dimension(1300, 400);
+        Dimension size = new Dimension(1300, 600);
         setSize(size);
         setMinimumSize(size);
         setMaximumSize(size);
