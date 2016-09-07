@@ -3,7 +3,6 @@ package net.kalinovcic.kinetix.simulation;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
-import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.util.Locale;
 

@@ -150,20 +150,12 @@ public class SimulationState
 		return nextEvent;
 	}
 	
-	public void update(double deltaTime, double timeout)
+	public void update(double deltaTime)
 	{
-	    long beginTime = System.nanoTime();
-	    
 		double remaining = deltaTime;
 		while (remaining > 0)
 		{
 			if (paused) return;
-			
-		    long currentTime = System.nanoTime();
-		    long runningTime = currentTime - beginTime;
-		    double runningTimeS = runningTime / 1000000000.0;
-		    if (runningTimeS > timeout)
-		        break;
 		    
 		    Event nextEvent = getNextEvent(remaining);
 			deltaTime = nextEvent.time;

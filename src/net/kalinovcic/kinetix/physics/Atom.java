@@ -6,10 +6,10 @@ import net.kalinovcic.kinetix.math.Vector2;
 
 public class Atom
 {
-	public static final int ATOM_RED = 0;
-	public static final int ATOM_GREEN = 1;
-	public static final int ATOM_BLUE = 2;
-	public static final int ATOM_BLACK = 3;
+	public static final int ATOM_REACTANT1 = 0;
+	public static final int ATOM_REACTANT2 = 1;
+	public static final int ATOM_PRODUCT1 = 2;
+	public static final int ATOM_PRODUCT2 = 3;
 	public static final int ATOM_TYPE_COUNT = 4;
 
 	public String typeName;
@@ -95,10 +95,10 @@ public class Atom
 	
 	public static Color getColor(int type)
 	{
-		if (type == Atom.ATOM_RED) return new Color(242, 5, 33);
-		if (type == Atom.ATOM_GREEN) return new Color(21, 150, 23);
-		if (type == Atom.ATOM_BLUE) return new Color(0, 130, 173);
-		if (type == Atom.ATOM_BLACK) return new Color(51, 51, 51);
+		if (type == Atom.ATOM_REACTANT1) return new Color(255, 0, 0);
+		if (type == Atom.ATOM_REACTANT2) return new Color(255, 98, 0);
+		if (type == Atom.ATOM_PRODUCT1) return new Color(0, 189, 25);
+		if (type == Atom.ATOM_PRODUCT2) return new Color(0, 101, 189);
 		return Color.GRAY;
 	}
 	
@@ -107,8 +107,8 @@ public class Atom
 	    if (other.radius > radius)
 	    	return other.attemptMerge(state, this);
 	    
-		if ((type == ATOM_RED && other.type == ATOM_GREEN) ||
-			(type == ATOM_GREEN && other.type == ATOM_RED))
+		if ((type == ATOM_REACTANT1 && other.type == ATOM_REACTANT2) ||
+			(type == ATOM_REACTANT2 && other.type == ATOM_REACTANT1))
 		{
 			state.removeAtom(this);
 			state.removeAtom(other);
@@ -124,8 +124,8 @@ public class Atom
 			state.addAtom(merged);
 			*/
 
-			Atom new1 = new Atom(ATOM_BLUE, position, velocity, radius, mass);
-			Atom new2 = new Atom(ATOM_BLACK, other.position, other.velocity, other.radius, other.mass);
+			Atom new1 = new Atom(ATOM_PRODUCT1, position, velocity, radius, mass);
+			Atom new2 = new Atom(ATOM_PRODUCT2, other.position, other.velocity, other.radius, other.mass);
 			state.addAtom(new1);
 			state.addAtom(new2);
 			

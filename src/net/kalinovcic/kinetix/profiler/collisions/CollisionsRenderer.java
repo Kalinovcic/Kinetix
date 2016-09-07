@@ -31,8 +31,8 @@ public class CollisionsRenderer
         int textHeight = g2D.getFontMetrics().getHeight();
         g2D.setColor(Color.BLACK);
         
-        int collisions = state.collisionInfo[Atom.ATOM_RED][Atom.ATOM_GREEN][0];
-        int reactions = state.collisionInfo[Atom.ATOM_RED][Atom.ATOM_GREEN][1];
+        int collisions = state.collisionInfo[Atom.ATOM_REACTANT1][Atom.ATOM_REACTANT2][0];
+        int reactions = state.collisionInfo[Atom.ATOM_REACTANT1][Atom.ATOM_REACTANT2][1];
         int total = collisions + reactions;
         double ratio = reactions / (double) total;
         g2D.drawString("# red-green collisions: " + collisions, 4, headerHeight += textHeight);
@@ -40,11 +40,11 @@ public class CollisionsRenderer
         g2D.drawString("# red-green ratio: " + String.format(Locale.US, "%.5f", ratio), 4, headerHeight += textHeight);
         headerHeight += textHeight;
         
-        g2D.drawString("# red-red collisions: " + state.collisionInfo[Atom.ATOM_RED][Atom.ATOM_RED][0], 4, headerHeight += textHeight);
-        g2D.drawString("# red-black collisions: " + state.collisionInfo[Atom.ATOM_RED][Atom.ATOM_BLACK][0], 4, headerHeight += textHeight);
-        g2D.drawString("# green-green collisions: " + state.collisionInfo[Atom.ATOM_GREEN][Atom.ATOM_GREEN][0], 4, headerHeight += textHeight);
-        g2D.drawString("# green-black collisions: " + state.collisionInfo[Atom.ATOM_GREEN][Atom.ATOM_BLACK][0], 4, headerHeight += textHeight);
-        g2D.drawString("# black-black collisions: " + state.collisionInfo[Atom.ATOM_BLACK][Atom.ATOM_BLACK][0], 4, headerHeight += textHeight);
+        g2D.drawString("# red-red collisions: " + state.collisionInfo[Atom.ATOM_REACTANT1][Atom.ATOM_REACTANT1][0], 4, headerHeight += textHeight);
+        g2D.drawString("# red-black collisions: " + state.collisionInfo[Atom.ATOM_REACTANT1][Atom.ATOM_PRODUCT2][0], 4, headerHeight += textHeight);
+        g2D.drawString("# green-green collisions: " + state.collisionInfo[Atom.ATOM_REACTANT2][Atom.ATOM_REACTANT2][0], 4, headerHeight += textHeight);
+        g2D.drawString("# green-black collisions: " + state.collisionInfo[Atom.ATOM_REACTANT2][Atom.ATOM_PRODUCT2][0], 4, headerHeight += textHeight);
+        g2D.drawString("# black-black collisions: " + state.collisionInfo[Atom.ATOM_PRODUCT2][Atom.ATOM_PRODUCT2][0], 4, headerHeight += textHeight);
         headerHeight += textHeight;
         
         g2D.dispose();
