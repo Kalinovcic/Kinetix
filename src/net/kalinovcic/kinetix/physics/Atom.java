@@ -1,19 +1,15 @@
 package net.kalinovcic.kinetix.physics;
 
-import java.awt.Color;
-
 import net.kalinovcic.kinetix.math.Vector2;
+import net.kalinovcic.kinetix.physics.reaction.Reaction;
 
 public class Atom
 {
-	public static final int ATOM_RED = 0;
-	public static final int ATOM_GREEN = 1;
-	public static final int ATOM_BLUE = 2;
-	public static final int ATOM_BLACK = 3;
-	public static final int ATOM_TYPE_COUNT = 4;
+    public static final int ATOM_RED = 0;
+    public static final int ATOM_GREEN = 1;
+    public static final int ATOM_BLACK = 2;
+    public static final int ATOM_BLUE = 3;
 
-	public String typeName;
-	public int uniqueTypeID;
 	public int type;
 	
 	public Vector2 position;
@@ -92,46 +88,41 @@ public class Atom
 		else
 			velocity.x *= -1;
 	}
+    
+    public static AtomType getType(SimulationState state, int type)
+    {
+        return state.atomTypes[type];
+    }
 	
-	public static Color getColor(int type)
+	public boolean onCollide(SimulationState state, Atom other, CollisionData data)
 	{
-		if (type == Atom.ATOM_RED) return new Color(242, 5, 33);
-		if (type == Atom.ATOM_GREEN) return new Color(21, 150, 23);
-		if (type == Atom.ATOM_BLUE) return new Color(0, 130, 173);
-		if (type == Atom.ATOM_BLACK) return new Color(51, 51, 51);
-		return Color.GRAY;
-	}
-	
-	public boolean attemptMerge(SimulationState state, Atom other)
-	{
-	    if (other.radius > radius)
-	    	return other.attemptMerge(state, this);
-	    
-		if ((type == ATOM_RED && other.type == ATOM_GREEN) ||
-			(type == ATOM_GREEN && other.type == ATOM_RED))
-		{
-			state.removeAtom(this);
-			state.removeAtom(other);
-			
-			/*
-			int mergedType = ATOM_BLACK;
-			Vector2 mergedPosition = position;
-			Vector2 mergedVelocity = velocity.clone().mul(mass / (mass + other.mass)).add(other.velocity.clone().mul(other.mass / (mass + other.mass)));
-			double mergedRadius = radius + other.radius;
-			double mergedMass = mass + other.mass;
-			
-			Atom merged = new Atom(mergedType, mergedPosition, mergedVelocity, mergedRadius, mergedMass);
-			state.addAtom(merged);
-			*/
+        AtomType atomType = getType(state, type);
+        if (atomType.reactantInReaction == null)
+            return false;
+        
+        double drs = atomType.reactantInReaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
+        if (drs < atomType.reactantInReaction.activationEnergy)
+            return false;
 
-			Atom new1 = new Atom(ATOM_BLUE, position, velocity, radius, mass);
-			Atom new2 = new Atom(ATOM_BLACK, other.position, other.velocity, other.radius, other.mass);
-			state.addAtom(new1);
-			state.addAtom(new2);
-			
-			return true;
-		}
+		state.removeAtom(this);
+		state.removeAtom(other);
 		
-		return false;
+		/*
+		int mergedType = ATOM_BLACK;
+		Vector2 mergedPosition = position;
+		Vector2 mergedVelocity = velocity.clone().mul(mass / (mass + other.mass)).add(other.velocity.clone().mul(other.mass / (mass + other.mass)));
+		double mergedRadius = radius + other.radius;
+		double mergedMass = mass + other.mass;
+		
+		Atom merged = new Atom(mergedType, mergedPosition, mergedVelocity, mergedRadius, mergedMass);
+		state.addAtom(merged);
+		*/
+
+		Atom new1 = new Atom(Atom.ATOM_BLACK, position, velocity, radius, mass);
+		Atom new2 = new Atom(Atom.ATOM_BLUE, other.position, other.velocity, other.radius, other.mass);
+		state.addAtom(new1);
+		state.addAtom(new2);
+		
+		return true;
 	}
 }

@@ -9,6 +9,7 @@ import java.util.Locale;
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.SimulationState;
+import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class AtomsOverVelocityRenderer
 {
@@ -19,7 +20,7 @@ public class AtomsOverVelocityRenderer
         this.profiler = profiler;
     }
     
-    public void displayColumns(Graphics2D g2D, int[] typeOrder, double top, double bottom, boolean stacked)
+    public void displayColumns(SimulationState state, Graphics2D g2D, int[] typeOrder, double top, double bottom, boolean stacked)
     {
     	double maximum = 0;
     	if (stacked)
@@ -27,14 +28,14 @@ public class AtomsOverVelocityRenderer
 		    for (int column = 0; column < profiler.columnCount; column++)
 		    {
 		    	double localMaximum = 0;
-	            for (int type = 0; type < Atom.ATOM_TYPE_COUNT; type++)
+	            for (int type = 0; type < Reactions.ATOM_TYPE_COUNT; type++)
 	            	localMaximum += profiler.averages[column][type];
 	        	maximum = Math.max(maximum, localMaximum);
 		    }
     	}
     	else
     	{
-	        for (int type = 0; type < Atom.ATOM_TYPE_COUNT; type++)
+	        for (int type = 0; type < Reactions.ATOM_TYPE_COUNT; type++)
 	        	maximum = Math.max(maximum, profiler.maximumAverage[type]);
     	}
 
@@ -54,7 +55,7 @@ public class AtomsOverVelocityRenderer
 	            
 	            if (stacked)
 	            {
-		            g2D.setColor(Atom.getColor(type));
+		            g2D.setColor(Atom.getType(state, type).color);
 		            g2D.fill(new Rectangle2D.Double(x, y - currentHeight, width, height));
 		            
 		            g2D.translate(x + width, y - currentHeight);
@@ -70,7 +71,7 @@ public class AtomsOverVelocityRenderer
 	            }
 	            else if (height > currentHeight)
             	{
-		            g2D.setColor(Atom.getColor(type));
+		            g2D.setColor(Atom.getType(state, type).color);
 		            g2D.fill(new Rectangle2D.Double(x, y, width, height - currentHeight));
 		            
 		            g2D.translate(x + width, y);
@@ -86,7 +87,7 @@ public class AtomsOverVelocityRenderer
             	}
             	else
             	{
-		            g2D.setColor(Atom.getColor(type));
+		            g2D.setColor(Atom.getType(state, type).color);
 		            g2D.drawLine((int) Math.round(x), (int) Math.round(y), (int) Math.round(x + width), (int) Math.round(y));
             	}
             }
@@ -118,11 +119,11 @@ public class AtomsOverVelocityRenderer
         {
         case AtomsOverVelocity.DISPLAY_SINGLE:
         {
-        	displayColumns(g2D, typeOrder, headerHeight, profiler.targetHeight, false);
+        	displayColumns(state, g2D, typeOrder, headerHeight, profiler.targetHeight, false);
         } break;
         case AtomsOverVelocity.DISPLAY_STACK:
         {
-        	displayColumns(g2D, typeOrder, headerHeight, profiler.targetHeight, true);
+        	displayColumns(state, g2D, typeOrder, headerHeight, profiler.targetHeight, true);
         } break;
         case AtomsOverVelocity.DISPLAY_SEPARATED:
         {
@@ -136,7 +137,7 @@ public class AtomsOverVelocityRenderer
         		double bottom = top + heightPerGraph;
         		
         		singleType[0] = typeOrder[typeIndex];
-        		displayColumns(g2D, singleType, top, bottom, false);
+        		displayColumns(state, g2D, singleType, top, bottom, false);
         	}
         } break;
         }

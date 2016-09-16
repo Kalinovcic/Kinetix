@@ -64,7 +64,7 @@ public class ReactionChooserWindow extends JInternalFrame
 			{
 				synchronized (Kinetix.STATE)
 				{
-					Reaction reaction = Reactions.getReactions().get(model.enabledIndex);
+					Reaction reaction = Reactions.reactions.get(model.enabledIndex);
 					
 					CommanderWindow.simulationRedRadius.setText(CommanderWindow.NUMBER_FORMAT.format(reaction.radius1));
 					CommanderWindow.simulationGreenRadius.setText(CommanderWindow.NUMBER_FORMAT.format(reaction.radius2));

@@ -12,7 +12,7 @@ public class Kinetix
     public static Reaction reaction;
     static
     {
-    	reaction = Reactions.getReactions().get(0);
+    	reaction = Reactions.reactions.get(0);
 		
 		reaction.temperature = 1000;
 		reaction.concentration1 = 0.02;

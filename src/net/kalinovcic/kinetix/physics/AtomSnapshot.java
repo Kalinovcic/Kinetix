@@ -25,9 +25,9 @@ public class AtomSnapshot
 		mass = atom.mass;
 	}
 	
-	public Color getColor()
+	public Color getColor(SimulationState state)
 	{
-		return Atom.getColor(type);
+		return Atom.getType(state, type).color;
 	}
 	
 	public Shape toShape(double deltaTime)

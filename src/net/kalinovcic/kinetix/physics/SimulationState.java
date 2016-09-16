@@ -1,8 +1,11 @@
 package net.kalinovcic.kinetix.physics;
 
+import java.awt.Color;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.kalinovcic.kinetix.Kinetix;
+import net.kalinovcic.kinetix.physics.reaction.Reactions;
 import net.kalinovcic.kinetix.simulation.LookbackUtil;
 import net.kalinovcic.kinetix.simulation.animation.Animation;
 
@@ -10,8 +13,9 @@ public class SimulationState
 {
 	public SimulationSettings settings = new SimulationSettings();
 	
+	public AtomType[] atomTypes;
 	public Set<Atom> atoms = new HashSet<Atom>();
-	public int collisionInfo[][][] = new int[Atom.ATOM_TYPE_COUNT][Atom.ATOM_TYPE_COUNT][2];
+	public int collisionInfo[][][];
 	
 	public double simulationTime = 0.0;
     public boolean paused = false;
@@ -36,8 +40,16 @@ public class SimulationState
     {
         atoms.clear();
         simulationTime = 0;
-        collisionInfo = new int[Atom.ATOM_TYPE_COUNT][Atom.ATOM_TYPE_COUNT][2];
-    	
+        collisionInfo = new int[Reactions.ATOM_TYPE_COUNT][Reactions.ATOM_TYPE_COUNT][2];
+
+        atomTypes = new AtomType[Reactions.ATOM_TYPE_COUNT];
+        atomTypes[0] = new AtomType(new Color(242,   5,  33), Kinetix.reaction);
+        atomTypes[1] = new AtomType(new Color( 21, 150,  23), Kinetix.reaction);
+        atomTypes[2] = new AtomType(new Color(  0, 130, 173), null);
+        atomTypes[3] = new AtomType(new Color( 51,  51,  51), null);
+        for (int i = 4; i < Reactions.ATOM_TYPE_COUNT; i++)
+            atomTypes[i] = new AtomType(Color.DARK_GRAY, null);
+
     	for (int i = 0; i < snapshots.length; i++)
     		snapshots[i].valid = false;
     	

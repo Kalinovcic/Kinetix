@@ -5,12 +5,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class Reactions
 {
-	private static boolean loaded = false;
-	private static List<Reaction> reactions;
+    public static final int ATOM_TYPE_COUNT;
+	public static List<Reaction> reactions;
+	
+	static
+	{
+	    loadReactions();
+	    
+	    HashSet<String> names = new HashSet<String>();
+	    for (Reaction reaction : reactions)
+	    {
+            names.add(reaction.reactant1);
+            names.add(reaction.reactant2);
+            names.add(reaction.product1);
+            names.add(reaction.product2);
+	    }
+	    
+	    ATOM_TYPE_COUNT = names.size();
+	}
 	
 	private static void loadReactions()
 	{
@@ -40,8 +57,8 @@ public class Reactions
 				
 				reaction.reactant1 = tokens[0].replaceAll("2", "₂").replaceAll("3", "₃").replaceAll("4", "₄");
 				reaction.reactant2 = tokens[1].replaceAll("2", "₂").replaceAll("3", "₃").replaceAll("4", "₄");
-				reaction.product1 = tokens[2];
-				reaction.product2 = tokens[3];
+				reaction.product1 = tokens[2].replaceAll("2", "₂").replaceAll("3", "₃").replaceAll("4", "₄");
+				reaction.product2 = tokens[3].replaceAll("2", "₂").replaceAll("3", "₃").replaceAll("4", "₄");
 				reaction.mass1 = Double.valueOf(tokens[4].replaceAll(",", "."));
 				reaction.mass2 = Double.valueOf(tokens[5].replaceAll(",", "."));
 				reaction.radius1 = Double.valueOf(tokens[6].replaceAll(",", "."));
@@ -75,16 +92,5 @@ public class Reactions
 			ex.printStackTrace();
 			System.exit(1);
 		}
-	}
-	
-	public static synchronized List<Reaction> getReactions()
-	{
-		if (!loaded)
-		{
-			loadReactions();
-			loaded = true;
-		}
-		
-		return reactions;
 	}
 }

@@ -8,6 +8,7 @@ import java.util.Locale;
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.SimulationState;
+import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class AtomsOverTimeRenderer
 {
@@ -38,14 +39,14 @@ public class AtomsOverTimeRenderer
         {
             double x1 = profiler.targetWidth * ((i - 1) / (double) (AtomsOverTime.ITERATION_COUNT - 1));
             double x2 = profiler.targetWidth * ((i - 0) / (double) (AtomsOverTime.ITERATION_COUNT - 1));
-            for (int j = 0; j < Atom.ATOM_TYPE_COUNT; j++)
+            for (int j = 0; j < Reactions.ATOM_TYPE_COUNT; j++)
             {
             	double py1 = profiler.countOverTime[i - 1][j] / (double) profiler.maximumAtomCount;
             	double py2 = profiler.countOverTime[i - 0][j] / (double) profiler.maximumAtomCount;
             	double y1 = profiler.targetHeight - py1 * (profiler.targetHeight - headerHeight);
             	double y2 = profiler.targetHeight - py2 * (profiler.targetHeight - headerHeight);
 
-                g2D.setColor(Atom.getColor(j));
+                g2D.setColor(Atom.getType(state, j).color);
                 g2D.drawLine((int) x1, (int) y1, (int) x2, (int) y2);
 
                 if (i == profiler.iteration - 1)

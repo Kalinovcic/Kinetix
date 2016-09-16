@@ -34,14 +34,14 @@ public class ReactionChooserModel extends AbstractTableModel
 	@Override
 	public int getRowCount()
 	{
-		return Reactions.getReactions().size();
+		return Reactions.reactions.size();
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex)
 	{
 		if (columnIndex == 0) return rowIndex == enabledIndex;
-		return Reactions.getReactions().get(rowIndex).partToString(columnIndex);
+		return Reactions.reactions.get(rowIndex).partToString(columnIndex);
 	}
 	
 	@Override
@@ -58,10 +58,10 @@ public class ReactionChooserModel extends AbstractTableModel
 		try
 		{
 			double v = Double.parseDouble(value);
-			if (columnIndex == 15) Reactions.getReactions().get(rowIndex).temperature = v;
-			if (columnIndex == 23) Reactions.getReactions().get(rowIndex).concentration1 = v / Reaction.cFactors[Reaction.cUnit];
-			if (columnIndex == 24) Reactions.getReactions().get(rowIndex).concentration2 = v / Reaction.cFactors[Reaction.cUnit];
-			Reactions.getReactions().get(rowIndex).recalculate();
+			if (columnIndex == 15) Reactions.reactions.get(rowIndex).temperature = v;
+			if (columnIndex == 24) Reactions.reactions.get(rowIndex).concentration1 = v / Reaction.cFactors[Reaction.cUnit];
+			if (columnIndex == 25) Reactions.reactions.get(rowIndex).concentration2 = v / Reaction.cFactors[Reaction.cUnit];
+			Reactions.reactions.get(rowIndex).recalculate();
 			fireTableDataChanged();
 		}
 		catch (Exception ex)

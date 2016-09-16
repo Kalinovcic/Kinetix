@@ -3,6 +3,7 @@ package net.kalinovcic.kinetix.profiler.atomsovervelocity;
 import net.kalinovcic.kinetix.KinetixThread;
 import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.SimulationState;
+import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class AtomsOverVelocityThread extends KinetixThread
 {
@@ -25,7 +26,7 @@ public class AtomsOverVelocityThread extends KinetixThread
     {
         if (profiler.columns == null || profiler.columns.length != profiler.frameInterval || profiler.columns[0].length != profiler.columnCount)
         {
-        	int[][][] newColumns = new int[profiler.frameInterval][profiler.columnCount][Atom.ATOM_TYPE_COUNT];
+        	int[][][] newColumns = new int[profiler.frameInterval][profiler.columnCount][Reactions.ATOM_TYPE_COUNT];
         	
         	profiler.availableFrames = 0;
         	if (profiler.columns != null)
@@ -33,7 +34,7 @@ public class AtomsOverVelocityThread extends KinetixThread
             	profiler.availableFrames = Math.min(profiler.columns.length, profiler.frameInterval);
         		for (int frame = 0; frame < profiler.availableFrames; frame++)
         			for (int column = 0; column < Math.min(profiler.columns[0].length, profiler.columnCount); column++)
-        				for (int type = 0; type < Atom.ATOM_TYPE_COUNT; type++)
+        				for (int type = 0; type < Reactions.ATOM_TYPE_COUNT; type++)
         					newColumns[frame][column][type] = profiler.columns[frame][column][type];
         	}
         	
@@ -41,10 +42,10 @@ public class AtomsOverVelocityThread extends KinetixThread
         }
         
         if (profiler.averages == null || profiler.averages.length != profiler.columnCount)
-        	profiler.averages = new double[profiler.columnCount][Atom.ATOM_TYPE_COUNT];
+        	profiler.averages = new double[profiler.columnCount][Reactions.ATOM_TYPE_COUNT];
     	
     	profiler.currentFrame %= profiler.frameInterval;
-        for (int type = 0; type < Atom.ATOM_TYPE_COUNT; type++)
+        for (int type = 0; type < Reactions.ATOM_TYPE_COUNT; type++)
 	        for (int column = 0; column < profiler.columnCount; column++)
 	        	profiler.columns[profiler.currentFrame][column][type] = 0;
         
@@ -59,7 +60,7 @@ public class AtomsOverVelocityThread extends KinetixThread
         }
         profiler.availableFrames = Math.min(profiler.availableFrames + 1, profiler.frameInterval);
         
-        for (int type = 0; type < Atom.ATOM_TYPE_COUNT; type++)
+        for (int type = 0; type < Reactions.ATOM_TYPE_COUNT; type++)
         {
             profiler.maximumAverage[type] = 0;
 	        for (int column = 0; column < profiler.columnCount; column++)

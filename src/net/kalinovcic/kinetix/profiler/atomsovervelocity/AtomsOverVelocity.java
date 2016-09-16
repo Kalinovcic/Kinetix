@@ -1,6 +1,6 @@
 package net.kalinovcic.kinetix.profiler.atomsovervelocity;
 
-import net.kalinovcic.kinetix.physics.Atom;
+import net.kalinovcic.kinetix.physics.reaction.Reactions;
 import net.kalinovcic.kinetix.profiler.Profiler;
 import net.kalinovcic.kinetix.profiler.ProfilerWindow;
 
@@ -17,7 +17,7 @@ public class AtomsOverVelocity extends Profiler
 
     public int[][][] columns = null;
     public double[][] averages = null;
-    public double[] maximumAverage = new double[Atom.ATOM_TYPE_COUNT];
+    public double[] maximumAverage = new double[Reactions.ATOM_TYPE_COUNT];
 
     public int frameInterval = 1;
     public int availableFrames;
