@@ -5,10 +5,10 @@ import net.kalinovcic.kinetix.physics.reaction.Reaction;
 
 public class Atom
 {
-    public static final int ATOM_RED = 0;
-    public static final int ATOM_GREEN = 1;
-    public static final int ATOM_BLACK = 2;
-    public static final int ATOM_BLUE = 3;
+    public static final int ATOM_REACTANT1 = 0;
+    public static final int ATOM_REACTANT2 = 1;
+    public static final int ATOM_PRODUCT1 = 2;
+    public static final int ATOM_PRODUCT2 = 3;
 
 	public int type;
 	
@@ -93,7 +93,7 @@ public class Atom
     {
         return state.atomTypes[type];
     }
-	
+
 	public boolean onCollide(SimulationState state, Atom other, CollisionData data)
 	{
         AtomType atomType = getType(state, type);
@@ -118,8 +118,8 @@ public class Atom
 		state.addAtom(merged);
 		*/
 
-		Atom new1 = new Atom(Atom.ATOM_BLACK, position, velocity, radius, mass);
-		Atom new2 = new Atom(Atom.ATOM_BLUE, other.position, other.velocity, other.radius, other.mass);
+		Atom new1 = new Atom(Atom.ATOM_PRODUCT1, position, velocity, radius, mass);
+		Atom new2 = new Atom(Atom.ATOM_PRODUCT2, other.position, other.velocity, other.radius, other.mass);
 		state.addAtom(new1);
 		state.addAtom(new2);
 		

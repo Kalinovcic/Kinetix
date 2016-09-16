@@ -1,12 +1,14 @@
 package net.kalinovcic.kinetix;
 
 import net.kalinovcic.kinetix.physics.SimulationState;
+import net.kalinovcic.kinetix.physics.TestingConfiguration;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class Kinetix
 {
     public static final SimulationState STATE = new SimulationState();
+    public static TestingConfiguration testing = null;
     public static boolean restart = true;
     
     public static Reaction reaction;

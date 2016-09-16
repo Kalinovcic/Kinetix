@@ -114,7 +114,7 @@ public class AtomsOverVelocityRenderer
         
         g2D.setFont(g2D.getFont().deriveFont(10.0f));
         
-        int[] typeOrder = new int[] { Atom.ATOM_RED, Atom.ATOM_GREEN, Atom.ATOM_BLUE, Atom.ATOM_BLACK };
+        int[] typeOrder = new int[] { Atom.ATOM_REACTANT1, Atom.ATOM_REACTANT2, Atom.ATOM_PRODUCT1, Atom.ATOM_PRODUCT2 };
         switch (profiler.displayOption)
         {
         case AtomsOverVelocity.DISPLAY_SINGLE:
