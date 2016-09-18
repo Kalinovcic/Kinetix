@@ -8,6 +8,7 @@ import javax.swing.JRootPane;
 import net.kalinovcic.kinetix.Kinetix;
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.MainWindow;
+import net.kalinovcic.kinetix.physics.AtomType;
 import net.kalinovcic.kinetix.physics.SimulationSettings;
 import net.kalinovcic.kinetix.physics.TestingConfiguration;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
@@ -34,8 +35,11 @@ import javax.swing.JLabel;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JFormattedTextField;
 import javax.swing.JTextField;
@@ -85,6 +89,10 @@ public class CommanderWindow extends JInternalFrame
     public static JTextField[] testScales;
     
     public static Reaction[] selectedReactions;
+    public static Map<String, JTextField> atomTypeCount = new HashMap<String, JTextField>();
+    public static Map<String, JTextField> atomTypeMass = new HashMap<String, JTextField>();
+    public static Map<String, JTextField> atomTypeRadius = new HashMap<String, JTextField>();
+    public static Map<String, JButton> atomTypeColor = new HashMap<String, JButton>();
     
     public CommanderWindow(MainWindow mainWindow)
     {
@@ -167,9 +175,10 @@ public class CommanderWindow extends JInternalFrame
 				synchronized (Kinetix.STATE)
 				{
 					configureSimuationAndReaction(mainWindow);
-					
-					Kinetix.STATE.settings = newSettings;
-					Kinetix.reaction = selectedReactions[0];
+
+                    Kinetix.STATE.settings = newSettings;
+                    Kinetix.STATE.reactions = newReactions;
+                    Kinetix.STATE.atomTypes = newAtomTypes;
 					Kinetix.testing = null;
 					Kinetix.restart = true;
 				}
@@ -324,7 +333,8 @@ public class CommanderWindow extends JInternalFrame
 
 					Kinetix.STATE.paused = false;
 					Kinetix.STATE.settings = newSettings;
-					Kinetix.reaction = selectedReactions[0];
+					Kinetix.STATE.reactions = newReactions;
+					Kinetix.STATE.atomTypes = newAtomTypes;
 					Kinetix.testing = configuration;
 					Kinetix.restart = true;
 				}
@@ -343,6 +353,11 @@ public class CommanderWindow extends JInternalFrame
         {
             selectedReactions = null;
 
+            atomTypeCount.clear();
+            atomTypeMass.clear();
+            atomTypeRadius.clear();
+            atomTypeColor.clear();
+            
             reactionPanel.removeAll();
             reactionPanel.add(new JLabel("(no reactions selected)"));
             
@@ -352,6 +367,11 @@ public class CommanderWindow extends JInternalFrame
         else
         {
             selectedReactions = newReactions;
+            
+            atomTypeCount.clear();
+            atomTypeMass.clear();
+            atomTypeRadius.clear();
+            atomTypeColor.clear();
             
             reactionPanel.removeAll();
 
@@ -420,6 +440,7 @@ public class CommanderWindow extends JInternalFrame
                 count.setMaximumSize(new Dimension(80, 20));
                 participantPanel.add(count);
                 participantPanel.add(Box.createHorizontalStrut(2));
+                atomTypeCount.put(participant, count);
 
                 JTextField mass = new JFormattedTextField(NUMBER_FORMAT);
                 mass.setText(NUMBER_FORMAT.format(Reactions.findMass(participant)));
@@ -428,6 +449,7 @@ public class CommanderWindow extends JInternalFrame
                 mass.setMaximumSize(new Dimension(80, 20));
                 participantPanel.add(mass);
                 participantPanel.add(Box.createHorizontalStrut(2));
+                atomTypeMass.put(participant, mass);
 
                 JTextField radius = new JFormattedTextField(NUMBER_FORMAT);
                 radius.setText(NUMBER_FORMAT.format(Reactions.findRadius(participant)));
@@ -436,6 +458,7 @@ public class CommanderWindow extends JInternalFrame
                 radius.setMaximumSize(new Dimension(80, 20));
                 participantPanel.add(radius);
                 participantPanel.add(Box.createHorizontalStrut(2));
+                atomTypeRadius.put(participant, radius);
                 
                 float colorHue = (participantIndex / (float) participants.size()) * 0.8f;
                 Color color = new Color(Color.HSBtoRGB(colorHue, 1.0f, 1.0f));
@@ -445,6 +468,7 @@ public class CommanderWindow extends JInternalFrame
                 colorChoice.setMaximumSize(new Dimension(20, 20));
                 colorChoice.setBackground(color);
                 participantPanel.add(colorChoice);
+                atomTypeColor.put(participant, colorChoice);
                 
                 colorChoice.addActionListener(new ActionListener()
                 {
@@ -522,30 +546,110 @@ public class CommanderWindow extends JInternalFrame
     }
 
     private SimulationSettings newSettings;
+    private Reaction[] newReactions;
+    private AtomType[] newAtomTypes;
     
     private void configureSimuationAndReaction(MainWindow mainWindow)
     {
     	newSettings = new SimulationSettings();
+    	newReactions = new Reaction[selectedReactions.length];
+    	newAtomTypes = new AtomType[Reactions.ATOM_TYPE_COUNT];
     	
-		try
-		{
-			newSettings.width = INTEGER_FORMAT.parse(simulationWidth.getText()).intValue();
-			newSettings.height = INTEGER_FORMAT.parse(simulationHeight.getText()).intValue();
-			if (newSettings.width < 1) throw new Exception();
-			if (newSettings.height < 1) throw new Exception();
+    	// Simulation settings
+        
+        try
+        {
+            newSettings.temperature = NUMBER_FORMAT.parse(simulationTemperature.getText()).doubleValue();
+            newSettings.width = INTEGER_FORMAT.parse(simulationWidth.getText()).intValue();
+            newSettings.height = INTEGER_FORMAT.parse(simulationHeight.getText()).intValue();
+            if (newSettings.temperature < 0.0) throw new Exception();
+            if (newSettings.width < 1) throw new Exception();
+            if (newSettings.height < 1) throw new Exception();
+        }
+        catch (Exception ex)
+        {
+            JOptionPane.showMessageDialog(mainWindow, "Invalid simulation parameters", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
+        // Atom types
+    	
+    	Set<String> atomTypes = atomTypeCount.keySet();
+    	for (String type : atomTypes)
+    	{
+    	    int unique = Reactions.uniqueAtoms.get(type);
 
-            newSettings.redCount = 100;
-            newSettings.greenCount = 100;
-			/*
-			newSettings.redCount = INTEGER_FORMAT.parse(simulationRedCount.getText()).intValue();
-			newSettings.greenCount = INTEGER_FORMAT.parse(simulationGreenCount.getText()).intValue();
-			*/
-			if (newSettings.redCount < 0) throw new Exception();
-			if (newSettings.greenCount < 0) throw new Exception();
-		}
-		catch (Exception ex)
-		{
-			JOptionPane.showMessageDialog(mainWindow, "Invalid simulation parameters", "Error", JOptionPane.ERROR_MESSAGE);
-		}
+            JTextField countField = atomTypeCount.get(type);
+            JTextField massField = atomTypeMass.get(type);
+            JTextField radiusField = atomTypeRadius.get(type);
+            JButton colorButton = atomTypeColor.get(type);
+            
+            int count = 0;
+            double mass = 0.0;
+            double radius = 0.0;
+            Color color = colorButton.getBackground();
+
+            try
+            {
+                count = INTEGER_FORMAT.parse(countField.getText()).intValue();
+                mass = NUMBER_FORMAT.parse(massField.getText()).doubleValue();
+                radius = NUMBER_FORMAT.parse(radiusField.getText()).doubleValue();
+
+                if (mass < 0.0) throw new Exception();
+                if (radius < 0.0) throw new Exception();
+                if (count < 0) throw new Exception();
+            }
+            catch (Exception ex)
+            {
+                JOptionPane.showMessageDialog(mainWindow, "Invalid simulation parameters", "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+            
+    	    newAtomTypes[unique] = new AtomType();
+
+            newAtomTypes[unique].name = type;
+            newAtomTypes[unique].unique = unique;
+    	    
+            newAtomTypes[unique].initialCount = count;
+            
+            newAtomTypes[unique].mass = mass;
+            newAtomTypes[unique].radius = radius;
+    	    newAtomTypes[unique].color = color;
+    	}
+    	
+    	// Reactions
+		
+        for (int index = 0; index < newReactions.length; index++)
+        {
+            int unique1 = Reactions.uniqueAtoms.get(selectedReactions[index].reactant1);
+            int unique2 = Reactions.uniqueAtoms.get(selectedReactions[index].reactant2);
+            
+            // Copy all new data and any information we have from the original reaction
+            newReactions[index] = new Reaction();
+            newReactions[index].reactant1 = selectedReactions[index].reactant1;
+            newReactions[index].reactant2 = selectedReactions[index].reactant2;
+            newReactions[index].product1 = selectedReactions[index].product1;
+            newReactions[index].product2 = selectedReactions[index].product2;
+            newReactions[index].mass1 = newAtomTypes[unique1].mass;
+            newReactions[index].mass2 = newAtomTypes[unique2].mass;
+            newReactions[index].radius1 = newAtomTypes[unique1].radius;
+            newReactions[index].radius2 = newAtomTypes[unique2].radius;
+            newReactions[index].radius2 = newAtomTypes[unique2].radius;
+            newReactions[index].temperatureRange_known = selectedReactions[index].temperatureRange_known;
+            newReactions[index].temperatureRange_low = selectedReactions[index].temperatureRange_low;
+            newReactions[index].temperatureRange_high = selectedReactions[index].temperatureRange_high;
+            newReactions[index].preExponentialFactor_experimental = selectedReactions[index].preExponentialFactor_experimental;
+            newReactions[index].b = selectedReactions[index].b;
+            newReactions[index].ratio = selectedReactions[index].ratio;
+
+            newReactions[index].temperature = newSettings.temperature;
+            
+            newReactions[index].concentration1 = selectedReactions[index].concentration1;
+            newReactions[index].concentration2 = selectedReactions[index].concentration2;
+            
+            newReactions[index].recalculate();
+            
+            newAtomTypes[unique1].reactantInReaction = newReactions[index];
+            newAtomTypes[unique2].reactantInReaction = newReactions[index];
+        }
     }
 }

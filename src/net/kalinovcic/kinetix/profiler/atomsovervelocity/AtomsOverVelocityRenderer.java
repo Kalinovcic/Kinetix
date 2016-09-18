@@ -6,7 +6,6 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Locale;
 
-import net.kalinovcic.kinetix.Kinetix;
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.SimulationState;
@@ -115,11 +114,15 @@ public class AtomsOverVelocityRenderer
         
         g2D.setFont(g2D.getFont().deriveFont(10.0f));
 
-        int reactant1 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant1);
-        int reactant2 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant2);
-        int product1 = Reactions.uniqueAtoms.get(Kinetix.reaction.product1);
-        int product2 = Reactions.uniqueAtoms.get(Kinetix.reaction.product2);
-        int[] typeOrder = new int[] { reactant1, reactant2, product1, product2 };
+        int typeCount = 0;
+        for (int i = 0; i < state.atomTypes.length; i++)
+            if (state.atomTypes[i] != null)
+                typeCount++;
+        int[] typeOrder = new int[typeCount];
+        typeCount = 0;
+        for (int i = 0; i < state.atomTypes.length; i++)
+            if (state.atomTypes[i] != null)
+                typeOrder[typeCount++] = i;
         
         switch (profiler.displayOption)
         {

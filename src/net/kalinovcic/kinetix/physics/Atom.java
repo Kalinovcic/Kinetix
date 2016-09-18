@@ -6,7 +6,7 @@ import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class Atom
 {
-	public int type;
+	public AtomType type;
 	
 	public Vector2 position;
 	public Vector2 velocity;
@@ -21,13 +21,13 @@ public class Atom
 	
 	public boolean toRemove = false;
 	
-	public Atom(int type, Vector2 position, Vector2 velocity, double radius, double mass)
+	public Atom(AtomType type, Vector2 position, Vector2 velocity)
 	{
 		this.type = type;
 		this.position = position;
 		this.velocity = velocity;
-		this.radius = radius;
-		this.mass = mass;
+		this.radius = type.radius;
+		this.mass = type.mass;
 	}
 	
 	public void updateCollisionTime(SimulationState state)
@@ -92,17 +92,17 @@ public class Atom
 
 	public boolean onCollide(SimulationState state, Atom other, CollisionData data)
 	{
-        AtomType atomType = getType(state, type);
-        if (atomType.reactantInReaction == null)
+        if (type.reactantInReaction == null)
             return false;
         
-        int reactant1 = Reactions.uniqueAtoms.get(atomType.reactantInReaction.reactant1);
-        int reactant2 = Reactions.uniqueAtoms.get(atomType.reactantInReaction.reactant2);
-        if ((type != reactant1 || other.type != reactant2) && (type != reactant2 || other.type != reactant1))
+        int reactant1 = Reactions.uniqueAtoms.get(type.reactantInReaction.reactant1);
+        int reactant2 = Reactions.uniqueAtoms.get(type.reactantInReaction.reactant2);
+        if ((type.unique != reactant1 || other.type.unique != reactant2) &&
+            (type.unique != reactant2 || other.type.unique != reactant1))
             return false;
         
-        double drs = atomType.reactantInReaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
-        if (drs < atomType.reactantInReaction.activationEnergy)
+        double energy = type.reactantInReaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
+        if (energy < type.reactantInReaction.activationEnergy)
             return false;
 
 		state.removeAtom(this);
@@ -119,10 +119,16 @@ public class Atom
 		state.addAtom(merged);
 		*/
 
-        int product1 = Reactions.uniqueAtoms.get(atomType.reactantInReaction.product1);
-        int product2 = Reactions.uniqueAtoms.get(atomType.reactantInReaction.product2);
-		Atom new1 = new Atom(product1, position, velocity, radius, mass);
-		Atom new2 = new Atom(product2, other.position, other.velocity, other.radius, other.mass);
+        int product1 = Reactions.uniqueAtoms.get(type.reactantInReaction.product1);
+        int product2 = Reactions.uniqueAtoms.get(type.reactantInReaction.product2);
+
+        double newV1 = Math.sqrt(2.0 * (energy * 1000.0 / Reaction.AVOGADRO / 2.0) / (state.atomTypes[product1].mass * Reaction.DALTON));
+        double newV2 = Math.sqrt(2.0 * (energy * 1000.0 / Reaction.AVOGADRO / 2.0) / (state.atomTypes[product2].mass * Reaction.DALTON));
+        // System.out.println((2.0 * (energy * 1000.0 * Reaction.AVOGADRO / 2.0)) + " " + (state.atomTypes[product2].mass * Reaction.DALTON));
+        // System.out.println(type.reactantInReaction.reducedMass + " " + data.dvnc + " " + (energy * 1000.0) + " " + newV1 + " " + newV2 + " " + state.atomTypes[product1].mass + " " + state.atomTypes[product2].mass);
+
+		Atom new1 = new Atom(state.atomTypes[product1], position, velocity.normal().mul(newV1));
+		Atom new2 = new Atom(state.atomTypes[product2], other.position, other.velocity.normal().mul(newV2));
 		state.addAtom(new1);
 		state.addAtom(new2);
 		

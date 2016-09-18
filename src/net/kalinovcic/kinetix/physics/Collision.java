@@ -51,8 +51,8 @@ public class Collision
 		atom2.velocity.set(data.v2c);
 
 		boolean merged = atom1.onCollide(state, atom2, data);
-		state.collisionInfo[atom1.type][atom2.type][merged ? 1 : 0]++;
-		state.collisionInfo[atom2.type][atom1.type][merged ? 1 : 0]++;
+		state.collisionInfo[atom1.type.unique][atom2.type.unique][merged ? 1 : 0]++;
+		state.collisionInfo[atom2.type.unique][atom1.type.unique][merged ? 1 : 0]++;
 		
 		if (merged && madeAnimation)
 		{

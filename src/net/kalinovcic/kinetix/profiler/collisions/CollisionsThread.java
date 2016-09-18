@@ -23,6 +23,7 @@ public class CollisionsThread extends KinetixThread
     @Override
     public void synchronizedUpdate(SimulationState state, double deltaTime)
     {
+        if (!state.readyToUse) return;
     	synchronized (profiler)
     	{
 	    	if (!profiler.isShowing()) return;

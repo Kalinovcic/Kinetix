@@ -37,7 +37,7 @@ public class AtomsOverTimeThread extends KinetixThread
                 profiler.countOverTime[profiler.iteration][type] = 0;
             
             for (Atom atom : state.atoms)
-                profiler.countOverTime[profiler.iteration][atom.type]++;
+                profiler.countOverTime[profiler.iteration][atom.type.unique]++;
 
             for (int type = 0; type < Reactions.ATOM_TYPE_COUNT; type++)
             {
@@ -53,6 +53,7 @@ public class AtomsOverTimeThread extends KinetixThread
     @Override
     public void synchronizedUpdate(SimulationState state, double deltaTime)
     {
+        if (!state.readyToUse) return;
     	synchronized (profiler)
     	{
             if (!state.paused) profiler.paused = false;

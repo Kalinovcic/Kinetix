@@ -42,6 +42,7 @@ public class SimulationThread extends KinetixThread
     @Override
     public void synchronizedUpdate(SimulationState state, double deltaTime)
     {
+        if (!state.readyToUse) return;
         renderer.render(state, deltaTime);
     }
 }

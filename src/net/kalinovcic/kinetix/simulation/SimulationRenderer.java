@@ -8,7 +8,6 @@ import java.util.Locale;
 
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.KinetixWindow;
-import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.AtomSnapshot;
 import net.kalinovcic.kinetix.physics.SimulationSnapshot;
 import net.kalinovcic.kinetix.physics.SimulationState;
@@ -76,7 +75,7 @@ public class SimulationRenderer
     		{
     			AtomSnapshot atom = snapshot.atoms[i];
     			
-				Color color = Atom.getType(state, atom.type).color;
+				Color color = atom.type.color;
 				g2D.setColor(color);
 				
 				Shape shape = atom.toShape(snapshotTime);

@@ -54,9 +54,7 @@ public class AtomsOverVelocityThread extends KinetixThread
             double velocity = atom.velocity.length();
             int index = (int) (velocity / profiler.velocityInterval);
             if (index < profiler.columnCount)
-            {
-            	profiler.columns[profiler.currentFrame][index][atom.type]++;
-            }
+            	profiler.columns[profiler.currentFrame][index][atom.type.unique]++;
         }
         profiler.availableFrames = Math.min(profiler.availableFrames + 1, profiler.frameInterval);
         
@@ -82,6 +80,7 @@ public class AtomsOverVelocityThread extends KinetixThread
     @Override
     public void synchronizedUpdate(SimulationState state, double deltaTime)
     {
+        if (!state.readyToUse) return;
     	synchronized (profiler)
     	{
             if (!state.paused) profiler.paused = false;

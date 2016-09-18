@@ -33,53 +33,52 @@ public class PhysicsThread extends KinetixThread
         
         final int MAXIMUM_VELOCITY = 5000;
 
-        int reactant1 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant1);
-        int reactant2 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant2);
-        int[] reactants = new int[]{ reactant1, reactant2 };
-        
         double[] sumProbabilities = new double[Reactions.ATOM_TYPE_COUNT];
         double[][] probabilities = new double[MAXIMUM_VELOCITY][Reactions.ATOM_TYPE_COUNT];
         
-        double temperature = Kinetix.reaction.temperature;
+        double temperature = state.settings.temperature;
         for (int velocity = 0; velocity < MAXIMUM_VELOCITY; velocity++)
         {
         	int velocitySq = velocity * velocity;
         	
-        	for (int type : reactants)
+        	for (AtomType type : state.atomTypes)
         	{
-        		double mass = (type == reactant1) ? Kinetix.reaction.mass1 : Kinetix.reaction.mass2;
+        	    if (type == null) continue;
+        		double mass = type.mass;
 
         		final double BOLTZMANN = 1.38064852;
         		final double DALTON = 1.660539040;
         		
-        		double a = Math.pow((mass * DALTON * 0.0001) / (2 * Math.PI * BOLTZMANN * Kinetix.reaction.temperature), 1.5);
+        		double a = Math.pow((mass * DALTON * 0.0001) / (2 * Math.PI * BOLTZMANN * temperature), 1.5);
         		double b = Math.exp(-mass * DALTON * 0.0001 * velocitySq / (2 * BOLTZMANN * temperature));
         		double probability = 4 * Math.PI * a * velocitySq * b;
         		
-        		probabilities[velocity][type] = probability;
-        		sumProbabilities[type] += probability;
+        		probabilities[velocity][type.unique] = probability;
+        		sumProbabilities[type.unique] += probability;
         	}
         }
-        
-        for (int i = 0; i < state.settings.redCount + state.settings.greenCount; i++)
+
+        for (AtomType type : state.atomTypes)
         {
-        	int type = (i < state.settings.redCount) ? reactant1 : reactant2;
-        	double radius = (type == reactant1) ? Kinetix.reaction.radius1 : Kinetix.reaction.radius2;
-        	double mass = (type == reactant1) ? Kinetix.reaction.mass1 : Kinetix.reaction.mass2;
-
-            double x = random.nextDouble()*(state.settings.width - 2*radius) + radius;
-            double y = random.nextDouble()*(state.settings.height - 2*radius) + radius;
-
-            double randomArea = random.nextDouble() * sumProbabilities[type];
-            int velocity = 0;
-            while (velocity < MAXIMUM_VELOCITY && randomArea > probabilities[velocity][type])
-            	randomArea -= probabilities[velocity++][type];
+            if (type == null) continue;
             
-            double angle = random.nextDouble() * Math.PI * 2;
-            double vx = Math.sin(angle) * velocity;
-            double vy = Math.cos(angle) * velocity;
-
-            state.addAtom(new Atom(type, new Vector2(x, y), new Vector2(vx, vy), radius, mass));
+            int count = type.initialCount;
+            for (int i = 0; i < count; i++)
+            {
+                double x = random.nextDouble() * (state.settings.width - 2 * type.radius) + type.radius;
+                double y = random.nextDouble() * (state.settings.height - 2 * type.radius) + type.radius;
+    
+                double randomArea = random.nextDouble() * sumProbabilities[type.unique];
+                int velocity = 0;
+                while (velocity < MAXIMUM_VELOCITY && randomArea > probabilities[velocity][type.unique])
+                	randomArea -= probabilities[velocity++][type.unique];
+                
+                double angle = random.nextDouble() * Math.PI * 2;
+                double vx = Math.sin(angle) * velocity;
+                double vy = Math.cos(angle) * velocity;
+    
+                state.addAtom(new Atom(type, new Vector2(x, y), new Vector2(vx, vy)));
+            }
         }
         
         if (Kinetix.testing == null)
@@ -91,8 +90,9 @@ public class PhysicsThread extends KinetixThread
     {
     	if (Kinetix.restart)
     	{
-    		Kinetix.restart = false;
     		initializeState(state);
+    		state.readyToUse = true;
+            Kinetix.restart = false;
     	}
     	
         if (state.paused) return;
@@ -103,6 +103,7 @@ public class PhysicsThread extends KinetixThread
 
         state.update(deltaTime);
         
+        /*
         if (Kinetix.testing != null)
         {
         	TestingConfiguration.TestingUnit unit = Kinetix.testing.currentUnit;
@@ -132,5 +133,6 @@ public class PhysicsThread extends KinetixThread
     			Kinetix.restart = true;
         	}
         }
+        */
     }
 }

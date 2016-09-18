@@ -32,6 +32,7 @@ public class CollisionsRenderer
         int textHeight = g2D.getFontMetrics().getHeight();
         g2D.setColor(Color.BLACK);
 
+        /*
         int reactant1 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant1);
         int reactant2 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant2);
         int product1 = Reactions.uniqueAtoms.get(Kinetix.reaction.product1);
@@ -56,6 +57,7 @@ public class CollisionsRenderer
         g2D.drawString("# green-blue collisions: " + state.collisionInfo[product1][product2][0], 4, headerHeight += textHeight);
         g2D.drawString("# blue-blue collisions: " + state.collisionInfo[product2][product2][0], 4, headerHeight += textHeight);
         headerHeight += textHeight;
+        */
         
         g2D.dispose();
 
