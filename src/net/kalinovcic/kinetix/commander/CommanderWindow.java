@@ -18,6 +18,7 @@ import net.kalinovcic.kinetix.profiler.ProfilerWindow;
 import javax.swing.JPanel;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,6 +28,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JLabel;
 
 import java.text.DecimalFormat;
@@ -63,6 +65,8 @@ public class CommanderWindow extends JInternalFrame
     {
         INTEGER_FORMAT.setGroupingUsed(false);
     }
+
+    public static MainWindow mainWindow;
     
     public static JPanel reactionPanel;
     public static JButton simulationStartButton;
@@ -71,7 +75,7 @@ public class CommanderWindow extends JInternalFrame
     public static JFormattedTextField simulationWidth;
     public static JFormattedTextField simulationHeight;
     
-    public static final int MAX_TESTS = 8;
+    public static final int MAX_TESTS = 12;
     public static int numTests = 6;
     public static JButton testDefaultButton;
     public static JButton testAddButton;
@@ -85,6 +89,7 @@ public class CommanderWindow extends JInternalFrame
     public CommanderWindow(MainWindow mainWindow)
     {
         super("Commander", false, false, false, false);
+        CommanderWindow.mainWindow = mainWindow;
         
         Dimension size = new Dimension(400, 400);
         setSize(size);
@@ -280,7 +285,7 @@ public class CommanderWindow extends JInternalFrame
         }
         
         testStartButton = new JButton("Start testing");
-        testStartButton.setBounds(10, 230, 380, 20);
+        testStartButton.setBounds(10, 330, 380, 20);
         testStartButton.setEnabled(false);
         testPanel.add(testStartButton);
 
@@ -369,8 +374,9 @@ public class CommanderWindow extends JInternalFrame
             
             JPanel participantHeaderPanel = new JPanel();
             participantHeaderPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            participantHeaderPanel.setMinimumSize(new Dimension(324, 20));
+            participantHeaderPanel.setMaximumSize(new Dimension(324, 20));
             participantHeaderPanel.setLayout(new BoxLayout(participantHeaderPanel, BoxLayout.X_AXIS));
-
             participantHeaderPanel.add(Box.createHorizontalStrut(84));
             JLabel countLabel = new JLabel("n [1]");
             countLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
@@ -392,10 +398,13 @@ public class CommanderWindow extends JInternalFrame
             reactionPanel.add(participantHeaderPanel);
             reactionPanel.add(Box.createVerticalStrut(2));
             
+            int participantIndex = 0;
             for (String participant : participants)
             {
                 JPanel participantPanel = new JPanel();
                 participantPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                participantPanel.setMinimumSize(new Dimension(346, 20));
+                participantPanel.setMaximumSize(new Dimension(346, 20));
                 participantPanel.setLayout(new BoxLayout(participantPanel, BoxLayout.X_AXIS));
                 
                 JLabel label = new JLabel(participant);
@@ -426,9 +435,35 @@ public class CommanderWindow extends JInternalFrame
                 radius.setMinimumSize(new Dimension(80, 20));
                 radius.setMaximumSize(new Dimension(80, 20));
                 participantPanel.add(radius);
+                participantPanel.add(Box.createHorizontalStrut(2));
+                
+                float colorHue = (participantIndex / (float) participants.size()) * 0.8f;
+                Color color = new Color(Color.HSBtoRGB(colorHue, 1.0f, 1.0f));
+                
+                JButton colorChoice = new ColoredButton();
+                colorChoice.setMinimumSize(new Dimension(20, 20));
+                colorChoice.setMaximumSize(new Dimension(20, 20));
+                colorChoice.setBackground(color);
+                participantPanel.add(colorChoice);
+                
+                colorChoice.addActionListener(new ActionListener()
+                {
+                    @Override
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        Color newColor = JColorChooser.showDialog(mainWindow, "Choose color", colorChoice.getBackground());
+                        if (newColor != null)
+                        {
+                            newColor = new Color(newColor.getRed(), newColor.getGreen(), newColor.getBlue());
+                            colorChoice.setBackground(newColor);
+                        }
+                    }
+                });
                 
                 reactionPanel.add(participantPanel);
                 reactionPanel.add(Box.createVerticalStrut(2));
+
+                participantIndex++;
             }
             
             simulationStartButton.setEnabled(true);
