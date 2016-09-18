@@ -28,13 +28,24 @@ public class AtomsOverTimeThread extends KinetixThread
         {
         	profiler.maximumAtomCount = 0;
         	profiler.countOverTime = new int[AtomsOverTime.ITERATION_COUNT][Reactions.ATOM_TYPE_COUNT];
+        	profiler.exists = new boolean[Reactions.ATOM_TYPE_COUNT];
         }
 
         if (profiler.iteration < AtomsOverTime.ITERATION_COUNT)
         {
-            for (int i = 0; i < Reactions.ATOM_TYPE_COUNT; i++) profiler.countOverTime[profiler.iteration][i] = 0;
-            for (Atom atom : state.atoms) profiler.countOverTime[profiler.iteration][atom.type]++;
-            for (int i = 0; i < Reactions.ATOM_TYPE_COUNT; i++) profiler.maximumAtomCount = Math.max(profiler.maximumAtomCount, profiler.countOverTime[profiler.iteration][i]);
+            for (int type = 0; type < Reactions.ATOM_TYPE_COUNT; type++)
+                profiler.countOverTime[profiler.iteration][type] = 0;
+            
+            for (Atom atom : state.atoms)
+                profiler.countOverTime[profiler.iteration][atom.type]++;
+
+            for (int type = 0; type < Reactions.ATOM_TYPE_COUNT; type++)
+            {
+                profiler.maximumAtomCount = Math.max(profiler.maximumAtomCount, profiler.countOverTime[profiler.iteration][type]);
+                if (profiler.countOverTime[profiler.iteration][type] > 0)
+                    profiler.exists[type] = true;
+            }
+            
             profiler.iteration++;
         }
     }

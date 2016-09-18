@@ -5,13 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 public class Reactions
 {
     public static final int ATOM_TYPE_COUNT;
 	public static List<Reaction> reactions;
+	public static Map<String, Integer> uniqueAtoms;
 	
 	static
 	{
@@ -26,8 +29,34 @@ public class Reactions
             names.add(reaction.product2);
 	    }
 	    
+	    uniqueAtoms = new HashMap<String, Integer>();
+	    
+	    int id = 0;
+	    for (String name : names)
+	        uniqueAtoms.put(name, id++);
+	    
 	    ATOM_TYPE_COUNT = names.size();
 	}
+    
+    public static double findMass(String atom)
+    {
+        for (Reaction reaction : reactions)
+        {
+            if (reaction.reactant1.equals(atom)) return reaction.mass1;
+            if (reaction.reactant2.equals(atom)) return reaction.mass2;
+        }
+        return 1.0;
+    }
+    
+    public static double findRadius(String atom)
+    {
+        for (Reaction reaction : reactions)
+        {
+            if (reaction.reactant1.equals(atom)) return reaction.radius1;
+            if (reaction.reactant2.equals(atom)) return reaction.radius2;
+        }
+        return 1.0;
+    }
 	
 	private static void loadReactions()
 	{

@@ -2,14 +2,10 @@ package net.kalinovcic.kinetix.physics;
 
 import net.kalinovcic.kinetix.math.Vector2;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
+import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class Atom
 {
-    public static final int ATOM_REACTANT1 = 0;
-    public static final int ATOM_REACTANT2 = 1;
-    public static final int ATOM_PRODUCT1 = 2;
-    public static final int ATOM_PRODUCT2 = 3;
-
 	public int type;
 	
 	public Vector2 position;
@@ -100,6 +96,11 @@ public class Atom
         if (atomType.reactantInReaction == null)
             return false;
         
+        int reactant1 = Reactions.uniqueAtoms.get(atomType.reactantInReaction.reactant1);
+        int reactant2 = Reactions.uniqueAtoms.get(atomType.reactantInReaction.reactant2);
+        if ((type != reactant1 || other.type != reactant2) && (type != reactant2 || other.type != reactant1))
+            return false;
+        
         double drs = atomType.reactantInReaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
         if (drs < atomType.reactantInReaction.activationEnergy)
             return false;
@@ -118,8 +119,10 @@ public class Atom
 		state.addAtom(merged);
 		*/
 
-		Atom new1 = new Atom(Atom.ATOM_PRODUCT1, position, velocity, radius, mass);
-		Atom new2 = new Atom(Atom.ATOM_PRODUCT2, other.position, other.velocity, other.radius, other.mass);
+        int product1 = Reactions.uniqueAtoms.get(atomType.reactantInReaction.product1);
+        int product2 = Reactions.uniqueAtoms.get(atomType.reactantInReaction.product2);
+		Atom new1 = new Atom(product1, position, velocity, radius, mass);
+		Atom new2 = new Atom(product2, other.position, other.velocity, other.radius, other.mass);
 		state.addAtom(new1);
 		state.addAtom(new2);
 		

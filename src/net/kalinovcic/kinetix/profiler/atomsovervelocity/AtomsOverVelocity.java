@@ -21,8 +21,8 @@ public class AtomsOverVelocity extends Profiler
 
     public int frameInterval = 1;
     public int availableFrames;
-    public double maximumVelocity = 300.0;
-    public int columnCount = 30;
+    public double maximumVelocity = 4000.0;
+    public int columnCount = 50;
     public double velocityInterval = maximumVelocity / columnCount;
 
     public boolean paused = false;

@@ -5,9 +5,10 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Locale;
 
+import net.kalinovcic.kinetix.Kinetix;
 import net.kalinovcic.kinetix.KinetixUI;
-import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.SimulationState;
+import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class CollisionsRenderer
 {
@@ -30,21 +31,30 @@ public class CollisionsRenderer
         int headerHeight = 0;
         int textHeight = g2D.getFontMetrics().getHeight();
         g2D.setColor(Color.BLACK);
+
+        int reactant1 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant1);
+        int reactant2 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant2);
+        int product1 = Reactions.uniqueAtoms.get(Kinetix.reaction.product1);
+        int product2 = Reactions.uniqueAtoms.get(Kinetix.reaction.product2);
         
-        int collisions = state.collisionInfo[Atom.ATOM_REACTANT1][Atom.ATOM_REACTANT2][0];
-        int reactions = state.collisionInfo[Atom.ATOM_REACTANT1][Atom.ATOM_REACTANT2][1];
+        int collisions = state.collisionInfo[reactant1][reactant2][0];
+        int reactions = state.collisionInfo[reactant1][reactant2][1];
         int total = collisions + reactions;
         double ratio = reactions / (double) total;
-        g2D.drawString("# red-green collisions: " + collisions, 4, headerHeight += textHeight);
-        g2D.drawString("# red-green reactions: " + reactions, 4, headerHeight += textHeight);
-        g2D.drawString("# red-green ratio: " + String.format(Locale.US, "%.5f", ratio), 4, headerHeight += textHeight);
+        g2D.drawString("# red-yellow collisions: " + collisions, 4, headerHeight += textHeight);
+        g2D.drawString("# red-yellow reactions: " + reactions, 4, headerHeight += textHeight);
+        g2D.drawString("# red-yellow ratio: " + String.format(Locale.US, "%.5f", ratio), 4, headerHeight += textHeight);
         headerHeight += textHeight;
-        
-        g2D.drawString("# red-red collisions: " + state.collisionInfo[Atom.ATOM_REACTANT1][Atom.ATOM_REACTANT1][0], 4, headerHeight += textHeight);
-        g2D.drawString("# red-black collisions: " + state.collisionInfo[Atom.ATOM_REACTANT1][Atom.ATOM_PRODUCT2][0], 4, headerHeight += textHeight);
-        g2D.drawString("# green-green collisions: " + state.collisionInfo[Atom.ATOM_REACTANT2][Atom.ATOM_REACTANT2][0], 4, headerHeight += textHeight);
-        g2D.drawString("# green-black collisions: " + state.collisionInfo[Atom.ATOM_REACTANT2][Atom.ATOM_PRODUCT2][0], 4, headerHeight += textHeight);
-        g2D.drawString("# black-black collisions: " + state.collisionInfo[Atom.ATOM_PRODUCT2][Atom.ATOM_PRODUCT2][0], 4, headerHeight += textHeight);
+
+        g2D.drawString("# red-red collisions: " + state.collisionInfo[reactant1][reactant1][0], 4, headerHeight += textHeight);
+        g2D.drawString("# red-green collisions: " + state.collisionInfo[reactant1][product1][0], 4, headerHeight += textHeight);
+        g2D.drawString("# red-blue collisions: " + state.collisionInfo[reactant1][product2][0], 4, headerHeight += textHeight);
+        g2D.drawString("# yellow-yellow collisions: " + state.collisionInfo[reactant2][reactant2][0], 4, headerHeight += textHeight);
+        g2D.drawString("# yellow-green collisions: " + state.collisionInfo[reactant2][product1][0], 4, headerHeight += textHeight);
+        g2D.drawString("# yellow-blue collisions: " + state.collisionInfo[reactant2][product2][0], 4, headerHeight += textHeight);
+        g2D.drawString("# green-green collisions: " + state.collisionInfo[product1][product1][0], 4, headerHeight += textHeight);
+        g2D.drawString("# green-blue collisions: " + state.collisionInfo[product1][product2][0], 4, headerHeight += textHeight);
+        g2D.drawString("# blue-blue collisions: " + state.collisionInfo[product2][product2][0], 4, headerHeight += textHeight);
         headerHeight += textHeight;
         
         g2D.dispose();

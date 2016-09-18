@@ -11,27 +11,34 @@ import net.kalinovcic.kinetix.MainWindow;
 import net.kalinovcic.kinetix.physics.SimulationSettings;
 import net.kalinovcic.kinetix.physics.TestingConfiguration;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
+import net.kalinovcic.kinetix.physics.reaction.Reactions;
 import net.kalinovcic.kinetix.physics.reaction.chooser.ReactionChooserWindow;
 import net.kalinovcic.kinetix.profiler.ProfilerWindow;
 
 import javax.swing.JPanel;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.HashSet;
 import java.util.Locale;
 
 import javax.swing.JFormattedTextField;
 import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+import javax.swing.JScrollPane;
 
 public class CommanderWindow extends JInternalFrame
 {
@@ -48,19 +55,19 @@ public class CommanderWindow extends JInternalFrame
 	static
 	{
 		NUMBER_FORMAT.setDecimalFormatSymbols(OTHER_SYMBOLS);
-		NUMBER_FORMAT.setGroupingUsed(false);
+        NUMBER_FORMAT.setGroupingUsed(false);
 	}
 	
     public static final NumberFormat INTEGER_FORMAT = NumberFormat.getIntegerInstance();
+    static
+    {
+        INTEGER_FORMAT.setGroupingUsed(false);
+    }
     
-    public static JFormattedTextField simulationRedCount;
-    public static JFormattedTextField simulationRedRadius;
-    public static JFormattedTextField simulationRedMass;
-    public static JFormattedTextField simulationGreenCount;
-    public static JFormattedTextField simulationGreenRadius;
-    public static JFormattedTextField simulationGreenMass;
+    public static JPanel reactionPanel;
+    public static JButton simulationStartButton;
+    public static JButton testStartButton;
     public static JFormattedTextField simulationTemperature;
-    public static JFormattedTextField simulationActivationEnergy;
     public static JFormattedTextField simulationWidth;
     public static JFormattedTextField simulationHeight;
     
@@ -73,11 +80,13 @@ public class CommanderWindow extends JInternalFrame
     public static JTextField[] testRepeats;
     public static JTextField[] testScales;
     
+    public static Reaction[] selectedReactions;
+    
     public CommanderWindow(MainWindow mainWindow)
     {
         super("Commander", false, false, false, false);
         
-        Dimension size = new Dimension(400, 300);
+        Dimension size = new Dimension(400, 400);
         setSize(size);
         setMinimumSize(size);
         setMaximumSize(size);
@@ -97,121 +106,56 @@ public class CommanderWindow extends JInternalFrame
         tabbedPane.addTab("Simulation", null, simulationPanel, null);
         simulationPanel.setLayout(null);
         
-        JButton openReaction = new JButton("Open reaction");
-        openReaction.setBounds(211, 161, 172, 23);
-        simulationPanel.add(openReaction);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setBounds(10, 11, 373, 239);
+        simulationPanel.add(scrollPane);
         
-        JButton openProfiler = new JButton("Open profiler");
-        openProfiler.setBounds(211, 190, 172, 23);
-        simulationPanel.add(openProfiler);
-        
-        JButton simulationStart = new JButton("Start");
-        simulationStart.setBounds(211, 219, 172, 23);
-        simulationPanel.add(simulationStart);
-        
-        JLabel lblRedProperties = new JLabel("Red properties...");
-        lblRedProperties.setBounds(10, 11, 143, 14);
-        simulationPanel.add(lblRedProperties);
-        
-        JLabel lblRedCount = new JLabel("Count:");
-        lblRedCount.setBounds(20, 36, 66, 14);
-        simulationPanel.add(lblRedCount);
-        
-        JLabel lblRedRadius = new JLabel("Radius [Å]:");
-        lblRedRadius.setBounds(20, 61, 66, 14);
-        simulationPanel.add(lblRedRadius);
-        
-        JLabel lblRedMass = new JLabel("Mass [g/mol]:");
-        lblRedMass.setBounds(20, 86, 66, 14);
-        simulationPanel.add(lblRedMass);
-        
-        simulationRedCount = new JFormattedTextField(INTEGER_FORMAT);
-        simulationRedCount.setText("100");
-        simulationRedCount.setBounds(96, 35, 60, 17);
-        simulationPanel.add(simulationRedCount);
-        
-        simulationRedRadius = new JFormattedTextField(NUMBER_FORMAT);
-        simulationRedRadius.setText("2");
-        simulationRedRadius.setBounds(96, 60, 60, 17);
-        simulationPanel.add(simulationRedRadius);
-        
-        simulationRedMass = new JFormattedTextField(NUMBER_FORMAT);
-        simulationRedMass.setText("30");
-        simulationRedMass.setBounds(96, 85, 60, 17);
-        simulationPanel.add(simulationRedMass);
-        
-        JLabel lblGreenProperties = new JLabel("Green properties...");
-        lblGreenProperties.setBounds(201, 11, 143, 14);
-        simulationPanel.add(lblGreenProperties);
-        
-        JLabel lblGreenCount = new JLabel("Count:");
-        lblGreenCount.setBounds(211, 36, 66, 14);
-        simulationPanel.add(lblGreenCount);
-        
-        JLabel lblGreenRadius = new JLabel("Radius [Å]:");
-        lblGreenRadius.setBounds(211, 61, 66, 14);
-        simulationPanel.add(lblGreenRadius);
-        
-        JLabel lblGreenMass = new JLabel("Mass [g⁄mol]:");
-        lblGreenMass.setBounds(211, 86, 66, 14);
-        simulationPanel.add(lblGreenMass);
-
-        simulationGreenCount = new JFormattedTextField(INTEGER_FORMAT);
-        simulationGreenCount.setText("100");
-        simulationGreenCount.setBounds(287, 35, 60, 17);
-        simulationPanel.add(simulationGreenCount);
-        
-        simulationGreenRadius = new JFormattedTextField(NUMBER_FORMAT);
-        simulationGreenRadius.setText("2.5");
-        simulationGreenRadius.setBounds(287, 60, 60, 17);
-        simulationPanel.add(simulationGreenRadius);
-        
-        simulationGreenMass = new JFormattedTextField(NUMBER_FORMAT);
-        simulationGreenMass.setText("48");
-        simulationGreenMass.setBounds(287, 85, 60, 17);
-        simulationPanel.add(simulationGreenMass);
-        
-        JLabel lblEnvironmentProperties = new JLabel("Environment properties...");
-        lblEnvironmentProperties.setBounds(10, 117, 174, 14);
-        simulationPanel.add(lblEnvironmentProperties);
+        reactionPanel = new JPanel();
+        reactionPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        reactionPanel.setLayout(new BoxLayout(reactionPanel, BoxLayout.Y_AXIS));
+        scrollPane.setViewportView(reactionPanel);
         
         JLabel lblTemperature = new JLabel("Temp [K]:");
-        lblTemperature.setBounds(20, 141, 76, 14);
+        lblTemperature.setBounds(10, 276, 76, 14);
         simulationPanel.add(lblTemperature);
         
-        JLabel lblActivationEnergy = new JLabel("Eₐ [kJ⁄mol]:");
-        lblActivationEnergy.setBounds(20, 166, 76, 14);
-        simulationPanel.add(lblActivationEnergy);
-        
         JLabel lblWidth = new JLabel("Width [px]:");
-        lblWidth.setBounds(20, 191, 76, 14);
+        lblWidth.setBounds(10, 301, 76, 14);
         simulationPanel.add(lblWidth);
         
         JLabel lblHeight = new JLabel("Height [px]:");
-        lblHeight.setBounds(20, 216, 76, 14);
+        lblHeight.setBounds(10, 326, 76, 14);
         simulationPanel.add(lblHeight);
         
         simulationTemperature = new JFormattedTextField(NUMBER_FORMAT);
         simulationTemperature.setText("1000");
-        simulationTemperature.setBounds(98, 140, 60, 17);
+        simulationTemperature.setBounds(88, 275, 60, 17);
         simulationPanel.add(simulationTemperature);
-        
-        simulationActivationEnergy = new JFormattedTextField(NUMBER_FORMAT);
-        simulationActivationEnergy.setText("200");
-        simulationActivationEnergy.setBounds(98, 165, 60, 17);
-        simulationPanel.add(simulationActivationEnergy);
         
         simulationWidth = new JFormattedTextField(INTEGER_FORMAT);
         simulationWidth.setText("600");
-        simulationWidth.setBounds(98, 190, 60, 17);
+        simulationWidth.setBounds(88, 300, 60, 17);
         simulationPanel.add(simulationWidth);
         
         simulationHeight = new JFormattedTextField(INTEGER_FORMAT);
         simulationHeight.setText("600");
-        simulationHeight.setBounds(98, 215, 60, 17);
+        simulationHeight.setBounds(88, 325, 60, 17);
         simulationPanel.add(simulationHeight);
+        
+        JButton openReaction = new JButton("Open reaction");
+        openReaction.setBounds(211, 261, 172, 23);
+        simulationPanel.add(openReaction);
+        
+        JButton openProfiler = new JButton("Open profiler");
+        openProfiler.setBounds(211, 290, 172, 23);
+        simulationPanel.add(openProfiler);
+        
+        simulationStartButton = new JButton("Start");
+        simulationStartButton.setBounds(211, 319, 172, 23);
+        simulationStartButton.setEnabled(false);
+        simulationPanel.add(simulationStartButton);
 
-        simulationStart.addActionListener(new ActionListener()
+        simulationStartButton.addActionListener(new ActionListener()
         {
 			public void actionPerformed(ActionEvent e)
 			{
@@ -220,7 +164,7 @@ public class CommanderWindow extends JInternalFrame
 					configureSimuationAndReaction(mainWindow);
 					
 					Kinetix.STATE.settings = newSettings;
-					Kinetix.reaction = newReaction;
+					Kinetix.reaction = selectedReactions[0];
 					Kinetix.testing = null;
 					Kinetix.restart = true;
 				}
@@ -335,11 +279,12 @@ public class CommanderWindow extends JInternalFrame
 	        testPanel.add(testScales[i]);
         }
         
-        JButton testStart = new JButton("Start testing");
-        testStart.setBounds(10, 230, 380, 20);
-        testPanel.add(testStart);
+        testStartButton = new JButton("Start testing");
+        testStartButton.setBounds(10, 230, 380, 20);
+        testStartButton.setEnabled(false);
+        testPanel.add(testStartButton);
 
-        testStart.addActionListener(new ActionListener()
+        testStartButton.addActionListener(new ActionListener()
         {
 			public void actionPerformed(ActionEvent e)
 			{
@@ -374,7 +319,7 @@ public class CommanderWindow extends JInternalFrame
 
 					Kinetix.STATE.paused = false;
 					Kinetix.STATE.settings = newSettings;
-					Kinetix.reaction = newReaction;
+					Kinetix.reaction = selectedReactions[0];
 					Kinetix.testing = configuration;
 					Kinetix.restart = true;
 				}
@@ -383,6 +328,112 @@ public class CommanderWindow extends JInternalFrame
         
         setTestDefaults();
         updateTestUIState();
+        
+        selectReactions(null);
+    }
+    
+    public static void selectReactions(Reaction[] newReactions)
+    {
+        if (newReactions == null || newReactions.length == 0)
+        {
+            selectedReactions = null;
+
+            reactionPanel.removeAll();
+            reactionPanel.add(new JLabel("(no reactions selected)"));
+            
+            simulationStartButton.setEnabled(false);
+            testStartButton.setEnabled(false);
+        }
+        else
+        {
+            selectedReactions = newReactions;
+            
+            reactionPanel.removeAll();
+
+            HashSet<String> participants = new HashSet<String>();
+            for (Reaction reaction : newReactions)
+            {
+                String formula = reaction.reactant1 + " + " + reaction.reactant2 + " → " + reaction.product1 + " + " + reaction.product2;
+                JLabel label = new JLabel(formula);
+                label.setAlignmentX(Component.LEFT_ALIGNMENT);
+                reactionPanel.add(label);
+
+                participants.add(reaction.reactant1);
+                participants.add(reaction.reactant2);
+                participants.add(reaction.product1);
+                participants.add(reaction.product2);
+            }
+            
+            reactionPanel.add(Box.createVerticalStrut(8));
+            //reactionPanel.add(new JSeparator());
+            
+            JPanel participantHeaderPanel = new JPanel();
+            participantHeaderPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            participantHeaderPanel.setLayout(new BoxLayout(participantHeaderPanel, BoxLayout.X_AXIS));
+
+            participantHeaderPanel.add(Box.createHorizontalStrut(84));
+            JLabel countLabel = new JLabel("n [1]");
+            countLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+            countLabel.setMinimumSize(new Dimension(80, 14));
+            countLabel.setMaximumSize(new Dimension(80, 14));
+            participantHeaderPanel.add(countLabel);
+            participantHeaderPanel.add(Box.createHorizontalStrut(2));
+            JLabel massLabel = new JLabel("M [g⁄mol]");
+            massLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+            massLabel.setMinimumSize(new Dimension(80, 14));
+            massLabel.setMaximumSize(new Dimension(80, 14));
+            participantHeaderPanel.add(massLabel);
+            participantHeaderPanel.add(Box.createHorizontalStrut(2));
+            JLabel radiusLabel = new JLabel("r [Å]");
+            radiusLabel.setAlignmentY(Component.CENTER_ALIGNMENT);
+            radiusLabel.setMinimumSize(new Dimension(80, 14));
+            radiusLabel.setMaximumSize(new Dimension(80, 14));
+            participantHeaderPanel.add(radiusLabel);
+            reactionPanel.add(participantHeaderPanel);
+            reactionPanel.add(Box.createVerticalStrut(2));
+            
+            for (String participant : participants)
+            {
+                JPanel participantPanel = new JPanel();
+                participantPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                participantPanel.setLayout(new BoxLayout(participantPanel, BoxLayout.X_AXIS));
+                
+                JLabel label = new JLabel(participant);
+                label.setAlignmentY(Component.CENTER_ALIGNMENT);
+                label.setMinimumSize(new Dimension(80, 14));
+                label.setMaximumSize(new Dimension(80, 14));
+                participantPanel.add(label);
+
+                JTextField count = new JFormattedTextField(INTEGER_FORMAT);
+                count.setText("0");
+                count.setAlignmentY(Component.CENTER_ALIGNMENT);
+                count.setMinimumSize(new Dimension(80, 20));
+                count.setMaximumSize(new Dimension(80, 20));
+                participantPanel.add(count);
+                participantPanel.add(Box.createHorizontalStrut(2));
+
+                JTextField mass = new JFormattedTextField(NUMBER_FORMAT);
+                mass.setText(NUMBER_FORMAT.format(Reactions.findMass(participant)));
+                mass.setAlignmentY(Component.CENTER_ALIGNMENT);
+                mass.setMinimumSize(new Dimension(80, 20));
+                mass.setMaximumSize(new Dimension(80, 20));
+                participantPanel.add(mass);
+                participantPanel.add(Box.createHorizontalStrut(2));
+
+                JTextField radius = new JFormattedTextField(NUMBER_FORMAT);
+                radius.setText(NUMBER_FORMAT.format(Reactions.findRadius(participant)));
+                radius.setAlignmentY(Component.CENTER_ALIGNMENT);
+                radius.setMinimumSize(new Dimension(80, 20));
+                radius.setMaximumSize(new Dimension(80, 20));
+                participantPanel.add(radius);
+                
+                reactionPanel.add(participantPanel);
+                reactionPanel.add(Box.createVerticalStrut(2));
+            }
+            
+            simulationStartButton.setEnabled(true);
+            testStartButton.setEnabled(true);
+        }
     }
     
     private void setTestDefaults()
@@ -436,46 +487,30 @@ public class CommanderWindow extends JInternalFrame
     }
 
     private SimulationSettings newSettings;
-    private Reaction newReaction;
     
     private void configureSimuationAndReaction(MainWindow mainWindow)
     {
     	newSettings = new SimulationSettings();
-    	newReaction = new Reaction();
-		
+    	
 		try
 		{
 			newSettings.width = INTEGER_FORMAT.parse(simulationWidth.getText()).intValue();
 			newSettings.height = INTEGER_FORMAT.parse(simulationHeight.getText()).intValue();
 			if (newSettings.width < 1) throw new Exception();
 			if (newSettings.height < 1) throw new Exception();
-			
+
+            newSettings.redCount = 100;
+            newSettings.greenCount = 100;
+			/*
 			newSettings.redCount = INTEGER_FORMAT.parse(simulationRedCount.getText()).intValue();
 			newSettings.greenCount = INTEGER_FORMAT.parse(simulationGreenCount.getText()).intValue();
+			*/
 			if (newSettings.redCount < 0) throw new Exception();
 			if (newSettings.greenCount < 0) throw new Exception();
-			
-			newReaction.mass1 = NUMBER_FORMAT.parse(simulationRedMass.getText()).doubleValue();
-			newReaction.mass2 = NUMBER_FORMAT.parse(simulationGreenMass.getText()).doubleValue();
-			if (newReaction.mass1 <= 0) throw new Exception();
-			if (newReaction.mass2 <= 0) throw new Exception();
-			
-			newReaction.radius1 = NUMBER_FORMAT.parse(simulationRedRadius.getText()).doubleValue();
-			newReaction.radius2 = NUMBER_FORMAT.parse(simulationGreenRadius.getText()).doubleValue();
-			if (newReaction.radius1 <= 0) throw new Exception();
-			if (newReaction.radius2 <= 0) throw new Exception();
-
-			newReaction.activationEnergy = NUMBER_FORMAT.parse(simulationActivationEnergy.getText()).doubleValue();
-			newReaction.ratio = newReaction.activationEnergy / (Reaction.IDEAL_GAS / 1000);
-			
-			newReaction.temperature = NUMBER_FORMAT.parse(simulationTemperature.getText()).doubleValue();
-			if (newReaction.temperature < 0) throw new Exception();
 		}
 		catch (Exception ex)
 		{
 			JOptionPane.showMessageDialog(mainWindow, "Invalid simulation parameters", "Error", JOptionPane.ERROR_MESSAGE);
 		}
-		
-		newReaction.recalculate();
     }
 }

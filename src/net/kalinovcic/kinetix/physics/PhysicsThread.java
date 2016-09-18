@@ -5,6 +5,7 @@ import java.util.Random;
 import net.kalinovcic.kinetix.Kinetix;
 import net.kalinovcic.kinetix.KinetixThread;
 import net.kalinovcic.kinetix.math.Vector2;
+import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class PhysicsThread extends KinetixThread
 {
@@ -31,18 +32,22 @@ public class PhysicsThread extends KinetixThread
         state.reset();
         
         final int MAXIMUM_VELOCITY = 5000;
+
+        int reactant1 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant1);
+        int reactant2 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant2);
+        int[] reactants = new int[]{ reactant1, reactant2 };
         
-        double[] sumProbabilities = new double[2];
-        double[][] probabilities = new double[MAXIMUM_VELOCITY][2];
+        double[] sumProbabilities = new double[Reactions.ATOM_TYPE_COUNT];
+        double[][] probabilities = new double[MAXIMUM_VELOCITY][Reactions.ATOM_TYPE_COUNT];
         
         double temperature = Kinetix.reaction.temperature;
         for (int velocity = 0; velocity < MAXIMUM_VELOCITY; velocity++)
         {
         	int velocitySq = velocity * velocity;
         	
-        	for (int type = 0; type < 2; type++)
+        	for (int type : reactants)
         	{
-        		double mass = (type == Atom.ATOM_REACTANT1) ? Kinetix.reaction.mass1 : Kinetix.reaction.mass2;
+        		double mass = (type == reactant1) ? Kinetix.reaction.mass1 : Kinetix.reaction.mass2;
 
         		final double BOLTZMANN = 1.38064852;
         		final double DALTON = 1.660539040;
@@ -58,9 +63,9 @@ public class PhysicsThread extends KinetixThread
         
         for (int i = 0; i < state.settings.redCount + state.settings.greenCount; i++)
         {
-        	int type = (i < state.settings.redCount) ? Atom.ATOM_REACTANT1 : Atom.ATOM_REACTANT2;
-        	double radius = (type == Atom.ATOM_REACTANT1) ? Kinetix.reaction.radius1 : Kinetix.reaction.radius2;
-        	double mass = (type == Atom.ATOM_REACTANT1) ? Kinetix.reaction.mass1 : Kinetix.reaction.mass2;
+        	int type = (i < state.settings.redCount) ? reactant1 : reactant2;
+        	double radius = (type == reactant1) ? Kinetix.reaction.radius1 : Kinetix.reaction.radius2;
+        	double mass = (type == reactant1) ? Kinetix.reaction.mass1 : Kinetix.reaction.mass2;
 
             double x = random.nextDouble()*(state.settings.width - 2*radius) + radius;
             double y = random.nextDouble()*(state.settings.height - 2*radius) + radius;
@@ -73,7 +78,7 @@ public class PhysicsThread extends KinetixThread
             double angle = random.nextDouble() * Math.PI * 2;
             double vx = Math.sin(angle) * velocity;
             double vy = Math.cos(angle) * velocity;
-            
+
             state.addAtom(new Atom(type, new Vector2(x, y), new Vector2(vx, vy), radius, mass));
         }
         
@@ -107,7 +112,9 @@ public class PhysicsThread extends KinetixThread
         	{
         		unit.timeRemaining = unit.time;
 
-                int reactions = state.collisionInfo[Atom.ATOM_REACTANT1][Atom.ATOM_REACTANT2][1];
+                int reactant1 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant1);
+                int reactant2 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant2);
+                int reactions = state.collisionInfo[reactant1][reactant2][1];
         		unit.countReactions[unit.repeat - unit.repeatRemaining] = reactions;
         		unit.repeatRemaining--;
         		if (unit.repeatRemaining <= 0)

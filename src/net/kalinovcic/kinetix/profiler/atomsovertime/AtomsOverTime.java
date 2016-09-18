@@ -13,6 +13,7 @@ public class AtomsOverTime extends Profiler
     public boolean paused = false;
     public int maximumAtomCount = 0;
     public int[][] countOverTime = null;
+    public boolean[] exists = null;
     
     public AtomsOverTime(ProfilerWindow window)
     {

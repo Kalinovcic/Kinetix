@@ -41,14 +41,12 @@ public class SimulationState
         atoms.clear();
         simulationTime = 0;
         collisionInfo = new int[Reactions.ATOM_TYPE_COUNT][Reactions.ATOM_TYPE_COUNT][2];
-
+        
         atomTypes = new AtomType[Reactions.ATOM_TYPE_COUNT];
-        atomTypes[0] = new AtomType(new Color(242,   5,  33), Kinetix.reaction);
-        atomTypes[1] = new AtomType(new Color( 21, 150,  23), Kinetix.reaction);
-        atomTypes[2] = new AtomType(new Color(  0, 130, 173), null);
-        atomTypes[3] = new AtomType(new Color( 51,  51,  51), null);
-        for (int i = 4; i < Reactions.ATOM_TYPE_COUNT; i++)
-            atomTypes[i] = new AtomType(Color.DARK_GRAY, null);
+        atomTypes[Reactions.uniqueAtoms.get(Kinetix.reaction.reactant1)] = new AtomType(new Color(255,   0,   0), Kinetix.reaction);
+        atomTypes[Reactions.uniqueAtoms.get(Kinetix.reaction.reactant2)] = new AtomType(new Color(255,  98,   0), Kinetix.reaction);
+        atomTypes[Reactions.uniqueAtoms.get(Kinetix.reaction.product1)]  = new AtomType(new Color(  0, 189,  25), null);
+        atomTypes[Reactions.uniqueAtoms.get(Kinetix.reaction.product2)]  = new AtomType(new Color(  0, 101, 189), null);
 
     	for (int i = 0; i < snapshots.length; i++)
     		snapshots[i].valid = false;
@@ -168,13 +166,13 @@ public class SimulationState
 		while (remaining > 0)
 		{
 			if (paused) return;
-		    
+
 		    Event nextEvent = getNextEvent(remaining);
 			deltaTime = nextEvent.time;
 			remaining -= deltaTime;
 			
 			passTime(deltaTime);
-			
+
 			if (nextEvent.type == EVENT_COLLISION)
 			{
 				Atom partner = nextEvent.atom.collisionPartner;				

@@ -1,5 +1,7 @@
 package net.kalinovcic.kinetix.physics.reaction.chooser;
 
+import java.util.HashSet;
+
 import javax.swing.table.AbstractTableModel;
 
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
@@ -9,7 +11,7 @@ public class ReactionChooserModel extends AbstractTableModel
 {
 	private static final long serialVersionUID = 1438709488546412748L;
 	
-	public int enabledIndex = 0;
+	public HashSet<Integer> enabledIndicies = new HashSet<Integer>();
 
 	@Override
 	public Class<?> getColumnClass(int columnIndex)
@@ -40,7 +42,7 @@ public class ReactionChooserModel extends AbstractTableModel
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex)
 	{
-		if (columnIndex == 0) return rowIndex == enabledIndex;
+		if (columnIndex == 0) return enabledIndicies.contains(rowIndex);
 		return Reactions.reactions.get(rowIndex).partToString(columnIndex);
 	}
 	
@@ -49,7 +51,10 @@ public class ReactionChooserModel extends AbstractTableModel
 	{
 		if (columnIndex == 0)
 		{
-			enabledIndex = rowIndex;
+		    if (enabledIndicies.contains(rowIndex))
+		        enabledIndicies.remove(rowIndex);
+		    else
+		        enabledIndicies.add(rowIndex);
 			fireTableDataChanged();
 		}
 		

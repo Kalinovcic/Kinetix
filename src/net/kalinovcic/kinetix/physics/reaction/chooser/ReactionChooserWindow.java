@@ -64,17 +64,13 @@ public class ReactionChooserWindow extends JInternalFrame
 			{
 				synchronized (Kinetix.STATE)
 				{
-					Reaction reaction = Reactions.reactions.get(model.enabledIndex);
-					
-					CommanderWindow.simulationRedRadius.setText(CommanderWindow.NUMBER_FORMAT.format(reaction.radius1));
-					CommanderWindow.simulationGreenRadius.setText(CommanderWindow.NUMBER_FORMAT.format(reaction.radius2));
-					
-					CommanderWindow.simulationRedMass.setText(CommanderWindow.NUMBER_FORMAT.format(reaction.mass1));
-					CommanderWindow.simulationGreenMass.setText(CommanderWindow.NUMBER_FORMAT.format(reaction.mass2));
-
-					CommanderWindow.simulationActivationEnergy.setText(CommanderWindow.NUMBER_FORMAT.format(reaction.activationEnergy));
-					CommanderWindow.simulationTemperature.setText(CommanderWindow.NUMBER_FORMAT.format(reaction.temperature));
-					
+				    Reaction[] reactions = new Reaction[model.enabledIndicies.size()];
+				    
+				    int reactionIndex = 0;
+				    for (int index : model.enabledIndicies)
+				        reactions[reactionIndex++] = Reactions.reactions.get(index);
+				    
+					CommanderWindow.selectReactions(reactions);
 					dispose();
 				}
 			}
