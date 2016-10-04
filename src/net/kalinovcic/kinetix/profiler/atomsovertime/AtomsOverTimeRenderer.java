@@ -3,7 +3,6 @@ package net.kalinovcic.kinetix.profiler.atomsovertime;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.util.Locale;
 
 import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.physics.Atom;
@@ -32,7 +31,6 @@ public class AtomsOverTimeRenderer
         int textHeight = g2D.getFontMetrics().getHeight();
         g2D.setColor(Color.BLACK);
         g2D.drawString("# atoms: " + state.atoms.size(), 4, headerHeight += textHeight);
-        g2D.drawString("Time: " + String.format(Locale.US, "%.2f", state.simulationTime) + "s", 4, headerHeight += textHeight);
         headerHeight += textHeight;
         
         for (int iter = 1; iter < profiler.iteration; iter++)

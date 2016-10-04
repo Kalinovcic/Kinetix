@@ -17,7 +17,7 @@ public class SimulationWindow extends KinetixWindow
 	
 	public SimulationWindow(KinetixThread thread, MainWindow mainWindow)
 	{
-		super(thread, mainWindow, "Simulation", 10, 10, 100, 100, false, false);
+		super(thread, mainWindow, "Simulation", 450, 20, 100, 100, false, false);
         setVisible(true);
 
         getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "TogglePause");

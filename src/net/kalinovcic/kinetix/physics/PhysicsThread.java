@@ -1,9 +1,11 @@
 package net.kalinovcic.kinetix.physics;
 
+import java.util.Locale;
 import java.util.Random;
 
 import net.kalinovcic.kinetix.Kinetix;
 import net.kalinovcic.kinetix.KinetixThread;
+import net.kalinovcic.kinetix.commander.CommanderWindow;
 import net.kalinovcic.kinetix.math.Vector2;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
@@ -97,11 +99,15 @@ public class PhysicsThread extends KinetixThread
     	
         if (state.paused) return;
 
-        double timeout = 1.0 / targetUPS;
+        double timeout = (1.0 / targetUPS) * state.settings.timeFactor;
+        // if (timeout > 1.5) timeout = 1.5; // You can't wait for more than 1.5 seconds
+        
+        deltaTime *= state.settings.timeFactor;
     	if (deltaTime > timeout)
     		deltaTime = timeout;
 
         state.update(deltaTime);
+        CommanderWindow.simluationTime.setText("Time: " + String.format(Locale.US, "%.2f", state.simulationTime) + " s");
         
         /*
         if (Kinetix.testing != null)

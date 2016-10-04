@@ -45,6 +45,8 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JScrollPane;
+import javax.swing.JCheckBox;
+import java.awt.Font;
 
 public class CommanderWindow extends JInternalFrame
 {
@@ -75,9 +77,13 @@ public class CommanderWindow extends JInternalFrame
     public static JPanel reactionPanel;
     public static JButton simulationStartButton;
     public static JButton testStartButton;
+    public static JCheckBox simulationSteric;
+    public static JFormattedTextField simulationTimeFactor;
     public static JFormattedTextField simulationTemperature;
     public static JFormattedTextField simulationWidth;
     public static JFormattedTextField simulationHeight;
+    
+    public static JLabel simluationTime;
     
     public static final int MAX_TESTS = 12;
     public static int numTests = 6;
@@ -99,11 +105,11 @@ public class CommanderWindow extends JInternalFrame
         super("Commander", false, false, false, false);
         CommanderWindow.mainWindow = mainWindow;
         
-        Dimension size = new Dimension(400, 400);
+        Dimension size = new Dimension(400, 450);
         setSize(size);
         setMinimumSize(size);
         setMaximumSize(size);
-        setLocation(620, 10);
+        setLocation(20, 20);
         
         getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         setUI(new KinetixUI(this));
@@ -127,46 +133,64 @@ public class CommanderWindow extends JInternalFrame
         reactionPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         reactionPanel.setLayout(new BoxLayout(reactionPanel, BoxLayout.Y_AXIS));
         scrollPane.setViewportView(reactionPanel);
+
+        simulationSteric = new JCheckBox("Steric");
+        simulationSteric.setBounds(6, 269, 97, 23);
+        simulationPanel.add(simulationSteric);
+        
+        JLabel lblTimeFactor = new JLabel("Time factor:");
+        lblTimeFactor.setBounds(10, 300, 76, 14);
+        simulationPanel.add(lblTimeFactor);
         
         JLabel lblTemperature = new JLabel("Temp [K]:");
-        lblTemperature.setBounds(10, 276, 76, 14);
+        lblTemperature.setBounds(10, 326, 76, 14);
         simulationPanel.add(lblTemperature);
         
         JLabel lblWidth = new JLabel("Width [px]:");
-        lblWidth.setBounds(10, 301, 76, 14);
+        lblWidth.setBounds(10, 351, 76, 14);
         simulationPanel.add(lblWidth);
         
         JLabel lblHeight = new JLabel("Height [px]:");
-        lblHeight.setBounds(10, 326, 76, 14);
+        lblHeight.setBounds(10, 376, 76, 14);
         simulationPanel.add(lblHeight);
+        
+        simulationTimeFactor = new JFormattedTextField(NUMBER_FORMAT);
+        simulationTimeFactor.setText("1");
+        simulationTimeFactor.setBounds(88, 299, 60, 17);
+        simulationPanel.add(simulationTimeFactor);
         
         simulationTemperature = new JFormattedTextField(NUMBER_FORMAT);
         simulationTemperature.setText("1000");
-        simulationTemperature.setBounds(88, 275, 60, 17);
+        simulationTemperature.setBounds(88, 325, 60, 17);
         simulationPanel.add(simulationTemperature);
         
         simulationWidth = new JFormattedTextField(INTEGER_FORMAT);
         simulationWidth.setText("600");
-        simulationWidth.setBounds(88, 300, 60, 17);
+        simulationWidth.setBounds(88, 350, 60, 17);
         simulationPanel.add(simulationWidth);
         
         simulationHeight = new JFormattedTextField(INTEGER_FORMAT);
         simulationHeight.setText("600");
-        simulationHeight.setBounds(88, 325, 60, 17);
+        simulationHeight.setBounds(88, 375, 60, 17);
         simulationPanel.add(simulationHeight);
         
         JButton openReaction = new JButton("Open reaction");
-        openReaction.setBounds(211, 261, 172, 23);
+        openReaction.setBounds(211, 311, 172, 23);
         simulationPanel.add(openReaction);
         
         JButton openProfiler = new JButton("Open profiler");
-        openProfiler.setBounds(211, 290, 172, 23);
+        openProfiler.setBounds(211, 340, 172, 23);
         simulationPanel.add(openProfiler);
         
         simulationStartButton = new JButton("Start");
-        simulationStartButton.setBounds(211, 319, 172, 23);
+        simulationStartButton.setBounds(211, 369, 172, 23);
         simulationStartButton.setEnabled(false);
         simulationPanel.add(simulationStartButton);
+        
+        simluationTime = new JLabel("Time: 0 [s]");
+        simluationTime.setFont(new Font("Tahoma", Font.BOLD, 18));
+        simluationTime.setBounds(211, 277, 172, 23);
+        simulationPanel.add(simluationTime);
 
         simulationStartButton.addActionListener(new ActionListener()
         {
@@ -559,10 +583,13 @@ public class CommanderWindow extends JInternalFrame
         
         try
         {
+            newSettings.doSteric = simulationSteric.isSelected();
+            newSettings.timeFactor = NUMBER_FORMAT.parse(simulationTimeFactor.getText()).doubleValue();
             newSettings.temperature = NUMBER_FORMAT.parse(simulationTemperature.getText()).doubleValue();
             newSettings.width = INTEGER_FORMAT.parse(simulationWidth.getText()).intValue();
             newSettings.height = INTEGER_FORMAT.parse(simulationHeight.getText()).intValue();
             if (newSettings.temperature < 0.0) throw new Exception();
+            if (newSettings.timeFactor <= 0.0) throw new Exception();
             if (newSettings.width < 1) throw new Exception();
             if (newSettings.height < 1) throw new Exception();
         }

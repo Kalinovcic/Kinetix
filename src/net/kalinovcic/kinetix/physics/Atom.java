@@ -104,6 +104,19 @@ public class Atom
         double energy = type.reactantInReaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
         if (energy < type.reactantInReaction.activationEnergy)
             return false;
+        
+        if (state.settings.doSteric)
+        {
+            type.reactantInReaction._stericRemaining -= 1.0;
+            if (type.reactantInReaction._stericRemaining <= 0)
+            {
+                type.reactantInReaction._stericRemaining += 1.0 / type.reactantInReaction.steric;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
 		state.removeAtom(this);
 		state.removeAtom(other);

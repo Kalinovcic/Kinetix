@@ -42,6 +42,11 @@ public class SimulationState
         atoms.clear();
         simulationTime = 0;
         collisionInfo = new int[Reactions.ATOM_TYPE_COUNT][Reactions.ATOM_TYPE_COUNT][2];
+        
+        for (Reaction r : reactions)
+        {
+            r._stericRemaining = 1.0 / r.steric;
+        }
 
     	for (int i = 0; i < snapshots.length; i++)
     		snapshots[i].valid = false;

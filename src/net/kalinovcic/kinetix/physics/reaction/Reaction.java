@@ -80,6 +80,8 @@ public class Reaction
 	public double rate_experimental;				// v(eksp)
 	public double rate_theoretical;					// v(teor)
 	
+	public double _stericRemaining;
+	
 	public static String partName(int i)
 	{
 		i--;

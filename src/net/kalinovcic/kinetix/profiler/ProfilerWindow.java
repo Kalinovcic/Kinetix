@@ -37,7 +37,7 @@ public class ProfilerWindow extends JInternalFrame
         setSize(size);
         setMinimumSize(size);
         setMaximumSize(size);
-        setLocation(60, 60);
+        setLocation(20, mainWindow.getHeight() - 400);
         
         getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         setUI(new KinetixUI(this));
