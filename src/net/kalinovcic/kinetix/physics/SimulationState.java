@@ -55,7 +55,6 @@ public class SimulationState
     	
     	nextSnapshotIndex = 0;
     	nextSnapshotDelta = 0;
-    	takeSnapshot();
     }
     
     public void takeSnapshot()

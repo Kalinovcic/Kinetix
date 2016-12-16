@@ -6,6 +6,8 @@ import java.util.Random;
 import net.kalinovcic.kinetix.Kinetix;
 import net.kalinovcic.kinetix.KinetixThread;
 import net.kalinovcic.kinetix.commander.CommanderWindow;
+import net.kalinovcic.kinetix.math.Distribution;
+import net.kalinovcic.kinetix.math.Distribution.Packing;
 import net.kalinovcic.kinetix.math.Vector2;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
@@ -33,7 +35,7 @@ public class PhysicsThread extends KinetixThread
         
         state.reset();
         
-        final int MAXIMUM_VELOCITY = 5000;
+        final int MAXIMUM_VELOCITY = 10000;
 
         double[] sumProbabilities = new double[Reactions.ATOM_TYPE_COUNT];
         double[][] probabilities = new double[MAXIMUM_VELOCITY][Reactions.ATOM_TYPE_COUNT];
@@ -60,27 +62,79 @@ public class PhysicsThread extends KinetixThread
         	}
         }
 
+        int equalAmountsTemp = -1;
+        boolean equalAmounts = true;
+        int[] amountPlaced = new int[Reactions.ATOM_TYPE_COUNT];
+        int totalCount = 0;
         for (AtomType type : state.atomTypes)
-        {
-            if (type == null) continue;
-            
-            int count = type.initialCount;
-            for (int i = 0; i < count; i++)
+            if (type != null)
             {
-                double x = random.nextDouble() * (state.settings.width - 2 * type.radius) + type.radius;
-                double y = random.nextDouble() * (state.settings.height - 2 * type.radius) + type.radius;
-    
-                double randomArea = random.nextDouble() * sumProbabilities[type.unique];
-                int velocity = 0;
-                while (velocity < MAXIMUM_VELOCITY && randomArea > probabilities[velocity][type.unique])
-                	randomArea -= probabilities[velocity++][type.unique];
-                
-                double angle = random.nextDouble() * Math.PI * 2;
-                double vx = Math.sin(angle) * velocity;
-                double vy = Math.cos(angle) * velocity;
-    
-                state.addAtom(new Atom(type, new Vector2(x, y), new Vector2(vx, vy)));
+                totalCount += type.initialCount;
+                amountPlaced[type.unique] = 0;
+                if (type.initialCount > 0)
+                {
+                    if (equalAmountsTemp == -1)
+                        equalAmountsTemp = type.initialCount; 
+                    else if (equalAmountsTemp != type.initialCount)
+                        equalAmounts = false;
+                }
             }
+        equalAmountsTemp = 0;
+
+        Packing packing = Distribution.findOptimalPacking(state.settings.width, state.settings.height, totalCount);
+        int gridX = 0;
+        int gridY = 0;
+        
+        for (int i = 0; i < totalCount; i++)
+        {
+            AtomType type;
+            int typeIndex;
+            if (equalAmounts)
+            {
+                do
+                {
+                    equalAmountsTemp++;
+                    if (equalAmountsTemp >= state.atomTypes.length)
+                        equalAmountsTemp = 0;
+                    typeIndex = equalAmountsTemp;
+                    type = state.atomTypes[typeIndex];
+                }
+                while (type == null || type.initialCount == 0);
+            }
+            else
+            {
+                do
+                {
+                    typeIndex = random.nextInt(state.atomTypes.length);
+                    type = state.atomTypes[typeIndex];
+                }
+                while (type == null || amountPlaced[type.unique] >= type.initialCount);
+                amountPlaced[type.unique]++;
+            }
+            
+            double x = packing.startX + packing.width * 0.5 * (gridY % 2) + packing.width * gridX;
+            double y = packing.startY + packing.height * gridY;
+            
+            gridX++;
+            if ((gridY % 2) == 0 ? (gridX >= packing.countX) : (gridX >= packing.countX - 1))
+            {
+                gridX = 0;
+                gridY++;
+            }
+            
+            // double x = random.nextDouble() * (state.settings.width - 2 * type.radius) + type.radius;
+            // double y = random.nextDouble() * (state.settings.height - 2 * type.radius) + type.radius;
+
+            double randomArea = random.nextDouble() * sumProbabilities[type.unique];
+            int velocity = 0;
+            while (velocity < MAXIMUM_VELOCITY && randomArea > probabilities[velocity][type.unique])
+                randomArea -= probabilities[velocity++][type.unique];
+            
+            double angle = random.nextDouble() * Math.PI * 2;
+            double vx = Math.sin(angle) * velocity;
+            double vy = Math.cos(angle) * velocity;
+
+            state.addAtom(new Atom(type, new Vector2(x, y), new Vector2(vx, vy)));
         }
         
         if (Kinetix.testing == null)
@@ -93,6 +147,7 @@ public class PhysicsThread extends KinetixThread
     	if (Kinetix.restart)
     	{
     		initializeState(state);
+    		state.takeSnapshot();
     		state.readyToUse = true;
             Kinetix.restart = false;
     	}
