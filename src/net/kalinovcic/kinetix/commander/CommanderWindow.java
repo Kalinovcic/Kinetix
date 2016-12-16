@@ -10,11 +10,13 @@ import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.MainWindow;
 import net.kalinovcic.kinetix.physics.AtomType;
 import net.kalinovcic.kinetix.physics.SimulationSettings;
-import net.kalinovcic.kinetix.physics.TestingConfiguration;
+import net.kalinovcic.kinetix.physics.SimulationState;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 import net.kalinovcic.kinetix.physics.reaction.chooser.ReactionChooserWindow;
 import net.kalinovcic.kinetix.profiler.ProfilerWindow;
+import net.kalinovcic.kinetix.test.TestingConfiguration;
+import net.kalinovcic.kinetix.test.TestingThread;
 
 import javax.swing.JPanel;
 
@@ -203,7 +205,6 @@ public class CommanderWindow extends JInternalFrame
                     Kinetix.STATE.settings = newSettings;
                     Kinetix.STATE.reactions = newReactions;
                     Kinetix.STATE.atomTypes = newAtomTypes;
-					Kinetix.testing = null;
 					Kinetix.restart = true;
 				}
 			}
@@ -336,18 +337,16 @@ public class CommanderWindow extends JInternalFrame
 					{
 						TestingConfiguration.TestingUnit unit = new TestingConfiguration.TestingUnit();
 						if (i == 0)
-							configuration.firstUnit = configuration.currentUnit = unit;
+							configuration.head = unit;
 						else
 							previousUnit.next = unit;
 						previousUnit = unit;
 
 						try
 						{
-							unit.time = unit.timeRemaining = NUMBER_FORMAT.parse(testTimes[i].getText()).doubleValue();
-							unit.repeat = unit.repeatRemaining = INTEGER_FORMAT.parse(testRepeats[i].getText()).intValue();
+							unit.time = NUMBER_FORMAT.parse(testTimes[i].getText()).doubleValue();
+							unit.repeat = INTEGER_FORMAT.parse(testRepeats[i].getText()).intValue();
 							unit.scale = NUMBER_FORMAT.parse(testScales[i].getText()).doubleValue();
-							
-							unit.countReactions = new int[unit.repeat];
 						}
 						catch (Exception ex)
 						{
@@ -355,12 +354,12 @@ public class CommanderWindow extends JInternalFrame
 						}
 					}
 
-					Kinetix.STATE.paused = false;
-					Kinetix.STATE.settings = newSettings;
-					Kinetix.STATE.reactions = newReactions;
-					Kinetix.STATE.atomTypes = newAtomTypes;
-					Kinetix.testing = configuration;
-					Kinetix.restart = true;
+					SimulationState state = new SimulationState();
+					state.paused = false;
+					state.settings = newSettings;
+					state.reactions = newReactions;
+					state.atomTypes = newAtomTypes;
+					new TestingThread(state, configuration).run();
 				}
 			}
 		});

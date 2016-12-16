@@ -25,6 +25,7 @@ public class SimulationState
     
     public Atom highlightAtom;
     
+    public boolean doesSnapshots;
     public SimulationSnapshot[] snapshots;
     public double nextSnapshotDelta;
     public int nextSnapshotIndex;
@@ -59,6 +60,9 @@ public class SimulationState
     
     public void takeSnapshot()
     {
+    	if (!doesSnapshots)
+    		return;
+    	
     	if (pauseInSnapshots > 0)
     	{
     		pauseInSnapshots--;
