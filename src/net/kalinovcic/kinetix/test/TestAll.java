@@ -12,7 +12,7 @@ import net.kalinovcic.kinetix.test.TestingConfiguration.TestingUnit;
 public class TestAll
 {
     private static final int TEMP_DIV = 10;
-    private static final int[] COUNTS = new int[] { 50, 100, 200, 500 };
+    private static final int[] COUNTS = new int[] { 100 };
     private static final double TIME = 60.0;
     private static final int REPEAT = 100;
     
