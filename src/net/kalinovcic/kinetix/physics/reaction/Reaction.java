@@ -182,4 +182,39 @@ public class Reaction
 		rate_experimental = speedCoefficient_experimental * concentration1 * concentration2;
 		rate_theoretical = speedCoefficient_theoretical * concentration1 * concentration2;
 	}
+	
+	public Reaction clone()
+	{
+	    Reaction n = new Reaction();
+	    n.reactant1 = reactant1;
+	    n.reactant2 = reactant2;
+	    n.product1 = product1;
+	    n.product2 = product2;
+	    n.mass1 = mass1;
+	    n.mass2 = mass2;
+	    n.radius1 = radius1;
+	    n.radius2 = radius2;
+	    n.temperatureRange_low = temperatureRange_low;
+	    n.temperatureRange_high = temperatureRange_high;
+	    n.temperatureRange_known = temperatureRange_known;
+	    n.preExponentialFactor_experimental = preExponentialFactor_experimental;
+	    n.b = b;
+	    n.ratio = ratio;
+	    n.reducedMass = reducedMass;
+	    n.sigma = sigma;
+	    n.activationEnergy = activationEnergy;
+	    n.temperature = temperature;
+	    n.relativeSpeed = relativeSpeed;
+	    n.x = x;
+	    n.expMinusX = expMinusX;
+	    n.preExponentialFactor_theoretical = preExponentialFactor_theoretical;
+	    n.speedCoefficient_experimental = speedCoefficient_experimental;
+	    n.speedCoefficient_theoretical = speedCoefficient_theoretical;
+	    n.steric = steric;
+	    n.concentration1 = concentration1;
+	    n.concentration2 = concentration2;
+	    n.rate_experimental = rate_experimental;
+	    n.rate_theoretical = rate_theoretical;
+	    return n;
+	}
 }

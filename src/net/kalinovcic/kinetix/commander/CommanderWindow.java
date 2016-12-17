@@ -10,11 +10,11 @@ import net.kalinovcic.kinetix.KinetixUI;
 import net.kalinovcic.kinetix.MainWindow;
 import net.kalinovcic.kinetix.physics.AtomType;
 import net.kalinovcic.kinetix.physics.SimulationSettings;
-import net.kalinovcic.kinetix.physics.SimulationState;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 import net.kalinovcic.kinetix.physics.reaction.chooser.ReactionChooserWindow;
 import net.kalinovcic.kinetix.profiler.ProfilerWindow;
+import net.kalinovcic.kinetix.test.TestAll;
 import net.kalinovcic.kinetix.test.TestingConfiguration;
 import net.kalinovcic.kinetix.test.TestingThread;
 
@@ -322,6 +322,11 @@ public class CommanderWindow extends JInternalFrame
         testStartButton.setBounds(10, 330, 380, 20);
         testStartButton.setEnabled(false);
         testPanel.add(testStartButton);
+        
+        JButton testAllButton = new JButton("Test all");
+        testAllButton.setBounds(10, 356, 380, 20);
+        testAllButton.setEnabled(true);
+        testPanel.add(testAllButton);
 
         testStartButton.addActionListener(new ActionListener()
         {
@@ -350,19 +355,33 @@ public class CommanderWindow extends JInternalFrame
 						}
 						catch (Exception ex)
 						{
-							JOptionPane.showMessageDialog(mainWindow, "Invalid simulation parameters", "Error", JOptionPane.ERROR_MESSAGE);
+						    JOptionPane.showMessageDialog(mainWindow, "Invalid simulation parameters", "Error", JOptionPane.ERROR_MESSAGE);
+						    return;
 						}
-					}
+						
+                        if (newReactions.length > 1)
+                        {
+                            JOptionPane.showMessageDialog(mainWindow, "Testing only permits one reaction", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
 
-					SimulationState state = new SimulationState();
-					state.paused = false;
-					state.settings = newSettings;
-					state.reactions = newReactions;
-					state.atomTypes = newAtomTypes;
-					new TestingThread(state, configuration).run();
+                        unit.settings = newSettings;
+                        unit.reaction = newReactions[0];
+                        unit.atomTypes = newAtomTypes;
+					}
+					
+					new TestingThread(mainWindow, configuration).start();
 				}
 			}
 		});
+        
+        testAllButton.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                TestAll.testAll(mainWindow);
+            }
+        });
         
         setTestDefaults();
         updateTestUIState();
@@ -649,29 +668,13 @@ public class CommanderWindow extends JInternalFrame
             int unique1 = Reactions.uniqueAtoms.get(selectedReactions[index].reactant1);
             int unique2 = Reactions.uniqueAtoms.get(selectedReactions[index].reactant2);
             
-            // Copy all new data and any information we have from the original reaction
-            newReactions[index] = new Reaction();
-            newReactions[index].reactant1 = selectedReactions[index].reactant1;
-            newReactions[index].reactant2 = selectedReactions[index].reactant2;
-            newReactions[index].product1 = selectedReactions[index].product1;
-            newReactions[index].product2 = selectedReactions[index].product2;
+            newReactions[index] = selectedReactions[index].clone();
             newReactions[index].mass1 = newAtomTypes[unique1].mass;
             newReactions[index].mass2 = newAtomTypes[unique2].mass;
             newReactions[index].radius1 = newAtomTypes[unique1].radius;
             newReactions[index].radius2 = newAtomTypes[unique2].radius;
             newReactions[index].radius2 = newAtomTypes[unique2].radius;
-            newReactions[index].temperatureRange_known = selectedReactions[index].temperatureRange_known;
-            newReactions[index].temperatureRange_low = selectedReactions[index].temperatureRange_low;
-            newReactions[index].temperatureRange_high = selectedReactions[index].temperatureRange_high;
-            newReactions[index].preExponentialFactor_experimental = selectedReactions[index].preExponentialFactor_experimental;
-            newReactions[index].b = selectedReactions[index].b;
-            newReactions[index].ratio = selectedReactions[index].ratio;
-
             newReactions[index].temperature = newSettings.temperature;
-            
-            newReactions[index].concentration1 = selectedReactions[index].concentration1;
-            newReactions[index].concentration2 = selectedReactions[index].concentration2;
-            
             newReactions[index].recalculate();
             
             newAtomTypes[unique1].reactantInReaction = newReactions[index];

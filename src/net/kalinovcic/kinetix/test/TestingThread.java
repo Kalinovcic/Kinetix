@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.swing.JFileChooser;
 
+import net.kalinovcic.kinetix.MainWindow;
 import net.kalinovcic.kinetix.physics.SimulationInitialization;
 import net.kalinovcic.kinetix.physics.SimulationState;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
@@ -17,24 +18,47 @@ import net.kalinovcic.kinetix.test.TestingConfiguration.TestingUnit;
 
 public class TestingThread extends Thread
 {
+    public MainWindow mainWindow;
 	public SimulationState state;
 	public TestingConfiguration configuration;
+	public TestingWindow window;
 	
 	public File file;
 	public FileWriter fileWriter;
 	public BufferedWriter bufferedWriter;
 	
-	public Reaction theReaction;
 	public int theReactant1;
 	public int theReactant2;
 
 	public List<Double> times;
 	public List<Double> averages;
 	
-	public TestingThread(SimulationState state, TestingConfiguration configuration)
+	public double testingCurrentTime = 0.0;
+	public double testingTotalTime = 0.0;
+    public int testingCurrentStep = 0;
+    public int testingTotalSteps = 0;
+	public boolean testingFinished = false;
+	
+	public TestingUnit unit;
+    public int unitIndex = 0;
+    public int unitRepeat = 0;
+    public double stepCurrentTime = 0.0;
+    public double stepTime = 0;
+	
+	public TestingThread(MainWindow mainWindow, TestingConfiguration configuration)
 	{
-		this.state = state;
+	    this.mainWindow = mainWindow;
 		this.configuration = configuration;
+	}
+	
+	private void unitHeader() throws IOException
+	{
+	    bufferedWriter.write("UNIT\n");
+        bufferedWriter.write(String.format("time=%.2f repeat=%d\n", unit.time, unit.repeat));
+        bufferedWriter.write(String.format("temp=%.2f N1=%d N2=%d\n", unit.reaction.temperature, unit.atomTypes[theReactant1].initialCount, unit.atomTypes[theReactant2].initialCount));
+        bufferedWriter.write(String.format("%s + %s -> %s + %s\n", Reactions.simpleName(unit.reaction.reactant1), Reactions.simpleName(unit.reaction.reactant2),
+                                                                   Reactions.simpleName(unit.reaction.product1), Reactions.simpleName(unit.reaction.product2)));
+        bufferedWriter.write("\n");
 	}
 	
 	private void single(double time) throws IOException
@@ -46,14 +70,22 @@ public class TestingThread extends Thread
 		
 		int index = 0;
 		double current = 0;
+		double update = 1.0;
 		while (current < time)
 		{
-			double stepTime = 1 / 5.0;
-			if (time < 2)
-				stepTime = 1 / 20.0;
+			double stepTime = 1 / 20.0;
 			
 			double delta = Math.min(time - current, stepTime);
 			current += delta;
+			testingCurrentTime += delta;
+			stepCurrentTime += delta;
+			update -= delta;
+			if (update < 0)
+			{
+			    while (update < 0)
+			        update += 1.0;
+			    window.update();
+			}
 
 	        state.update(delta);
 	        
@@ -90,28 +122,53 @@ public class TestingThread extends Thread
     		file = chooser.getSelectedFile();
 			fileWriter = new FileWriter(file);
 			bufferedWriter = new BufferedWriter(fileWriter);
-    	
-	    	for (Reaction reaction : state.reactions)
-	    		if (reaction != null)
-	    		{
-	    			theReaction = reaction;
-	    			theReactant1 = Reactions.uniqueAtoms.get(theReaction.reactant1);
-	    			theReactant2 = Reactions.uniqueAtoms.get(theReaction.reactant2);
-	    			break;
-	    		}
+    
+	    	{
+	    	    TestingUnit unit = configuration.head;
+	    	    while (unit != null)
+	    	    {
+	    	        testingTotalTime += unit.repeat * unit.time;
+	    	        testingTotalSteps += unit.repeat;
+	                unit = unit.next;
+	    	    }
+	    	}
 	    	
-	    	TestingUnit unit = configuration.head;
+	        window = new TestingWindow(mainWindow, this);
+	    	
+	    	unitIndex = 0;
+	    	testingCurrentStep = 0;
+	    	testingCurrentTime = 0.0;
+	    	
+	    	unit = configuration.head;
 	    	while (unit != null)
 	    	{
+	    	    state = new SimulationState();
+                state.paused = false;
+                state.settings = unit.settings;
+                state.reactions = new Reaction[] { unit.reaction };
+                state.atomTypes = unit.atomTypes;
+                theReactant1 = Reactions.uniqueAtoms.get(unit.reaction.reactant1);
+                theReactant2 = Reactions.uniqueAtoms.get(unit.reaction.reactant2);
+                window.unitUpdate();
+	    	    
 	    		times = new ArrayList<Double>();
 	    		averages = new ArrayList<Double>();
 	    		
-	    		bufferedWriter.write("UNIT: time " + String.format("%.2f", unit.time) + " repeat " + unit.repeat + "\n\n");
-	    		
+	    		unitHeader();
+
+	    		unitRepeat = 0;
+	    		stepTime = unit.time;
+                unitIndex++;
 	    		for (int i = 0; i < unit.repeat; i++)
 	    		{
+                    testingCurrentStep++;
+                    unitRepeat++;
+                    stepCurrentTime = 0.0;
+                    window.update();
+                    
 	    			single(unit.time);
 	    			bufferedWriter.flush();
+	    	        window.update();
 	    		}
 
 	    		bufferedWriter.write("\n");
@@ -124,6 +181,9 @@ public class TestingThread extends Thread
 	    		
 	    		unit = unit.next;
 	    	}
+	    	
+	    	testingFinished = true;
+	    	window.update();
 
 			bufferedWriter.close();
 			fileWriter.close();
@@ -132,8 +192,6 @@ public class TestingThread extends Thread
 		{
 			ex.printStackTrace();
 		}
-    	
-    	System.out.println("Done");
     	
     	/*
     	unit.timeRemaining -= deltaTime;

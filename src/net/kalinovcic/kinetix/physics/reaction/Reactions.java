@@ -37,6 +37,11 @@ public class Reactions
 	    
 	    ATOM_TYPE_COUNT = names.size();
 	}
+	
+	public static String simpleName(String name)
+	{
+	    return name.replaceAll("₂", "2").replaceAll("₃", "3").replaceAll("₄", "4");
+	}
     
     public static double findMass(String atom)
     {
