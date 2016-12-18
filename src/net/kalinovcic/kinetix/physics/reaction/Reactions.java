@@ -36,6 +36,14 @@ public class Reactions
 	        uniqueAtoms.put(name, id++);
 	    
 	    ATOM_TYPE_COUNT = names.size();
+	    
+        for (Reaction reaction : reactions)
+        {
+            reaction.reactant1_unique = uniqueAtoms.get(reaction.reactant1);
+            reaction.reactant2_unique = uniqueAtoms.get(reaction.reactant2);
+            reaction.product1_unique = uniqueAtoms.get(reaction.product1);
+            reaction.product2_unique = uniqueAtoms.get(reaction.product2);
+        }
 	}
 	
 	public static String simpleName(String name)

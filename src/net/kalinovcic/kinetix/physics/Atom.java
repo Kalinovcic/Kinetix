@@ -2,7 +2,6 @@ package net.kalinovcic.kinetix.physics;
 
 import net.kalinovcic.kinetix.math.Vector2;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
-import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class Atom
 {
@@ -95,8 +94,8 @@ public class Atom
         if (type.reactantInReaction == null)
             return false;
         
-        int reactant1 = Reactions.uniqueAtoms.get(type.reactantInReaction.reactant1);
-        int reactant2 = Reactions.uniqueAtoms.get(type.reactantInReaction.reactant2);
+        int reactant1 = type.reactantInReaction.reactant1_unique;
+        int reactant2 = type.reactantInReaction.reactant2_unique;
         if ((type.unique != reactant1 || other.type.unique != reactant2) &&
             (type.unique != reactant2 || other.type.unique != reactant1))
             return false;
@@ -132,8 +131,8 @@ public class Atom
 		state.addAtom(merged);
 		*/
 
-        int product1 = Reactions.uniqueAtoms.get(type.reactantInReaction.product1);
-        int product2 = Reactions.uniqueAtoms.get(type.reactantInReaction.product2);
+        int product1 = type.reactantInReaction.product1_unique;
+        int product2 = type.reactantInReaction.product2_unique;
 
         double newV1 = Math.sqrt(2.0 * (energy * 1000.0 / Reaction.AVOGADRO / 2.0) / (state.atomTypes[product1].mass * Reaction.DALTON));
         double newV2 = Math.sqrt(2.0 * (energy * 1000.0 / Reaction.AVOGADRO / 2.0) / (state.atomTypes[product2].mass * Reaction.DALTON));

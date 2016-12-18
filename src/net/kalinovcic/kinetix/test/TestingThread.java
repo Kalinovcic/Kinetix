@@ -44,6 +44,8 @@ public class TestingThread extends Thread
     public int unitRepeat = 0;
     public double stepCurrentTime = 0.0;
     public double stepTime = 0;
+    
+    public double averageStepTime;
 	
 	public TestingThread(MainWindow mainWindow, TestingConfiguration configuration)
 	{
@@ -63,11 +65,15 @@ public class TestingThread extends Thread
 	
 	private void single(double time) throws IOException
 	{
+	    long stepTimeStart = System.nanoTime();
+	    
     	SimulationInitialization.initialize(state);
 		state.doesSnapshots = false;
 		state.readyToUse = true;
 		state.paused = false;
-		
+
+        bufferedWriter.write("STEP ");
+        
 		int index = 0;
 		double current = 0;
 		double update = 1.0;
@@ -103,6 +109,10 @@ public class TestingThread extends Thread
 		}
 		
 		bufferedWriter.write("\n");
+		
+		long stepTimeEnd = System.nanoTime();
+		double stepTime = (stepTimeEnd - stepTimeStart) / 1000000000.0;
+		averageStepTime = (averageStepTime * (testingCurrentStep - 1) + stepTime) / testingCurrentStep;
 	}
 	
     @Override
@@ -164,7 +174,7 @@ public class TestingThread extends Thread
                     testingCurrentStep++;
                     unitRepeat++;
                     stepCurrentTime = 0.0;
-                    window.update();
+                    window.stepUpdate();
                     
 	    			single(unit.time);
 	    			bufferedWriter.flush();
@@ -177,7 +187,7 @@ public class TestingThread extends Thread
 	    		bufferedWriter.write("\n");
 	    		for (Double value : averages)
 	    			bufferedWriter.write(String.format("%.2f\t", value.doubleValue() / (double) unit.repeat));
-	    		bufferedWriter.write("\n");
+                bufferedWriter.write("\n\n");
 	    		
 	    		unit = unit.next;
 	    	}

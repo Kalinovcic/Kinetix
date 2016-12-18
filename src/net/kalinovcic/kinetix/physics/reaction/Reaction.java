@@ -79,7 +79,11 @@ public class Reaction
 	
 	public double rate_experimental;				// v(eksp)
 	public double rate_theoretical;					// v(teor)
-	
+
+    public int reactant1_unique;
+    public int reactant2_unique;
+    public int product1_unique;
+    public int product2_unique;
 	public double _stericRemaining;
 	
 	public static String partName(int i)
@@ -215,6 +219,10 @@ public class Reaction
 	    n.concentration2 = concentration2;
 	    n.rate_experimental = rate_experimental;
 	    n.rate_theoretical = rate_theoretical;
+        n.reactant1_unique = reactant1_unique;
+        n.reactant2_unique = reactant2_unique;
+        n.product1_unique = product1_unique;
+        n.product2_unique = product2_unique;
 	    return n;
 	}
 }

@@ -41,7 +41,7 @@ public class TestAll
         unit.settings = new SimulationSettings();
         unit.settings.doSteric = false;
         unit.settings.timeFactor = 1.0;
-        unit.settings.temperature = unit.reaction.temperatureRange_known ? unit.reaction.temperatureRange_high : 1000;
+        unit.settings.temperature = temperature;
         unit.settings.width = 1000;
         unit.settings.height = 1000;
         
@@ -67,7 +67,7 @@ public class TestAll
             if (reaction.temperatureRange_known)
             {
                 tempBegin = reaction.temperatureRange_low;
-                tempBegin = reaction.temperatureRange_high;
+                tempEnd = reaction.temperatureRange_high;
             }
             
             for (int i = 0; i <= TEMP_DIV; i++)

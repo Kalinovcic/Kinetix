@@ -121,7 +121,8 @@ public class SimulationState
 		
 		for (Atom atom : atoms)
 		{
-			atom.position.add(atom.velocity.clone().mul(deltaTime));
+            atom.position.x += atom.velocity.x * deltaTime;
+            atom.position.y += atom.velocity.y * deltaTime;
 			atom.wallTime -= deltaTime;
 			if (atom.collisionTime >= 0.0)
 				atom.collisionTime -= deltaTime;
@@ -139,10 +140,12 @@ public class SimulationState
 		public int type = EVENT_NONE;
 	}
 	
-	public Event getNextEvent(double deltaTime)
+    private Event nextEvent = new Event();
+	public void getNextEvent(double deltaTime)
 	{
-		Event nextEvent = new Event();
+	    nextEvent.atom = null;
 		nextEvent.time = deltaTime;
+		nextEvent.type = EVENT_NONE;
 		
 		for (Atom atom : atoms)
 			if (atom.collisionTime >= 0.0 && atom.collisionTime < nextEvent.time)
@@ -159,8 +162,6 @@ public class SimulationState
 				nextEvent.type = EVENT_WALL;
 				nextEvent.time = atom.wallTime;
 			}
-		
-		return nextEvent;
 	}
 	
 	public void update(double deltaTime)
@@ -170,7 +171,7 @@ public class SimulationState
 		{
 			if (paused) return;
 
-		    Event nextEvent = getNextEvent(remaining);
+		    getNextEvent(remaining);
 			deltaTime = nextEvent.time;
 			remaining -= deltaTime;
 			

@@ -72,6 +72,19 @@ public class TestingWindow extends JInternalFrame
 	public void unitUpdate()
 	{
 	    formula.setText(tester.unit.reaction.reactant1 + " + " + tester.unit.reaction.reactant2 + " → " + tester.unit.reaction.product1 + " + " + tester.unit.reaction.product2);
+        status2.setText(String.format("time=%.2f, temp=%.2f, N(%s)=%d, N(%s)=%d",
+                tester.stepTime, tester.unit.reaction.temperature,
+                tester.unit.reaction.reactant1, tester.state.atomTypes[tester.theReactant1].initialCount,
+                tester.unit.reaction.reactant2, tester.state.atomTypes[tester.theReactant2].initialCount));
+	}
+	
+	public void stepUpdate()
+	{
+	    int remaining = (int)((tester.testingTotalSteps - tester.testingCurrentStep) * tester.averageStepTime);
+        int hours = remaining / 60 / 60;
+        int minutes = remaining / 60 % 60;
+        int seconds = remaining % 60;
+        status1.setText(String.format("unit %d, step %d (%02d:%02d:%02d, %.2f s/step)", tester.unitIndex, tester.unitRepeat, hours, minutes, seconds, tester.averageStepTime));
 	}
 	
 	public void update()
@@ -83,11 +96,6 @@ public class TestingWindow extends JInternalFrame
     	    progressBar.setString(String.format("%d / %d (%d%% : %d%%)", tester.testingCurrentStep, tester.testingTotalSteps,
     	                                        (int)(tester.testingCurrentTime / tester.testingTotalTime * 100),
     	                                        (int)(tester.stepCurrentTime / tester.stepTime * 100)));
-    	    status1.setText(String.format("unit %d, step %d", tester.unitIndex, tester.unitRepeat));
-    	    status2.setText(String.format("time=%.2f, temp=%.2f, N(%s)=%d, N(%s)=%d",
-                            	          tester.stepTime, tester.unit.reaction.temperature,
-                                          tester.unit.reaction.reactant1, tester.state.atomTypes[tester.theReactant1].initialCount,
-                                          tester.unit.reaction.reactant2, tester.state.atomTypes[tester.theReactant2].initialCount));
     	    repaint();
 	    }
 	}
