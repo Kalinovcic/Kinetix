@@ -74,11 +74,15 @@ public class SimulationRenderer
     		for (int i = 0; i < snapshot.atomCount; i++)
     		{
     			AtomSnapshot atom = snapshot.atoms[i];
-    			
+
+                float color_multiply = (float)(1.0 - (atom.z / state.settings.depth) * 0.8);
 				Color color = atom.type.color;
+				color = new Color(color.getRed() / 255.0f * color_multiply,
+				                  color.getGreen() / 255.0f * color_multiply,
+				                  color.getBlue() / 255.0f * color_multiply);
 				g2D.setColor(color);
 				
-				Shape shape = atom.toShape(snapshotTime);
+				Shape shape = atom.toShape(snapshotTime, state.settings.depth);
 				g2D.fill(shape);
 			}
     	}

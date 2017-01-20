@@ -156,18 +156,18 @@ public class Animation
 	
 	public void renderInitialVelocities(Graphics2D g2D, double progress)
 	{
-        double maxVelocity = Math.max(collision.v1.length(), collision.v2.length());
+        /*double maxVelocity = Math.max(collision.v1.length(), collision.v2.length());
         double maxLength = Math.max(collision.r1, collision.r2) * 1.5;
         Vector2 resizedV1 = collision.v1.clone().div(maxVelocity / maxLength);
         Vector2 resizedV2 = collision.v2.clone().div(maxVelocity / maxLength);
         
         drawLine(g2D, collision.p1, collision.p1.clone().add(resizedV1), progress);
-        drawLine(g2D, collision.p2, collision.p2.clone().add(resizedV2), progress);
+        drawLine(g2D, collision.p2, collision.p2.clone().add(resizedV2), progress);*/
 	}
 	
 	public void renderNT(Graphics2D g2D, double progress)
 	{
-        drawLine(g2D, collision.p1, collision.p2, getElementProgress(progress, 0.0, 0.5));
+        /*drawLine(g2D, collision.p1, collision.p2, getElementProgress(progress, 0.0, 0.5));
         
         Vector2 collisionPoint = collision.p1.clone().add(collision.un.clone().mul(collision.r1));
         Vector2 tLow = collisionPoint.clone().sub(collision.t.clone().mul(0.5));
@@ -175,19 +175,19 @@ public class Animation
         drawLine(g2D, tLow, tHigh, getElementProgress(progress, 0.5, 1.0));
         
         fade(g2D);
-        renderInitialVelocities(g2D, 1.0);
+        renderInitialVelocities(g2D, 1.0);*/
 	}
 	
 	public void renderUNUT(Graphics2D g2D, double progress)
 	{
         g2D.setStroke(thickStroke);
         
-        drawLine(g2D, collision.p1, collision.p1.clone().add(collision.un), getElementProgress(progress, 0.0, 0.5));
+        /*drawLine(g2D, collision.p1, collision.p1.clone().add(collision.un), getElementProgress(progress, 0.0, 0.5));
         
         Vector2 collisionPoint = collision.p1.clone().add(collision.un.clone().mul(collision.r1));
         Vector2 tLow = collisionPoint.clone().sub(collision.t.clone().mul(0.5));
         Vector2 tHigh = tLow.clone().add(collision.ut);
-        drawLine(g2D, tLow, tHigh, getElementProgress(progress, 0.5, 1.0));
+        drawLine(g2D, tLow, tHigh, getElementProgress(progress, 0.5, 1.0));*/
         
         g2D.setStroke(thinStroke);
         renderNT(g2D, 1.0);
@@ -197,7 +197,7 @@ public class Animation
     {
         g2D.setStroke(thickStroke);
 
-        Vector2 current = collision.p1.clone().add(collision.p2.clone().sub(collision.p1).mul(progress));
+        /*Vector2 current = collision.p1.clone().add(collision.p2.clone().sub(collision.p1).mul(progress));
         drawLine(g2D, collision.p1, collision.p1.clone().add(collision.un), 1.0);
         drawLine(g2D, current, current.clone().add(collision.un), 1.0);
         
@@ -210,7 +210,7 @@ public class Animation
         Vector2 current2 = begin.clone().add(offset2.clone().mul(progress));
 
         drawLine(g2D, current1, current1.clone().add(collision.ut), 1.0);
-        drawLine(g2D, current2, current2.clone().add(collision.ut), 1.0);
+        drawLine(g2D, current2, current2.clone().add(collision.ut), 1.0);*/
 
         g2D.setStroke(thinStroke);
         fade(g2D);
@@ -220,7 +220,7 @@ public class Animation
     public void renderExtendUNUT(Graphics2D g2D, double progress, boolean first)
     {
         g2D.setStroke(thickStroke);
-        if (first)
+        /*if (first)
         {
             drawLine(g2D, collision.p1, collision.p1.clone().add(collision.un), 1.0);        
             drawLine(g2D, collision.p1, collision.p1.clone().add(collision.ut), 1.0);
@@ -279,18 +279,18 @@ public class Animation
         else
         {
             drawLine(g2D, collision.p2, collision.p2.clone().add(resizedV2), 1.0);
-        }
+        }*/
         g2D.setStroke(thinStroke);
     }
 	
 	public void renderFinalVelocities(Graphics2D g2D, double progress)
 	{
-        double maxVelocity = Math.max(collision.v1c.length(), collision.v2c.length());
+        /*double maxVelocity = Math.max(collision.v1c.length(), collision.v2c.length());
         double maxLength = Math.max(collision.r1, collision.r2) * 1.5;
         Vector2 resizedV1c = collision.v1c.clone().div(maxVelocity / maxLength);
         Vector2 resizedV2c = collision.v2c.clone().div(maxVelocity / maxLength);
         
         drawLine(g2D, collision.p1, collision.p1.clone().add(resizedV1c), progress);
-        drawLine(g2D, collision.p2, collision.p2.clone().add(resizedV2c), progress);
+        drawLine(g2D, collision.p2, collision.p2.clone().add(resizedV2c), progress);*/
 	}
 }

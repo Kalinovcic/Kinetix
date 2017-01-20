@@ -110,4 +110,10 @@ public class Vector2
 	{
 		return clone().normalize();
 	}
+	
+	@Override
+	public String toString()
+	{
+	    return String.format("(%.2f, %.2f)", x, y);
+	}
 }

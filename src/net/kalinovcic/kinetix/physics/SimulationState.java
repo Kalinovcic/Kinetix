@@ -123,6 +123,7 @@ public class SimulationState
 		{
             atom.position.x += atom.velocity.x * deltaTime;
             atom.position.y += atom.velocity.y * deltaTime;
+            atom.position.z += atom.velocity.z * deltaTime;
 			atom.wallTime -= deltaTime;
 			if (atom.collisionTime >= 0.0)
 				atom.collisionTime -= deltaTime;
@@ -194,6 +195,17 @@ public class SimulationState
 				
 				takeSnapshot();
 			}
+			
+			/*
+			double sumEnergies = 0;
+			for (Atom atom : atoms)
+			{
+			    double velocity = atom.velocity.length();
+                double energy = 0.5 * atom.mass * velocity * velocity;
+			    sumEnergies += energy;
+			}
+			System.out.println(sumEnergies);
+			*/
 		}
 	}
 }

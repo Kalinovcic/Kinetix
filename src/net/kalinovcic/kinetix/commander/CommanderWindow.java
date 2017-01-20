@@ -80,10 +80,12 @@ public class CommanderWindow extends JInternalFrame
     public static JButton simulationStartButton;
     public static JButton testStartButton;
     public static JCheckBox simulationSteric;
+    public static JCheckBox simulation2D;
     public static JFormattedTextField simulationTimeFactor;
     public static JFormattedTextField simulationTemperature;
     public static JFormattedTextField simulationWidth;
     public static JFormattedTextField simulationHeight;
+    public static JFormattedTextField simulationDepth;
     
     public static JLabel simluationTime;
     
@@ -137,44 +139,57 @@ public class CommanderWindow extends JInternalFrame
         scrollPane.setViewportView(reactionPanel);
 
         simulationSteric = new JCheckBox("Steric");
-        simulationSteric.setBounds(6, 269, 97, 23);
+        simulationSteric.setBounds(6, 250, 80, 23);
         simulationPanel.add(simulationSteric);
+
+        simulation2D = new JCheckBox("2D");
+        simulation2D.setBounds(88, 250, 80, 23);
+        simulationPanel.add(simulation2D);
         
         JLabel lblTimeFactor = new JLabel("Time factor:");
-        lblTimeFactor.setBounds(10, 300, 76, 14);
+        lblTimeFactor.setBounds(10, 276, 76, 14);
         simulationPanel.add(lblTimeFactor);
         
         JLabel lblTemperature = new JLabel("Temp [K]:");
-        lblTemperature.setBounds(10, 326, 76, 14);
+        lblTemperature.setBounds(10, 301, 76, 14);
         simulationPanel.add(lblTemperature);
         
         JLabel lblWidth = new JLabel("Width [px]:");
-        lblWidth.setBounds(10, 351, 76, 14);
+        lblWidth.setBounds(10, 326, 76, 14);
         simulationPanel.add(lblWidth);
         
         JLabel lblHeight = new JLabel("Height [px]:");
-        lblHeight.setBounds(10, 376, 76, 14);
+        lblHeight.setBounds(10, 351, 76, 14);
         simulationPanel.add(lblHeight);
+        
+        JLabel lblDepth = new JLabel("Depth [px]:");
+        lblDepth.setBounds(10, 376, 76, 14);
+        simulationPanel.add(lblDepth);
         
         simulationTimeFactor = new JFormattedTextField(NUMBER_FORMAT);
         simulationTimeFactor.setText("1");
-        simulationTimeFactor.setBounds(88, 299, 60, 17);
+        simulationTimeFactor.setBounds(88, 275, 60, 17);
         simulationPanel.add(simulationTimeFactor);
         
         simulationTemperature = new JFormattedTextField(NUMBER_FORMAT);
         simulationTemperature.setText("1000");
-        simulationTemperature.setBounds(88, 325, 60, 17);
+        simulationTemperature.setBounds(88, 300, 60, 17);
         simulationPanel.add(simulationTemperature);
         
         simulationWidth = new JFormattedTextField(INTEGER_FORMAT);
         simulationWidth.setText("600");
-        simulationWidth.setBounds(88, 350, 60, 17);
+        simulationWidth.setBounds(88, 325, 60, 17);
         simulationPanel.add(simulationWidth);
         
         simulationHeight = new JFormattedTextField(INTEGER_FORMAT);
         simulationHeight.setText("600");
-        simulationHeight.setBounds(88, 375, 60, 17);
+        simulationHeight.setBounds(88, 350, 60, 17);
         simulationPanel.add(simulationHeight);
+        
+        simulationDepth = new JFormattedTextField(INTEGER_FORMAT);
+        simulationDepth.setText("600");
+        simulationDepth.setBounds(88, 375, 60, 17);
+        simulationPanel.add(simulationDepth);
         
         JButton openReaction = new JButton("Open reaction");
         openReaction.setBounds(211, 311, 172, 23);
@@ -602,10 +617,12 @@ public class CommanderWindow extends JInternalFrame
         try
         {
             newSettings.doSteric = simulationSteric.isSelected();
+            newSettings.do2D = simulation2D.isSelected();
             newSettings.timeFactor = NUMBER_FORMAT.parse(simulationTimeFactor.getText()).doubleValue();
             newSettings.temperature = NUMBER_FORMAT.parse(simulationTemperature.getText()).doubleValue();
             newSettings.width = INTEGER_FORMAT.parse(simulationWidth.getText()).intValue();
             newSettings.height = INTEGER_FORMAT.parse(simulationHeight.getText()).intValue();
+            newSettings.depth = INTEGER_FORMAT.parse(simulationDepth.getText()).intValue();
             if (newSettings.temperature < 0.0) throw new Exception();
             if (newSettings.timeFactor <= 0.0) throw new Exception();
             if (newSettings.width < 1) throw new Exception();

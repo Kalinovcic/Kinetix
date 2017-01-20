@@ -3,7 +3,7 @@ package net.kalinovcic.kinetix.physics;
 import java.util.Random;
 
 import net.kalinovcic.kinetix.math.Distribution;
-import net.kalinovcic.kinetix.math.Vector2;
+import net.kalinovcic.kinetix.math.Vector3;
 import net.kalinovcic.kinetix.math.Distribution.Packing;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
@@ -94,6 +94,7 @@ public class SimulationInitialization
             
             double x = packing.startX + packing.width * 0.5 * (gridY % 2) + packing.width * gridX;
             double y = packing.startY + packing.height * gridY;
+            double z = state.settings.do2D ? 0 : (random.nextDouble() * (state.settings.depth - 10) + 5);
             
             gridX++;
             if ((gridY % 2) == 0 ? (gridX >= packing.countX) : (gridX >= packing.countX - 1))
@@ -110,11 +111,9 @@ public class SimulationInitialization
             while (velocity < MAXIMUM_VELOCITY && randomArea > probabilities[velocity][type.unique])
                 randomArea -= probabilities[velocity++][type.unique];
             
-            double angle = random.nextDouble() * Math.PI * 2;
-            double vx = Math.sin(angle) * velocity;
-            double vy = Math.cos(angle) * velocity;
-
-            state.addAtom(new Atom(type, new Vector2(x, y), new Vector2(vx, vy)));
+            Vector3 vel = new Vector3(random.nextDouble() - 0.5, random.nextDouble() - 0.5,
+                    state.settings.do2D ? 0 : (random.nextDouble() - 0.5)).normalize().mul(velocity);
+            state.addAtom(new Atom(type, new Vector3(x, y, z), vel));
         }
         
         state.paused = true;

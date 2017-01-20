@@ -44,6 +44,7 @@ public class TestAll
         unit.settings.temperature = temperature;
         unit.settings.width = 1000;
         unit.settings.height = 1000;
+        unit.settings.depth = 1000;
         
         unit.atomTypes = new AtomType[Reactions.ATOM_TYPE_COUNT];
         initAtom(unit, unit.reaction.reactant1, count);

@@ -1,14 +1,14 @@
 package net.kalinovcic.kinetix.physics;
 
-import net.kalinovcic.kinetix.math.Vector2;
+import net.kalinovcic.kinetix.math.Vector3;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
 
 public class Atom
 {
 	public AtomType type;
 	
-	public Vector2 position;
-	public Vector2 velocity;
+	public Vector3 position;
+	public Vector3 velocity;
 	public double radius;
 	public double mass;
 	
@@ -16,11 +16,11 @@ public class Atom
 	public Atom collisionPartner;
 	
 	public double wallTime;
-	public boolean wallHorizontal;
+	public int wall;
 	
 	public boolean toRemove = false;
 	
-	public Atom(AtomType type, Vector2 position, Vector2 velocity)
+	public Atom(AtomType type, Vector3 position, Vector3 velocity)
 	{
 		this.type = type;
 		this.position = position;
@@ -59,29 +59,43 @@ public class Atom
 			if (time < wallTime)
 			{
 				wallTime = time;
-				wallHorizontal = false;
+				wall = 0;
 			}
 		}
-		if (velocity.y != 0.0)
-		{
-			double time = (velocity.y < 0.0) ?
-				((position.y - radius) / -velocity.y) :
-				((state.settings.height - position.y - radius) / velocity.y);
-			
-			if (time < wallTime)
-			{
-				wallTime = time;
-				wallHorizontal = true;
-			}
-		}
+        if (velocity.y != 0.0)
+        {
+            double time = (velocity.y < 0.0) ?
+                ((position.y - radius) / -velocity.y) :
+                ((state.settings.height - position.y - radius) / velocity.y);
+            
+            if (time < wallTime)
+            {
+                wallTime = time;
+                wall = 1;
+            }
+        }
+        if (velocity.z != 0.0)
+        {
+            double time = (velocity.z < 0.0) ?
+                ((position.z - radius) / -velocity.z) :
+                ((state.settings.depth - position.z - radius) / velocity.z);
+            
+            if (time < wallTime)
+            {
+                wallTime = time;
+                wall = 2;
+            }
+        }
 	}
 	
 	public void wallBounce()
 	{
-		if (wallHorizontal)
-			velocity.y *= -1;
-		else
-			velocity.x *= -1;
+	    switch (wall)
+	    {
+        case 0: velocity.x *= -1.0; break;
+        case 1: velocity.y *= -1.0; break;
+        case 2: velocity.z *= -1.0; break;
+	    }
 	}
     
     public static AtomType getType(SimulationState state, int type)
@@ -141,6 +155,7 @@ public class Atom
 
 		Atom new1 = new Atom(state.atomTypes[product1], position, velocity.normal().mul(newV1));
 		Atom new2 = new Atom(state.atomTypes[product2], other.position, other.velocity.normal().mul(newV2));
+		
 		state.addAtom(new1);
 		state.addAtom(new2);
 		
