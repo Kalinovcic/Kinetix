@@ -81,6 +81,8 @@ public class CommanderWindow extends JInternalFrame
     public static JButton testStartButton;
     public static JCheckBox simulationSteric;
     public static JCheckBox simulation2D;
+    public static JCheckBox simulationV;
+    public static JFormattedTextField simulationActivationEnergy;
     public static JFormattedTextField simulationTimeFactor;
     public static JFormattedTextField simulationTemperature;
     public static JFormattedTextField simulationWidth;
@@ -145,6 +147,19 @@ public class CommanderWindow extends JInternalFrame
         simulation2D = new JCheckBox("2D");
         simulation2D.setBounds(88, 250, 80, 23);
         simulationPanel.add(simulation2D);
+
+        simulationV = new JCheckBox("V");
+        simulationV.setBounds(170, 250, 80, 23);
+        simulationPanel.add(simulationV);
+        
+        JLabel lblActivationEnergy = new JLabel("Eₐ:");
+        lblActivationEnergy.setBounds(252, 256, 40, 17);
+        simulationPanel.add(lblActivationEnergy);
+        
+        simulationActivationEnergy = new JFormattedTextField(NUMBER_FORMAT);
+        simulationActivationEnergy.setText("-1");
+        simulationActivationEnergy.setBounds(280, 255, 60, 17);
+        simulationPanel.add(simulationActivationEnergy);
         
         JLabel lblTimeFactor = new JLabel("Time factor:");
         lblTimeFactor.setBounds(10, 276, 76, 14);
@@ -618,6 +633,8 @@ public class CommanderWindow extends JInternalFrame
         {
             newSettings.doSteric = simulationSteric.isSelected();
             newSettings.do2D = simulation2D.isSelected();
+            newSettings.doV = simulationV.isSelected();
+            newSettings.activationEnergy = NUMBER_FORMAT.parse(simulationActivationEnergy.getText()).doubleValue();
             newSettings.timeFactor = NUMBER_FORMAT.parse(simulationTimeFactor.getText()).doubleValue();
             newSettings.temperature = NUMBER_FORMAT.parse(simulationTemperature.getText()).doubleValue();
             newSettings.width = INTEGER_FORMAT.parse(simulationWidth.getText()).intValue();

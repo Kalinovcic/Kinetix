@@ -108,14 +108,20 @@ public class Atom
         if (type.reactantInReaction == null)
             return false;
         
-        int reactant1 = type.reactantInReaction.reactant1_unique;
-        int reactant2 = type.reactantInReaction.reactant2_unique;
-        if ((type.unique != reactant1 || other.type.unique != reactant2) &&
-            (type.unique != reactant2 || other.type.unique != reactant1))
-            return false;
+        int typeA = type.reactantInReaction.reactant1_unique;
+        int typeB = type.reactantInReaction.reactant2_unique;
+        int typeC = type.reactantInReaction.product1_unique;
+        int typeD = type.reactantInReaction.product2_unique;
         
+        if ((type.unique != typeA || other.type.unique != typeB) &&
+            (type.unique != typeB || other.type.unique != typeA))
+            return false;
+
         double energy = type.reactantInReaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
-        if (energy < type.reactantInReaction.activationEnergy)
+        double activationEnergy = state.settings.activationEnergy;
+        if (activationEnergy < 0.0)
+            activationEnergy = type.reactantInReaction.activationEnergy;
+        if (energy < activationEnergy)
             return false;
         
         if (state.settings.doSteric)
@@ -131,33 +137,35 @@ public class Atom
             }
         }
 
+        double massC = state.atomTypes[typeC].mass * Reaction.DALTON;
+        double massD = state.atomTypes[typeD].mass * Reaction.DALTON;
+        
+        double kineticA = 0.5 * (mass * Reaction.DALTON) * velocity.length() * velocity.length();
+        double kineticB = 0.5 * (other.mass * Reaction.DALTON) * other.velocity.length() * other.velocity.length();
+        double kinetic1 = kineticA + kineticB;
+        
+        double velocityC, velocityD;
+        if (state.settings.doV)
+        {
+            velocityC = Math.sqrt(2 * kinetic1 / (massC + massD));
+            velocityD = Math.sqrt(2 * kinetic1 / (massC + massD));
+        }
+        else
+        {
+            double kineticC = 0.5 * kinetic1;
+            double kineticD = 0.5 * kinetic1;
+            velocityC = Math.sqrt(2 * kineticC / massC);
+            velocityD = Math.sqrt(2 * kineticD / massD);
+        }
+
 		state.removeAtom(this);
 		state.removeAtom(other);
-		
-		/*
-		int mergedType = ATOM_BLACK;
-		Vector2 mergedPosition = position;
-		Vector2 mergedVelocity = velocity.clone().mul(mass / (mass + other.mass)).add(other.velocity.clone().mul(other.mass / (mass + other.mass)));
-		double mergedRadius = radius + other.radius;
-		double mergedMass = mass + other.mass;
-		
-		Atom merged = new Atom(mergedType, mergedPosition, mergedVelocity, mergedRadius, mergedMass);
-		state.addAtom(merged);
-		*/
 
-        int product1 = type.reactantInReaction.product1_unique;
-        int product2 = type.reactantInReaction.product2_unique;
-
-        double newV1 = Math.sqrt(2.0 * (energy * 1000.0 / Reaction.AVOGADRO / 2.0) / (state.atomTypes[product1].mass * Reaction.DALTON));
-        double newV2 = Math.sqrt(2.0 * (energy * 1000.0 / Reaction.AVOGADRO / 2.0) / (state.atomTypes[product2].mass * Reaction.DALTON));
-        // System.out.println((2.0 * (energy * 1000.0 * Reaction.AVOGADRO / 2.0)) + " " + (state.atomTypes[product2].mass * Reaction.DALTON));
-        // System.out.println(type.reactantInReaction.reducedMass + " " + data.dvnc + " " + (energy * 1000.0) + " " + newV1 + " " + newV2 + " " + state.atomTypes[product1].mass + " " + state.atomTypes[product2].mass);
-
-		Atom new1 = new Atom(state.atomTypes[product1], position, velocity.normal().mul(newV1));
-		Atom new2 = new Atom(state.atomTypes[product2], other.position, other.velocity.normal().mul(newV2));
+		Atom atomC = new Atom(state.atomTypes[typeC], position, velocity.normal().mul(velocityC));
+		Atom atomD = new Atom(state.atomTypes[typeD], other.position, other.velocity.normal().mul(velocityD));
 		
-		state.addAtom(new1);
-		state.addAtom(new2);
+		state.addAtom(atomC);
+		state.addAtom(atomD);
 		
 		return true;
 	}
