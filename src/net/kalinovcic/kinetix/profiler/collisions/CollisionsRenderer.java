@@ -3,11 +3,15 @@ package net.kalinovcic.kinetix.profiler.collisions;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import net.kalinovcic.kinetix.Kinetix;
 import net.kalinovcic.kinetix.KinetixUI;
+import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.SimulationState;
+import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class CollisionsRenderer
@@ -31,6 +35,37 @@ public class CollisionsRenderer
         int headerHeight = 0;
         int textHeight = g2D.getFontMetrics().getHeight();
         g2D.setColor(Color.BLACK);
+
+        double totalSum = 0.0;
+        int totalCount = 0;
+        Map<String, Double> sums = new HashMap<String, Double>();
+        Map<String, Integer> counts = new HashMap<String, Integer>();
+        synchronized(Kinetix.STATE)
+        {
+            for (Atom atom : Kinetix.STATE.atoms)
+            {
+                double v = atom.velocity.length();
+                double kineticEnergy = 0.5 * (atom.mass * Reaction.DALTON * Reaction.AVOGADRO) * v * v;
+                if (!sums.containsKey(atom.type.name))
+                {
+                    sums.put(atom.type.name, kineticEnergy);
+                    counts.put(atom.type.name, 1);
+                }
+                else
+                {
+                    sums.put(atom.type.name, sums.get(atom.type.name) + kineticEnergy);
+                    counts.put(atom.type.name, counts.get(atom.type.name) + 1);
+                }
+                totalSum += kineticEnergy;
+                totalCount += 1;
+            }
+        }
+        
+        for (String name : sums.keySet())
+        {
+            g2D.drawString(String.format(Locale.US, "%s: %.5f", name, (sums.get(name) / counts.get(name))), 4, headerHeight += textHeight);
+        }
+        g2D.drawString(String.format(Locale.US, "total: %.5f", (totalSum / totalCount)), 4, headerHeight += textHeight);
 
         /*
         int reactant1 = Reactions.uniqueAtoms.get(Kinetix.reaction.reactant1);
