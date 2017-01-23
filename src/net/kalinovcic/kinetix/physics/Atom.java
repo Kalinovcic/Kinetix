@@ -107,6 +107,8 @@ public class Atom
 	{
         if (type.reactantInReaction == null)
             return false;
+        if (state.simulationTime < state.settings.reactionStartTime)
+            return false;
         
         int typeA = type.reactantInReaction.reactant1_unique;
         int typeB = type.reactantInReaction.reactant2_unique;

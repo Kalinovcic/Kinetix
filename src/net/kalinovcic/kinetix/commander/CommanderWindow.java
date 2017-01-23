@@ -83,6 +83,7 @@ public class CommanderWindow extends JInternalFrame
     public static JCheckBox simulation2D;
     public static JCheckBox simulationV;
     public static JFormattedTextField simulationActivationEnergy;
+    public static JFormattedTextField simulationReactionStartTime;
     public static JFormattedTextField simulationTimeFactor;
     public static JFormattedTextField simulationTemperature;
     public static JFormattedTextField simulationWidth;
@@ -141,25 +142,34 @@ public class CommanderWindow extends JInternalFrame
         scrollPane.setViewportView(reactionPanel);
 
         simulationSteric = new JCheckBox("Steric");
-        simulationSteric.setBounds(6, 250, 80, 23);
+        simulationSteric.setBounds(6, 250, 52, 23);
         simulationPanel.add(simulationSteric);
 
         simulation2D = new JCheckBox("2D");
-        simulation2D.setBounds(88, 250, 80, 23);
+        simulation2D.setBounds(60, 250, 38, 23);
         simulationPanel.add(simulation2D);
 
         simulationV = new JCheckBox("V");
-        simulationV.setBounds(170, 250, 80, 23);
+        simulationV.setBounds(100, 250, 38, 23);
         simulationPanel.add(simulationV);
         
         JLabel lblActivationEnergy = new JLabel("Eₐ:");
-        lblActivationEnergy.setBounds(252, 256, 40, 17);
+        lblActivationEnergy.setBounds(140, 256, 18, 17);
         simulationPanel.add(lblActivationEnergy);
         
         simulationActivationEnergy = new JFormattedTextField(NUMBER_FORMAT);
         simulationActivationEnergy.setText("-1");
-        simulationActivationEnergy.setBounds(280, 255, 60, 17);
+        simulationActivationEnergy.setBounds(160, 255, 60, 17);
         simulationPanel.add(simulationActivationEnergy);
+        
+        JLabel lblReactionStartTime = new JLabel("x:");
+        lblReactionStartTime.setBounds(230, 256, 18, 17);
+        simulationPanel.add(lblReactionStartTime);
+        
+        simulationReactionStartTime = new JFormattedTextField(NUMBER_FORMAT);
+        simulationReactionStartTime.setText("0");
+        simulationReactionStartTime.setBounds(250, 255, 60, 17);
+        simulationPanel.add(simulationReactionStartTime);
         
         JLabel lblTimeFactor = new JLabel("Time factor:");
         lblTimeFactor.setBounds(10, 276, 76, 14);
@@ -635,11 +645,13 @@ public class CommanderWindow extends JInternalFrame
             newSettings.do2D = simulation2D.isSelected();
             newSettings.doV = simulationV.isSelected();
             newSettings.activationEnergy = NUMBER_FORMAT.parse(simulationActivationEnergy.getText()).doubleValue();
+            newSettings.reactionStartTime = NUMBER_FORMAT.parse(simulationReactionStartTime.getText()).doubleValue();
             newSettings.timeFactor = NUMBER_FORMAT.parse(simulationTimeFactor.getText()).doubleValue();
             newSettings.temperature = NUMBER_FORMAT.parse(simulationTemperature.getText()).doubleValue();
             newSettings.width = INTEGER_FORMAT.parse(simulationWidth.getText()).intValue();
             newSettings.height = INTEGER_FORMAT.parse(simulationHeight.getText()).intValue();
             newSettings.depth = INTEGER_FORMAT.parse(simulationDepth.getText()).intValue();
+            if (newSettings.reactionStartTime < 0.0) throw new Exception();
             if (newSettings.temperature < 0.0) throw new Exception();
             if (newSettings.timeFactor <= 0.0) throw new Exception();
             if (newSettings.width < 1) throw new Exception();
