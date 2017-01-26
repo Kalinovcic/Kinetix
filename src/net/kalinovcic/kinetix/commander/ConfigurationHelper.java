@@ -4,12 +4,15 @@ import net.kalinovcic.kinetix.physics.AtomType;
 import net.kalinovcic.kinetix.physics.SimulationSettings;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
+import net.kalinovcic.kinetix.test.TestingConfiguration;
 
 public class ConfigurationHelper
 {
     public static SimulationSettings settings;
     public static Reaction[] reactions;
     public static AtomType[] atomTypes;
+    
+    public static TestingConfiguration tests;
     
     public static void configureSimulation()
     {
@@ -63,6 +66,31 @@ public class ConfigurationHelper
             
             atomTypes[unique1].reactantInReaction = reactions[index];
             atomTypes[unique2].reactantInReaction = reactions[index];
+        }
+    }
+    
+    public static void configureTesting()
+    {
+        ConfigurationHelper.configureSimulation();
+        
+        tests = new TestingConfiguration();
+        TestingConfiguration.TestingUnit previousUnit = null;
+        for (int i = 0; i < CommanderWindow.testsTimeInputs.size(); i++)
+        {
+            TestingConfiguration.TestingUnit unit = new TestingConfiguration.TestingUnit();
+            if (i == 0)
+                tests.head = unit;
+            else
+                previousUnit.next = unit;
+            previousUnit = unit;
+
+            unit.time = CommanderWindow.testsTimeInputs.get(i).value;
+            unit.repeat = CommanderWindow.testsRepeatInputs.get(i).value;
+            unit.scale = CommanderWindow.testsScaleInputs.get(i).value;
+
+            unit.settings = settings;
+            unit.reaction = reactions[0];
+            unit.atomTypes = atomTypes;
         }
     }
 }

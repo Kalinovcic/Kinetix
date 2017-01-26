@@ -17,6 +17,8 @@ import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 import net.kalinovcic.kinetix.physics.reaction.chooser.ReactionChooserWindow;
 import net.kalinovcic.kinetix.profiler.ProfilerWindow;
+import net.kalinovcic.kinetix.test.TestAll;
+import net.kalinovcic.kinetix.test.TestingThread;
 
 import static net.kalinovcic.kinetix.imgui.ImguiTheme.*;
 
@@ -42,6 +44,19 @@ public class CommanderWindow extends ImguiFrame
     public static ImguiIntegerInput widthInput = new ImguiIntegerInput(600, 1, Integer.MAX_VALUE);
     public static ImguiIntegerInput heightInput = new ImguiIntegerInput(600, 1, Integer.MAX_VALUE);
     public static ImguiIntegerInput depthInput = new ImguiIntegerInput(600, 1, Integer.MAX_VALUE);
+
+    public static List<ImguiDoubleInput> testsTimeInputs = new ArrayList<ImguiDoubleInput>();
+    public static List<ImguiIntegerInput> testsRepeatInputs = new ArrayList<ImguiIntegerInput>();
+    public static List<ImguiDoubleInput> testsScaleInputs = new ArrayList<ImguiDoubleInput>();
+    static
+    {
+        double[] times = new double[] { 20, 10, 1, 0.5, 0.2, 0.1 };
+        int[] repeats = new int[] { 5, 10, 100, 200, 500, 1000 };
+        double[] scales = new double[] { 0.05, 0.01, 1, 2, 5, 10 };
+        for (double time : times) testsTimeInputs.add(new ImguiDoubleInput(time, Double.MIN_VALUE, Double.MAX_VALUE));
+        for (int repeat : repeats) testsRepeatInputs.add(new ImguiIntegerInput(repeat, 1, Integer.MAX_VALUE));
+        for (double scale : scales) testsScaleInputs.add(new ImguiDoubleInput(scale, Double.MIN_VALUE, Double.MAX_VALUE));
+    }
     
     public CommanderWindow(MainWindow mainWindow)
     {
@@ -221,6 +236,57 @@ public class CommanderWindow extends ImguiFrame
         
         private void updateTestingTab()
         {
+            float listHeight = context.bounds.height - 60;
+            pushBounds(new ImguiBounds(0, 0, context.bounds.width, listHeight));
+            
+            context.bounds.width -= BUTTON_HEIGHT + PADDING_HORIZONTAL;
+            beginRow();
+            doLabel("time", columnWidth(3), 0.5f, FONT, null);
+            doLabel("repeat", columnWidth(3), 0.5f, FONT, null);
+            doLabel("scale", columnWidth(3), 0.5f, FONT, null);
+            endRow();
+            for (int i = 0; i < testsTimeInputs.size(); i++)
+            {
+                beginRow();
+                doInput("", columnWidth(3), testsTimeInputs.get(i));
+                doInput("", columnWidth(3), testsRepeatInputs.get(i));
+                doInput("", columnWidth(3), testsScaleInputs.get(i));
+                if (doButton("-", BUTTON_HEIGHT, BUTTON_HEIGHT))
+                {
+                    testsTimeInputs.remove(i);
+                    testsRepeatInputs.remove(i);
+                    testsScaleInputs.remove(i);
+                    i--;
+                }
+                endRow();
+            }
+            context.bounds.width += BUTTON_HEIGHT + PADDING_HORIZONTAL;
+            if (doButton("+", columnWidth(1), 0))
+            {
+                testsTimeInputs.add(new ImguiDoubleInput(1, Double.MIN_VALUE, Double.MAX_VALUE));
+                testsRepeatInputs.add(new ImguiIntegerInput(1, 1, Integer.MAX_VALUE));
+                testsScaleInputs.add(new ImguiDoubleInput(1, Double.MIN_VALUE, Double.MAX_VALUE));
+            }
+            
+            popBounds();
+            popLayout();
+            pushLayout(new ImguiVerticalLayout());
+            doSpace(0, listHeight);
+
+            boolean testingReady = reactions != null && atomTypes != null && reactions.size() == 1;
+            if (doButton("Start testing", columnWidth(1), 0, testingReady))
+            {
+                ConfigurationHelper.configureTesting();
+                synchronized (Kinetix.STATE)
+                {
+                    new TestingThread(myMainWindow, ConfigurationHelper.tests).start();
+                }
+            }
+            
+            if (doButton("Test all", columnWidth(1), 0))
+            {
+                TestAll.testAll(myMainWindow);
+            }
         }
     }
 }
