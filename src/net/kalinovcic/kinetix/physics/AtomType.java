@@ -2,6 +2,8 @@ package net.kalinovcic.kinetix.physics;
 
 import java.awt.Color;
 
+import net.kalinovcic.kinetix.imgui.ImguiDoubleInput;
+import net.kalinovcic.kinetix.imgui.ImguiIntegerInput;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
 
 public class AtomType
@@ -15,4 +17,8 @@ public class AtomType
     public double radius;
     public Color color;
     public Reaction reactantInReaction;
+
+    public ImguiIntegerInput initialCountInput;
+    public ImguiDoubleInput massInput;
+    public ImguiDoubleInput radiusInput;
 }

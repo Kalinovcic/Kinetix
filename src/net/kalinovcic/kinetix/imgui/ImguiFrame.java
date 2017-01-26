@@ -26,18 +26,17 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, MouseL
 {
     private static final long serialVersionUID = 1L;
 
-    private MainWindow mainWindow;
     private boolean closable;
-    
-    private Imgui imgui;
-    private ImguiContext context;
+    public MainWindow mainWindow;
+    public Imgui imgui;
+    public ImguiContext context;
 
     public ImguiFrame(MainWindow mainWindow, String title, int x, int y, int width, int height, boolean closable, Imgui imgui)
     {
         super("IMGUI", false, false, false, false);
-        
-        this.mainWindow = mainWindow;
+
         this.closable = closable;
+        this.mainWindow = mainWindow;
         this.imgui = imgui;
         this.context = new ImguiContext();
         
@@ -93,13 +92,13 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, MouseL
         g.fill(imgui.rounded(new Rectangle2D.Float(0, 0, w, h), WINDOW_ROUNDED_RADIUS));
         
         if (closable)
-            if (imgui.doButton("", new Rectangle2D.Float(w - 25, 5, 20, 20)))
+            if (imgui.doButton("", new Rectangle2D.Float(w - 25, 5, 20, 20), true))
             {
                 dispose();
                 return;
             }
         
-        imgui.pushBounds(new ImguiBounds(5, 5, w - 10, h - 25));
+        imgui.pushBounds(new ImguiBounds(12, 8, w - 24, h - 16));
         imgui.pushLayout(new ImguiVerticalLayout());
         imgui.update();
         imgui.popLayout();

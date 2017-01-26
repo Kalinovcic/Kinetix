@@ -70,7 +70,7 @@ public class ReactionChooserWindow extends JInternalFrame
 				    for (int index : model.enabledIndicies)
 				        reactions[reactionIndex++] = Reactions.reactions.get(index);
 				    
-					CommanderWindow.selectReactions(reactions);
+					CommanderWindow.setReactionList(reactions);
 					dispose();
 				}
 			}

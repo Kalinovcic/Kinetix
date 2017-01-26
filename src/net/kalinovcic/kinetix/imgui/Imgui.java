@@ -1,8 +1,10 @@
 package net.kalinovcic.kinetix.imgui;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
@@ -79,6 +81,12 @@ public abstract class Imgui
         point.setLocation(-point.getX(), -point.getY());
         g.getTransform().transform(point, point);
         point.setLocation(-point.getX(), -point.getY());
+        
+        Rectangle clipBounds = g.getClipBounds();
+        if (point.getX() < clipBounds.x) point.setLocation(-10000.0f, -10000.0f);
+        if (point.getY() < clipBounds.y) point.setLocation(-10000.0f, -10000.0f);
+        if (point.getX() >= clipBounds.x + clipBounds.width) point.setLocation(-10000.0f, -10000.0f);
+        if (point.getY() >= clipBounds.y + clipBounds.height) point.setLocation(-10000.0f, -10000.0f);
         return point;
     }
     
@@ -110,16 +118,21 @@ public abstract class Imgui
     
     public void renderText(String text, Rectangle2D.Float r, float alignment, float offset)
     {
+        renderText(text, r, alignment, offset, FONT, TEXT);
+    }
+    
+    public void renderText(String text, Rectangle2D.Float r, float alignment, float offset, Font font, Color color)
+    {
         if (text.length() == 0) return;
         
-        g.setFont(FONT);
+        g.setFont(font);
         FontMetrics metrics = g.getFontMetrics();
         int textWidth = metrics.stringWidth(text);
         int textHeight = metrics.getHeight();
         
         float textX = r.x + (r.width - textWidth) * alignment + offset;
         float textY = r.y + (r.height - textHeight) / 2 + metrics.getAscent();
-        g.setColor(TEXT);
+        g.setColor(color);
         g.drawString(text, textX, textY);
     }
 
@@ -134,47 +147,96 @@ public abstract class Imgui
     
     public void doLabel(String text)
     {
-        doLabel(text, context.bounds.width);
+        doLabel(text, context.bounds.width, 0.0f, FONT, null);
     }
     
     public void doLabel(String text, float width)
     {
         if (width <= 0) width = -(g.getFontMetrics(FONT).stringWidth(text));
         Rectangle2D.Float r = pushBox(-width, -g.getFontMetrics(FONT).getHeight());
-        doLabel(text, r);
+        doLabel(text, r, 0.0f, FONT, null);
     }
     
-    public void doLabel(String text, Rectangle2D.Float r)
+    public void doLabel(String text, float width, float alignment, Font font, Color color)
     {
-        renderText(text, r, 0.0f, 0);
+        if (width <= 0) width = -(g.getFontMetrics(font).stringWidth(text));
+        float height = (color == null) ? (g.getFontMetrics(font).getHeight()) : (BUTTON_HEIGHT);
+        Rectangle2D.Float r = pushBox(-width, -height);
+        doLabel(text, r, alignment, font, color);
+    }
+    
+    public void doLabel(String text, Rectangle2D.Float r, float alignment, Font font, Color color)
+    {
+        if (color != null)
+        {
+            renderShape(rounded(r, BUTTON_ROUNDED_RADIUS), color);
+            renderText(text, r, alignment, 0, font, TEXT);
+        }
+        else
+        {
+            renderText(text, r, alignment, 0, font, TEXT);
+        }
     }
     
     public boolean doButton(String text)
     {
-        return doButton(text, 0, 0);
+        return doButton(text, 0, 0, true);
     }
     
     public boolean doButton(String text, float width, float height)
     {
+        return doButton(text, width, height, true);
+    }
+    
+    public boolean doButton(String text, float width, float height, boolean enabled)
+    {
         if (width <= 0) width = -(g.getFontMetrics(FONT).stringWidth(text) + 20);
         if (height <= 0) height = -BUTTON_HEIGHT;
         Rectangle2D.Float r = pushBox(width, height);
-        return doButton(text, r);
+        return doButton(text, r, enabled);
     }
     
-    public boolean doButton(String text, Rectangle2D.Float r)
+    public boolean doButton(String text, Rectangle2D.Float r, boolean enabled)
     {
         Shape shape = rounded(r, BUTTON_ROUNDED_RADIUS);
         
-        boolean hot = shape.contains(mousePoint());
+        boolean hot = enabled && shape.contains(mousePoint());
         boolean active = hot && (context.mouseDown);
         boolean pressed = hot && context.mouseReleased;
         if (hot) context.mouseBusy = true;
         
-        renderShape(shape, active ? BUTTON_ACTIVE : (hot ? BUTTON_HOT : BUTTON_NORMAL));
+        renderShape(shape, enabled ? (active ? BUTTON_ACTIVE : (hot ? BUTTON_HOT : BUTTON_NORMAL)) : BUTTON_DISABLED);
         renderText(text, r, 0.5f, 0);
         
         return pressed;
+    }
+    
+    public boolean doCheckbox(String text, boolean current)
+    {
+        Rectangle2D.Float r = pushBox(-(g.getFontMetrics(FONT).stringWidth(text) + CHECKBOX_HEIGHT + 8), -CHECKBOX_HEIGHT);
+        return doCheckbox(text, r, current);
+    }
+    
+    public boolean doCheckbox(String text, float width, boolean current)
+    {
+        Rectangle2D.Float r = pushBox(-width, -CHECKBOX_HEIGHT);
+        return doCheckbox(text, r, current);
+    }
+    
+    public boolean doCheckbox(String text, Rectangle2D.Float r, boolean current)
+    {
+        Rectangle2D.Float inputRect = new Rectangle2D.Float(r.x, r.y, r.height, r.height);
+        Rectangle2D.Float textRect = new Rectangle2D.Float(r.x + r.height + 8, r.y, r.width - r.height - 8, r.height);
+        Shape inputShape = rounded(inputRect, CHECKBOX_ROUNDED_RADIUS);
+        
+        boolean hot = inputShape.contains(mousePoint());
+        boolean pressed = hot && context.mouseReleased;
+        if (hot) context.mouseBusy = true;
+        if (pressed) current = !current;
+        
+        renderShape(inputShape, current ? CHECKBOX_TRUE : CHECKBOX_FALSE);
+        renderText(text, textRect, 0.0f, 0);
+        return current;
     }
     
     public boolean doFold(String text, boolean current)
@@ -217,19 +279,25 @@ public abstract class Imgui
         return current;
     }
     
-    public String doInput(String text, String current)
+    public void doInput(String text, ImguiInput input)
     {
         Rectangle2D.Float r = pushBox(-context.bounds.width, -INPUT_HEIGHT);
-        return doInput(text, r, current);
+        doInput(text, r, input, null);
     }
     
-    public String doInput(String text, float width, String current)
+    public void doInput(String text, float width, ImguiInput input)
     {
         Rectangle2D.Float r = pushBox(-width, -INPUT_HEIGHT);
-        return doInput(text, r, current);
+        doInput(text, r, input, null);
     }
     
-    public String doInput(String text, Rectangle2D.Float r, String current)
+    public void doInput(String text, float width, ImguiInput input, String suffix)
+    {
+        Rectangle2D.Float r = pushBox(-width, -INPUT_HEIGHT);
+        doInput(text, r, input, suffix);
+    }
+    
+    public void doInput(String text, Rectangle2D.Float r, ImguiInput input, String suffix)
     {
         Rectangle2D.Float inputRect = (text.length() == 0) ? r : (new Rectangle2D.Float(r.x + r.width * INPUT_DIVIDE_PERCENT, r.y, r.width * (1 - INPUT_DIVIDE_PERCENT), r.height));
         Shape inputShape = rounded(inputRect, INPUT_ROUNDED_RADIUS);
@@ -237,26 +305,43 @@ public abstract class Imgui
         boolean hot = inputShape.contains(mousePoint());
         if (hot)
         {
+            input.hasFocus = true;
             for (Character c : context.typedChars)
             {
-                if (c == 0x08 && current.length() > 0)
-                    current = current.substring(0, current.length() - 1);
+                if (c == 0x08 && input.text.length() > 0)
+                    input.text = input.text.substring(0, input.text.length() - 1);
                 else if (c >= 0x20)
-                    current += c.charValue();
+                    input.text += c.charValue();
             }
             context.typedChars.clear();
             context.mouseBusy = true;
+        }
+        else
+        {
+            if (input.hasFocus)
+            {
+                input.text = input.accept(input.text);
+            }
         }
         
         renderShape(inputShape, hot ? INPUT_HOT : INPUT_NORMAL);
         renderText(text, r, 0.0f, 0);
         
         Shape clip = g.getClip();
-        g.setClip(inputRect);
-        renderText(current, inputRect, 0.0f, 5);
+        g.clip(inputRect);
+        renderText(input.text, inputRect, 0.0f, 5);
+        if (suffix != null)
+        {
+            FontMetrics metrics = g.getFontMetrics();
+            int textWidth = metrics.stringWidth(input.text);
+            int textHeight = metrics.getHeight();
+            
+            float textX = inputRect.x + 10 + textWidth;
+            float textY = inputRect.y + (inputRect.height - textHeight) / 2 + metrics.getAscent();
+            g.setColor(TEXT_DISABLED);
+            g.drawString(suffix, textX, textY);
+        }
         g.setClip(clip);
-        
-        return current;
     }
     
     public int doTabs(String[] text, int current)
@@ -314,5 +399,24 @@ public abstract class Imgui
         }
         
         return current;
+    }
+
+    /***********************************************************/
+    /***********************************************************/
+    /***********************************************************/
+    
+    public void beginRow()
+    {
+        pushLayout(new ImguiHorizontalLayout());
+    }
+    
+    public void endRow()
+    {
+        popLayout();
+    }
+    
+    public float columnWidth(int numColumns)
+    {
+        return (context.bounds.width - (numColumns - 1) * PADDING_HORIZONTAL) / numColumns;
     }
 }

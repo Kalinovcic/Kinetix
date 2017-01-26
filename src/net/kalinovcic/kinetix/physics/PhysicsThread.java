@@ -47,6 +47,6 @@ public class PhysicsThread extends KinetixThread
 
         state.update(deltaTime);
         
-        CommanderWindow.simluationTime.setText("Time: " + String.format(Locale.US, "%.2f", state.simulationTime) + " s");
+        CommanderWindow.simulationTime = "Time: " + String.format(Locale.US, "%.2f", state.simulationTime) + " s";
     }
 }
