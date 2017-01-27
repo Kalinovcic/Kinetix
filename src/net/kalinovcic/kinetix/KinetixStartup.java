@@ -6,7 +6,7 @@ import javax.swing.UIManager;
 import net.kalinovcic.kinetix.commander.CommanderWindow;
 import net.kalinovcic.kinetix.physics.PhysicsThread;
 import net.kalinovcic.kinetix.profiler.ProfilerWindow;
-import net.kalinovcic.kinetix.simulation.SimulationThread;
+import net.kalinovcic.kinetix.simulation.SimulationWindow;
 
 public class KinetixStartup
 {
@@ -26,7 +26,7 @@ public class KinetixStartup
             {
                 MainWindow mainWindow = new MainWindow();
                 new CommanderWindow(mainWindow);
-                new SimulationThread(mainWindow).start();
+                new SimulationWindow(mainWindow);
                 new ProfilerWindow(mainWindow);
             }
         });

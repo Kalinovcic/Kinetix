@@ -5,6 +5,11 @@ import java.util.List;
 
 public class ImguiContext 
 {
+    public int currentWindowWidth;
+    public int currentWindowHeight;
+    public int nextFrameWindowWidth;
+    public int nextFrameWindowHeight;
+    
     public ImguiBounds bounds;
     
     public List<ImguiLayout> layoutStack = new ArrayList<ImguiLayout>();

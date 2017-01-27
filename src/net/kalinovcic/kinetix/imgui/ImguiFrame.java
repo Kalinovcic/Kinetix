@@ -51,10 +51,11 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, MouseL
         this.setBorder(null);
 
         // Size it
-        Dimension size = new Dimension(width, height);
-        setSize(size);
-        setMinimumSize(size);
-        setMaximumSize(size);
+        context.nextFrameWindowWidth = width;
+        context.nextFrameWindowHeight = height;
+        context.currentWindowWidth = context.nextFrameWindowWidth;
+        context.currentWindowHeight = context.nextFrameWindowHeight;
+        resizeToMatchContext();
         setLocation(x, y);
         
         // Link it
@@ -106,7 +107,23 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, MouseL
         
         context.typedChars.clear();
         
+        if (context.nextFrameWindowWidth != context.currentWindowWidth ||
+            context.nextFrameWindowHeight != context.currentWindowHeight)
+        {
+            context.currentWindowWidth = context.nextFrameWindowWidth;
+            context.currentWindowHeight = context.nextFrameWindowHeight;
+            resizeToMatchContext();
+        }
+        
         g.dispose();
+    }
+    
+    private void resizeToMatchContext()
+    {
+        Dimension size = new Dimension(context.currentWindowWidth, context.currentWindowHeight);
+        setSize(size);
+        setMinimumSize(size);
+        setMaximumSize(size);
     }
     
     @Override

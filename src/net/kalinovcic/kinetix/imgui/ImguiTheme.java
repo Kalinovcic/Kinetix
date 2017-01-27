@@ -7,7 +7,9 @@ public class ImguiTheme
 {
     public static final Font FONT = new Font("Segoe UI", Font.PLAIN, 12);
     public static final Font BIG_FONT = new Font("Segoe UI", Font.PLAIN, 32);
-
+    
+    public static final Color DESKTOP_NORMAL = new Color(0, 95, 179);
+    
     public static final float WINDOW_ROUNDED_RADIUS = 10.0f;
     public static final Color WINDOW_NORMAL = new Color(40, 51, 54);
     /* public static final Color WINDOW_NORMAL = new Color(239, 239, 239);*/
