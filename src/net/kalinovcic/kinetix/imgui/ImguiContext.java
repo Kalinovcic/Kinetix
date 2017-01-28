@@ -5,25 +5,33 @@ import java.util.List;
 
 public class ImguiContext 
 {
-    public int currentWindowWidth;
-    public int currentWindowHeight;
-    public int nextFrameWindowWidth;
-    public int nextFrameWindowHeight;
+    public int currentFrameX;
+    public int currentFrameY;
+    public int currentFrameWidth;
+    public int currentFrameHeight;
+    public int nextFrameWidth;
+    public int nextFrameHeight;
     
     public ImguiBounds bounds;
     
     public List<ImguiLayout> layoutStack = new ArrayList<ImguiLayout>();
     public ImguiLayout layout;
 
+    public boolean focus;
+    public float totalTranslationX;
+    public float totalTranslationY;
+    
+    public boolean mouseBusy;
+    public boolean mouseDragging;
+    public int pressMouseScreenX;
+    public int pressMouseScreenY;
+    public int pressFrameX;
+    public int pressFrameY;
+
     public int mouseX;
     public int mouseY;
-    public int mouseBeginX;
-    public int mouseBeginY;
-    public boolean mouseBusy;
-
-    public boolean dragging;
-    public int windowBeginX;
-    public int windowBeginY;
+    public int mouseScreenX;
+    public int mouseScreenY;
     
     public boolean mouseDown;
     public boolean mouseDownPrevious;

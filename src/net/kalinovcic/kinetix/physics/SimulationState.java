@@ -25,6 +25,9 @@ public class SimulationState
     public int pauseInSnapshots;
     public Animation animation;
     
+    public double endTime = 0.0f;
+    public int autoRestartCounter = 0;
+    
     public Atom highlightAtom;
     
     public boolean doesSnapshots;

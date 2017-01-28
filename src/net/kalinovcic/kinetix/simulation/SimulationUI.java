@@ -76,8 +76,8 @@ public class SimulationUI extends Imgui
         int windowWidth = contentWidth + SIM_PADDING * 2;
         int windowHeight = contentHeight + SIM_PADDING * 2;
         
-        context.nextFrameWindowWidth = windowWidth;
-        context.nextFrameWindowHeight = windowHeight;
+        context.nextFrameWidth = windowWidth;
+        context.nextFrameHeight = windowHeight;
 
         popLayout();
         popBounds();

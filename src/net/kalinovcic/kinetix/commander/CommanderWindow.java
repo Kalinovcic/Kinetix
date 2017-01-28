@@ -45,6 +45,9 @@ public class CommanderWindow extends ImguiFrame
     public static ImguiIntegerInput heightInput = new ImguiIntegerInput(600, 1, Integer.MAX_VALUE);
     public static ImguiIntegerInput depthInput = new ImguiIntegerInput(600, 1, Integer.MAX_VALUE);
 
+    public static ImguiIntegerInput autoRepeatInput = new ImguiIntegerInput(0, 0, Integer.MAX_VALUE);
+    public static ImguiDoubleInput repeatTimeInput = new ImguiDoubleInput(0, Double.MIN_VALUE, Double.MAX_VALUE);
+
     public static List<ImguiDoubleInput> testsTimeInputs = new ArrayList<ImguiDoubleInput>();
     public static List<ImguiIntegerInput> testsRepeatInputs = new ArrayList<ImguiIntegerInput>();
     public static List<ImguiDoubleInput> testsScaleInputs = new ArrayList<ImguiDoubleInput>();
@@ -60,7 +63,7 @@ public class CommanderWindow extends ImguiFrame
     
     public CommanderWindow(MainWindow mainWindow)
     {
-        super(mainWindow, "Commander", 20, 20, 400, 500, false, new CommanderUI());
+        super(mainWindow, "Commander", 20, 20, 400, 530, false, new CommanderUI());
         myMainWindow = mainWindow;
     }
     
@@ -210,6 +213,11 @@ public class CommanderWindow extends ImguiFrame
             endRow();
             
             beginRow();
+            doInput("Repeat:", columnWidth(2), autoRepeatInput);
+            doInput("End time:", columnWidth(2), repeatTimeInput);
+            endRow();
+            
+            beginRow();
             doInput("W:", columnWidth(3), widthInput, "px");
             doInput("H:", columnWidth(3), heightInput, "px");
             doInput("D:", columnWidth(3), depthInput, "px");
@@ -231,10 +239,20 @@ public class CommanderWindow extends ImguiFrame
             {
                 ConfigurationHelper.configureSimulation();
 
-                Kinetix.STATE.settings = ConfigurationHelper.settings;
-                Kinetix.STATE.reactions = ConfigurationHelper.reactions;
-                Kinetix.STATE.atomTypes = ConfigurationHelper.atomTypes;
-                Kinetix.restart = true;
+                synchronized (Kinetix.STATE)
+                {
+                    Kinetix.STATE.settings = ConfigurationHelper.settings;
+                    Kinetix.STATE.reactions = ConfigurationHelper.reactions;
+                    Kinetix.STATE.atomTypes = ConfigurationHelper.atomTypes;
+                    
+                    if (autoRepeatInput.value > 0)
+                    {
+                        Kinetix.STATE.autoRestartCounter = autoRepeatInput.value;
+                        Kinetix.STATE.endTime = repeatTimeInput.value;
+                    }
+                    
+                    Kinetix.restart = true;
+                }
             }
         }
         
@@ -281,10 +299,7 @@ public class CommanderWindow extends ImguiFrame
             if (doButton("Start testing", columnWidth(1), 0, testingReady))
             {
                 ConfigurationHelper.configureTesting();
-                synchronized (Kinetix.STATE)
-                {
-                    new TestingThread(myMainWindow, ConfigurationHelper.tests).start();
-                }
+                new TestingThread(myMainWindow, ConfigurationHelper.tests).start();
             }
             
             if (doButton("Test all", columnWidth(1), 0))

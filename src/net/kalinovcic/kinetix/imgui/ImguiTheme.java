@@ -42,7 +42,9 @@ public class ImguiTheme
     
     public static final float WINDOW_ROUNDED_RADIUS = 10.0f;
     public static final Color WINDOW_NORMAL = new Color(40, 51, 54);
-    /* public static final Color WINDOW_NORMAL = new Color(239, 239, 239);*/
+    public static final Color WINDOW_FOCUS = new Color(153, 61, 139);
+    /* public static final Color WINDOW_NORMAL = new Color(239, 239, 239);
+    public static final Color WINDOW_FOCUS = new Color(244, 66, 217);*/
     
     public static final float PADDING_VERTICAL = 4.0f;
     public static final float PADDING_HORIZONTAL = 10.0f;

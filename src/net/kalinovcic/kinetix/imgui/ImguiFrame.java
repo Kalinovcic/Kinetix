@@ -1,12 +1,17 @@
 package net.kalinovcic.kinetix.imgui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -23,7 +28,7 @@ import net.kalinovcic.kinetix.MainWindow;
 
 import static net.kalinovcic.kinetix.imgui.ImguiTheme.*;
 
-public class ImguiFrame extends JInternalFrame implements ActionListener, MouseListener, MouseMotionListener, KeyListener
+public class ImguiFrame extends JInternalFrame implements ActionListener, FocusListener, MouseListener, MouseMotionListener, KeyListener
 {
     private static final long serialVersionUID = 1L;
 
@@ -52,15 +57,18 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, MouseL
         this.setBorder(null);
 
         // Size it
-        context.nextFrameWindowWidth = width;
-        context.nextFrameWindowHeight = height;
-        context.currentWindowWidth = context.nextFrameWindowWidth;
-        context.currentWindowHeight = context.nextFrameWindowHeight;
+        context.nextFrameWidth = width;
+        context.nextFrameHeight = height;
+        context.currentFrameX = x;
+        context.currentFrameY = y;
+        context.currentFrameWidth = context.nextFrameWidth;
+        context.currentFrameHeight = context.nextFrameHeight;
         resizeToMatchContext();
-        setLocation(x, y);
+        moveToMatchContext();
         
         // Link it
         setFocusable(true);
+        addFocusListener(this);
         addMouseListener(this);
         addMouseMotionListener(this);
         addKeyListener(this);
@@ -68,7 +76,7 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, MouseL
         mainWindow.desktop.add(this);
         
         // Active rendering:
-        Timer timer = new Timer(10, this);
+        Timer timer = new Timer(30, this);
         timer.setInitialDelay(0);
         timer.start();
     }
@@ -88,12 +96,47 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, MouseL
         context.mousePressed = context.mouseDown && !context.mouseDownPrevious;
         context.mouseReleased = !context.mouseDown && context.mouseDownPrevious;
         context.mouseDownPrevious = context.mouseDown;
+        
+        if (context.focus && context.mouseDown && !context.mousePressed && !context.mouseBusy)
+        {
+            context.mouseBusy = true;
+            context.mouseDragging = true;
+        }
+        
+        if (context.mouseDragging)
+        {
+            if (context.mouseReleased)
+            {
+                context.mouseDragging = false;
+            }
+            else
+            {
+                int deltaX = context.mouseScreenX - context.pressMouseScreenX;
+                int deltaY = context.mouseScreenY - context.pressMouseScreenY;
+                int frameX = context.pressFrameX + deltaX;
+                int frameY = context.pressFrameY + deltaY;
+
+                context.currentFrameX = frameX;
+                context.currentFrameY = frameY;
+            }
+        }
 
         float w = getWidth();
         float h = getHeight();
 
+        Shape windowShape = imgui.rounded(new Rectangle2D.Float(0, 0, w - 1, h - 1), WINDOW_ROUNDED_RADIUS);
         g.setColor(WINDOW_NORMAL);
-        g.fill(imgui.rounded(new Rectangle2D.Float(0, 0, w, h), WINDOW_ROUNDED_RADIUS));
+        g.fill(windowShape);
+        if (context.focus)
+        {
+            Stroke defaultStroke = g.getStroke();
+            g.setStroke(new BasicStroke(2.0f));
+
+            g.setColor(WINDOW_FOCUS);
+            g.draw(windowShape);
+            
+            g.setStroke(defaultStroke);
+        }
         
         if (closable)
             if (imgui.doButton("", new Rectangle2D.Float(w - 25, 5, 20, 20), true))
@@ -109,67 +152,94 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, MouseL
         imgui.popBounds();
         
         context.typedChars.clear();
+
+        if (mainWindow.desktop.getWidth() != 0)
+            if (context.currentFrameWidth > mainWindow.desktop.getWidth())
+                context.nextFrameHeight = mainWindow.desktop.getWidth();
+        if (mainWindow.desktop.getHeight() != 0)
+            if (context.currentFrameHeight > mainWindow.desktop.getHeight())
+                context.nextFrameHeight = mainWindow.desktop.getHeight();
         
-        if (context.nextFrameWindowWidth != context.currentWindowWidth ||
-            context.nextFrameWindowHeight != context.currentWindowHeight)
+        if (context.nextFrameWidth != context.currentFrameWidth ||
+            context.nextFrameHeight != context.currentFrameHeight)
         {
-            context.currentWindowWidth = context.nextFrameWindowWidth;
-            context.currentWindowHeight = context.nextFrameWindowHeight;
+            context.currentFrameWidth = context.nextFrameWidth;
+            context.currentFrameHeight = context.nextFrameHeight;
+            if (mainWindow.desktop.getWidth() != 0)
+                if (context.currentFrameWidth > mainWindow.desktop.getWidth())
+                    context.currentFrameWidth = mainWindow.desktop.getWidth();
+            if (mainWindow.desktop.getHeight() != 0)
+                if (context.currentFrameHeight > mainWindow.desktop.getHeight())
+                    context.currentFrameHeight = mainWindow.desktop.getHeight();
+            
             resizeToMatchContext();
         }
+        moveToMatchContext();
         
         g.dispose();
     }
     
+    private void moveToMatchContext()
+    {
+        if (context.currentFrameX < 0) context.currentFrameX = 0;
+        if (context.currentFrameY < 0) context.currentFrameY = 0;
+        if (mainWindow.desktop.getWidth() != 0)
+        {
+            if (context.currentFrameX + context.currentFrameWidth > mainWindow.desktop.getWidth())
+                context.currentFrameX = mainWindow.desktop.getWidth() - context.currentFrameWidth;
+        }
+        if (mainWindow.desktop.getHeight() != 0)
+        {
+            if (context.currentFrameY + context.currentFrameHeight > mainWindow.desktop.getHeight())
+                context.currentFrameY = mainWindow.desktop.getHeight() - context.currentFrameHeight;
+        }
+        setLocation(context.currentFrameX, context.currentFrameY);
+    }
+    
     private void resizeToMatchContext()
     {
-        Dimension size = new Dimension(context.currentWindowWidth, context.currentWindowHeight);
+        Dimension size = new Dimension(context.currentFrameWidth, context.currentFrameHeight);
         setSize(size);
         setMinimumSize(size);
         setMaximumSize(size);
     }
     
-    @Override
-    public void actionPerformed(ActionEvent e)
+    @Override public void actionPerformed(ActionEvent e)
     {
+        moveToMatchContext();
         repaint();
     }
+    
+    @Override public void focusGained(FocusEvent e) { context.focus = true; }
+    @Override public void focusLost(FocusEvent e) { context.focus = context.mouseDown = context.mouseDragging = context.mouseBusy = false; }
 
     @Override public void mouseClicked(MouseEvent e) {}
     @Override public void mouseEntered(MouseEvent e) {}
-    @Override public void mouseExited(MouseEvent e) { context.mouseDown = context.dragging = context.mouseBusy = false; }
+    @Override public void mouseExited(MouseEvent e) {}
     @Override public void mousePressed(MouseEvent e)
     {
         if (e.getButton() != MouseEvent.BUTTON1) return;
+        context.pressMouseScreenX = e.getXOnScreen();
+        context.pressMouseScreenY = e.getYOnScreen();
+        context.pressFrameX = getX();
+        context.pressFrameY = getY();
         context.mouseDown = true;
-        context.mouseBeginX = e.getLocationOnScreen().x;
-        context.mouseBeginY = e.getLocationOnScreen().y;
+        context.focus = true;
     }
-    @Override public void mouseReleased(MouseEvent e) { context.mouseDown = context.dragging = context.mouseBusy = false; }
-
-    @Override public void mouseDragged(MouseEvent e)
+    @Override public void mouseReleased(MouseEvent e)
     {
-        if (context.mouseBusy) return;
-        int dragX = e.getLocationOnScreen().x;
-        int dragY = e.getLocationOnScreen().y;
-        if (!context.dragging)
-        {
-            context.dragging = true;
-            context.windowBeginX = getLocation().x;
-            context.windowBeginY = getLocation().y;
-        }
-        if (context.dragging)
-        {
-            int x = context.windowBeginX + (dragX - context.mouseBeginX);
-            int y = context.windowBeginY + (dragY - context.mouseBeginY);
-            if (x < 0) x = 0;
-            if (y < 0) y = 0;
-            if (x + getWidth() > mainWindow.desktop.getWidth()) x = mainWindow.desktop.getWidth() - getWidth();
-            if (y + getHeight() > mainWindow.desktop.getHeight()) y = mainWindow.desktop.getHeight() - getHeight();
-            setLocation(x, y);
-        }
+        if (e.getButton() != MouseEvent.BUTTON1) return;
+        context.mouseDown = context.mouseBusy = false;
     }
-    @Override public void mouseMoved(MouseEvent e) { context.mouseX = e.getX(); context.mouseY = e.getY(); }
+
+    @Override public void mouseDragged(MouseEvent e) { mouseMoved(e); }
+    @Override public void mouseMoved(MouseEvent e)
+    {
+        context.mouseX = e.getX();
+        context.mouseY = e.getY();
+        context.mouseScreenX = e.getXOnScreen();
+        context.mouseScreenY = e.getYOnScreen();
+    }
     
     @Override public void keyPressed(KeyEvent e) {}
     @Override public void keyReleased(KeyEvent e) {}

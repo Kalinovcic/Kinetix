@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.font.FontRenderContext;
@@ -34,6 +33,10 @@ public abstract class Imgui
         AffineTransform transform = new AffineTransform();
         transform.setToTranslation(context.bounds.x, context.bounds.y);
         g.transform(transform);
+        
+        context.totalTranslationX += context.bounds.x;
+        context.totalTranslationY += context.bounds.y;
+        
         g.setClip(new Rectangle2D.Float(0, 0, context.bounds.width + 1, context.bounds.height + 1));
     }
     
@@ -42,6 +45,9 @@ public abstract class Imgui
         AffineTransform transform = new AffineTransform();
         transform.setToTranslation(-context.bounds.x, -context.bounds.y);
         g.transform(transform);
+        
+        context.totalTranslationX -= context.bounds.x;
+        context.totalTranslationY -= context.bounds.y;
         
         context.bounds = context.bounds.parent;
         if (context.bounds != null)
@@ -79,19 +85,20 @@ public abstract class Imgui
     /***********************************************************/
     /***********************************************************/
     
-    public Point2D mousePoint()
+    public Point2D.Float mousePoint()
     {
-        Point2D point = new Point2D.Float(context.mouseX, context.mouseY);
-        point.setLocation(-point.getX(), -point.getY());
-        g.getTransform().transform(point, point);
-        point.setLocation(-point.getX(), -point.getY());
-        
-        Rectangle clipBounds = g.getClipBounds();
-        if (point.getX() < clipBounds.x) point.setLocation(-10000.0f, -10000.0f);
-        if (point.getY() < clipBounds.y) point.setLocation(-10000.0f, -10000.0f);
-        if (point.getX() >= clipBounds.x + clipBounds.width) point.setLocation(-10000.0f, -10000.0f);
-        if (point.getY() >= clipBounds.y + clipBounds.height) point.setLocation(-10000.0f, -10000.0f);
-        return point;
+        if (!context.focus) return new Point2D.Float(-10000.0f, -10000.0f);
+        if (context.mouseDragging) return new Point2D.Float(-10000.0f, -10000.0f);
+
+        float mouseX = context.mouseX - context.totalTranslationX;
+        float mouseY = context.mouseY - context.totalTranslationY;
+
+        if (context.bounds != null)
+        {
+            if (mouseX > context.bounds.width) return new Point2D.Float(-10000.0f, -10000.0f);
+            if (mouseY > context.bounds.height) return new Point2D.Float(-10000.0f, -10000.0f);
+        }
+        return new Point2D.Float(mouseX, mouseY);
     }
     
     public Rectangle2D.Float pushBox(float width, float height)

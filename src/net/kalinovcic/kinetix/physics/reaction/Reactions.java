@@ -51,6 +51,14 @@ public class Reactions
 	    return name.replaceAll("₂", "2").replaceAll("₃", "3").replaceAll("₄", "4");
 	}
     
+    public static String findName(int unique)
+    {
+        for (Map.Entry<String, Integer> entry : uniqueAtoms.entrySet())
+            if (entry.getValue() == unique)
+                return entry.getKey();
+        return null;
+    }
+    
     public static double findMass(String atom)
     {
         for (Reaction reaction : reactions)
