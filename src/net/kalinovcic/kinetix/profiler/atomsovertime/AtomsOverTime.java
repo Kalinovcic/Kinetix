@@ -23,8 +23,11 @@ public class AtomsOverTime extends Profiler
     public static final float PADDING_BOTTOM = 15.0f;
     public static final float PADDING_RIGHT = 10.0f;
     public static final float PADDING_TOP = 36.0f;
-    
+
     public static final Color STRUCTURE_COLOR = TEXT;
+    public static final Color MAJOR_COLOR = new Color(TEXT.getRed(), TEXT.getGreen(), TEXT.getBlue(), 40);
+    public static final Color MINOR_COLOR = new Color(TEXT.getRed(), TEXT.getGreen(), TEXT.getBlue(), 10);
+    public static final int GRID_DIV = 5;
     
     public AtomsOverTime()
     {
@@ -52,6 +55,9 @@ public class AtomsOverTime extends Profiler
     private float horMarkEvery = 2.0f;
     private float horMaximum = 30.0f;
 
+    private boolean major = true;
+    private boolean minor = true;
+
     @Override
     public void update(ProfilerUI ui)
     {
@@ -65,6 +71,7 @@ public class AtomsOverTime extends Profiler
         
         updateInput();
         updateGraph();
+        
         renderGraph();
         renderStructure();
     }
@@ -72,18 +79,28 @@ public class AtomsOverTime extends Profiler
     public void updateInput()
     {
         ui.beginRow();
-        if (ui.doButton("+ resolution", 0, 18))
+        if (ui.doButton("clear", 0, 18))
+        {
+            lines.clear();
+        }
+        if (ui.doButton("+ R", 0, 18))
         {
             horMaximum *= 2.0f;
             horMarkEvery *= 2.0f;
         }
-        if (ui.doButton("- resolution", 0, 18))
+        if (ui.doButton("- R", 0, 18))
         {
             horMaximum /= 2.0f;
             horMarkEvery /= 2.0f;
         }
-        if (ui.doButton("+ width", 0, 18)) context.nextFrameWindowWidth += 100;
-        if (ui.doButton("- width", 0, 18)) context.nextFrameWindowWidth -= 100;
+        if (ui.doButton("+ W", 0, 18)) context.nextFrameWindowWidth += 50;
+        if (ui.doButton("- W", 0, 18)) context.nextFrameWindowWidth -= 50;
+        if (ui.doButton("+ H", 0, 18)) context.nextFrameWindowHeight += 50;
+        if (ui.doButton("- H", 0, 18)) context.nextFrameWindowHeight -= 50;
+
+        major = ui.doCheckbox("major", 0, 18, major);
+        minor = ui.doCheckbox("minor", 0, 18, minor);
+        
         ui.endRow();
     }
     
@@ -155,10 +172,11 @@ public class AtomsOverTime extends Profiler
             previousTime = newTime;
         }
     }
+    
+    private Line2D.Float line2D = new Line2D.Float();
 
     public void renderGraph()
     {
-        Line2D.Float line2D = new Line2D.Float();
         for (Line line : lines)
         {
             line2D.x1 = horX1 + line.time1 * horPixelsPerUnit;
@@ -181,7 +199,7 @@ public class AtomsOverTime extends Profiler
         verY2 = PADDING_TOP;
         
         verPixelsPerUnit = (verY1 - verY2) * 0.9f / maximumCount;
-        verMarkEvery = 40.0f;
+        verMarkEvery = 20.0f;
         verMaximum = maximumCount;
         
         horY = context.bounds.height - PADDING_BOTTOM;
@@ -200,32 +218,81 @@ public class AtomsOverTime extends Profiler
         float ascent = metrics.getAscent();
         
         // horizontal axis
-        
-        g.draw(new Line2D.Float(horX1, horY, horX2, horY));
+
+        line2D.x1 = horX1; line2D.x2 = horX2;
+        line2D.y1 = line2D.y2 = horY; 
+        g.draw(line2D);
         for (float value = horMarkEvery; value <= horMaximum; value += horMarkEvery)
         {
-            float x = horX1 + value * horPixelsPerUnit;
-            float y = horY;
-            g.draw(new Line2D.Float(x, y, x, y + 2));
+            line2D.x2 = (line2D.x1 = horX1 + value * horPixelsPerUnit);
+            line2D.y2 = (line2D.y1 = horY) + 2;
+            g.draw(line2D);
             
             String text = String.format(Locale.US, "%.0f", value);
-            g.drawString(text, x - metrics.stringWidth(text) * 0.5f, y + ascent + 4);
+            g.drawString(text, line2D.x1 - metrics.stringWidth(text) * 0.5f, line2D.y1 + ascent + 4);
+            
+            if (major || minor)
+            {
+                line2D.y2 = verY2;
+                for (int i = 0; i < GRID_DIV; i++)
+                {
+                    if (i == 0 && major)
+                    {
+                        g.setColor(MAJOR_COLOR);
+                    }
+                    else
+                    {
+                        if (!minor) continue;
+                        g.setColor(MINOR_COLOR);
+                    }
+                    
+                    float gridValue = value - (i / (float) GRID_DIV) * horMarkEvery;
+                    line2D.x2 = (line2D.x1 = horX1 + gridValue * horPixelsPerUnit);
+                    g.draw(line2D);
+                    g.setColor(STRUCTURE_COLOR);
+                }
+            }
         }
         
         final String horLabel = "t [s]";
         g.drawString(horLabel, horX2 - metrics.stringWidth(horLabel), horY - height + ascent);
         
         // vertical axis
-        
-        g.draw(new Line2D.Float(verX, verY1, verX, verY2));
+
+        line2D.x1 = line2D.x2 = verX;
+        line2D.y1 = verY1; line2D.y2 = verY2; 
+        g.draw(line2D);
         for (float value = verMarkEvery; value <= verMaximum; value += verMarkEvery)
         {
-            float x = verX;
-            float y = verY1 - value * verPixelsPerUnit;
-            g.draw(new Line2D.Float(x, y, x - 2, y));
+            line2D.x2 = (line2D.x1 = verX) - 2;
+            line2D.y2 = (line2D.y1 = verY1 - value * verPixelsPerUnit);
+            g.draw(line2D);
 
             String text = String.format(Locale.US, "%.0f", value);
-            g.drawString(text, x - metrics.stringWidth(text) - 5, y - height * 0.5f + ascent);
+            g.drawString(text, line2D.x1 - metrics.stringWidth(text) - 5, line2D.y1 - height * 0.5f + ascent);
+            
+            if (major || minor)
+            {
+                line2D.x2 = horX2;
+                for (int i = 0; i < GRID_DIV; i++)
+                {
+                    if (i == 0)
+                    {
+                        if (!major) continue;
+                        g.setColor(MAJOR_COLOR);
+                    }
+                    else
+                    {
+                        if (!minor) continue;
+                        g.setColor(MINOR_COLOR);
+                    }
+                    
+                    float gridValue = value - (i / (float) GRID_DIV) * verMarkEvery;
+                    line2D.y2 = (line2D.y1 = verY1 - gridValue * verPixelsPerUnit);
+                    g.draw(line2D);
+                    g.setColor(STRUCTURE_COLOR);
+                }
+            }
         }
         
         final String verLabel = "atom [1]";

@@ -1,11 +1,15 @@
 package net.kalinovcic.kinetix.imgui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.Stroke;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
@@ -115,25 +119,45 @@ public abstract class Imgui
         g.setColor(OUTLINE);
         g.draw(shape);
     }
+
+    public Font textFont;
+    public Color textColor;
+    public Color textOutline;
+    public float textOutlineWidth = 2.0f;
     
     public void renderText(String text, Rectangle2D.Float r, float alignment, float offset)
     {
-        renderText(text, r, alignment, offset, FONT, TEXT);
-    }
-    
-    public void renderText(String text, Rectangle2D.Float r, float alignment, float offset, Font font, Color color)
-    {
+        Font font = (textFont != null ? textFont : FONT);
+        Color color = (textColor != null ? textColor : TEXT);
+        
         if (text.length() == 0) return;
         
-        g.setFont(font);
-        FontMetrics metrics = g.getFontMetrics();
+        FontMetrics metrics = g.getFontMetrics(font);
         int textWidth = metrics.stringWidth(text);
         int textHeight = metrics.getHeight();
         
         float textX = r.x + (r.width - textWidth) * alignment + offset;
         float textY = r.y + (r.height - textHeight) / 2 + metrics.getAscent();
+        
+        FontRenderContext renderContext = g.getFontRenderContext();
+        TextLayout layout = new TextLayout(text, font, renderContext);
+        Shape shape = layout.getOutline(null);
+        // Shape shape = font.createGlyphVector(, text).getOutline(textX, textY);
+        
+        g.translate(textX, textY);
+        if (textOutline != null)
+        {
+            Stroke defaultStroke = g.getStroke();
+            g.setStroke(new BasicStroke(textOutlineWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, null, 0));
+            
+            g.setColor(textOutline);
+            g.draw(shape);
+            
+            g.setStroke(defaultStroke);
+        }
         g.setColor(color);
-        g.drawString(text, textX, textY);
+        g.fill(shape);
+        g.translate(-textX, -textY);
     }
 
     /***********************************************************/
@@ -170,11 +194,16 @@ public abstract class Imgui
         if (color != null)
         {
             renderShape(rounded(r, BUTTON_ROUNDED_RADIUS), color);
-            renderText(text, r, alignment, 0, font, TEXT);
+            
+            textFont = font;
+            renderText(text, r, alignment, 0);
+            textFont = null;
         }
         else
         {
-            renderText(text, r, alignment, 0, font, TEXT);
+            textFont = font;
+            renderText(text, r, alignment, 0);
+            textFont = null;
         }
     }
     
@@ -213,13 +242,14 @@ public abstract class Imgui
     
     public boolean doCheckbox(String text, boolean current)
     {
-        Rectangle2D.Float r = pushBox(-(g.getFontMetrics(FONT).stringWidth(text) + CHECKBOX_HEIGHT + 8), -CHECKBOX_HEIGHT);
-        return doCheckbox(text, r, current);
+        return doCheckbox(text, 0, 0, current);
     }
     
-    public boolean doCheckbox(String text, float width, boolean current)
+    public boolean doCheckbox(String text, float width, float height, boolean current)
     {
-        Rectangle2D.Float r = pushBox(-width, -CHECKBOX_HEIGHT);
+        if (width <= 0) width = -(g.getFontMetrics(FONT).stringWidth(text) + CHECKBOX_HEIGHT + 8);
+        if (height <= 0) height = -CHECKBOX_HEIGHT;
+        Rectangle2D.Float r = pushBox(-width, -height);
         return doCheckbox(text, r, current);
     }
     

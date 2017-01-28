@@ -172,7 +172,11 @@ public class CommanderWindow extends ImguiFrame
                 for (AtomType type : atomTypes)
                 {
                     beginRow();
-                    doLabel(type.name, columnWidth(4), 0.5f, FONT, type.color);
+                    
+                    textOutline = TEXT_OUTLINE;
+                    doLabel(type.name, columnWidth(4), 0.5f, BOLD_FONT, type.color);
+                    textOutline = null;
+                    
                     doInput("", columnWidth(4), type.initialCountInput);
                     doInput("", columnWidth(4), type.massInput, "g ⁄ mol");
                     doInput("", columnWidth(4), type.radiusInput, "Å");
@@ -190,9 +194,9 @@ public class CommanderWindow extends ImguiFrame
             doSpace(0, 235);
 
             beginRow();
-            simulateSteric = doCheckbox("Steric", columnWidth(3), simulateSteric);
-            simulate2D = doCheckbox("2D", columnWidth(3), simulate2D);
-            simulateV = doCheckbox("V", columnWidth(3), simulateV);
+            simulateSteric = doCheckbox("Steric", columnWidth(3), 0, simulateSteric);
+            simulate2D = doCheckbox("2D", columnWidth(3), 0, simulate2D);
+            simulateV = doCheckbox("V", columnWidth(3), 0, simulateV);
             endRow();
 
             beginRow();

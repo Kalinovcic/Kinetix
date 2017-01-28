@@ -2,12 +2,41 @@ package net.kalinovcic.kinetix.imgui;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontFormatException;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class ImguiTheme
 {
-    public static final Font FONT = new Font("Segoe UI", Font.PLAIN, 12);
-    public static final Font SMALL_FONT = new Font("Segoe UI", Font.PLAIN, 9);
-    public static final Font BIG_FONT = new Font("Segoe UI", Font.PLAIN, 32);
+    private static Font SEGOEUI_REGULAR;
+    private static Font SEGOEUI_BOLD;
+    static
+    {
+        try
+        {
+            InputStream REGULAR = ImguiTheme.class.getResourceAsStream("/net/kalinovcic/kinetix/imgui/segoeui.ttf");
+            InputStream BOLD = ImguiTheme.class.getResourceAsStream("/net/kalinovcic/kinetix/imgui/segoeuib.ttf");
+            SEGOEUI_REGULAR = Font.createFont(Font.TRUETYPE_FONT, REGULAR);
+            SEGOEUI_BOLD = Font.createFont(Font.TRUETYPE_FONT, BOLD);
+        }
+        catch (IOException | FontFormatException ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+
+    public static final float SMALL_FONT_SIZE = 9.0f;
+    public static final float REGULAR_FONT_SIZE = 12.0f;
+    public static final float BIG_FONT_SIZE = 32.0f;
+
+    public static final Font SMALL_FONT = SEGOEUI_REGULAR.deriveFont(SMALL_FONT_SIZE);
+    public static final Font FONT = SEGOEUI_REGULAR.deriveFont(REGULAR_FONT_SIZE);
+    public static final Font BIG_FONT = SEGOEUI_REGULAR.deriveFont(BIG_FONT_SIZE);
+    
+    public static final Font BOLD_FONT = SEGOEUI_BOLD.deriveFont(REGULAR_FONT_SIZE);
+    public static final Font BOLD_BIG_FONT = SEGOEUI_BOLD.deriveFont(BIG_FONT_SIZE);
+    
+    
     
     public static final Color DESKTOP_NORMAL = new Color(0, 95, 179);
     
@@ -19,9 +48,11 @@ public class ImguiTheme
     public static final float PADDING_HORIZONTAL = 10.0f;
     public static final Color OUTLINE = new Color(40, 40, 40);
     public static final Color TEXT = new Color(229, 229, 229);
+    public static final Color TEXT_OUTLINE = new Color(40, 40, 40);
     public static final Color TEXT_DISABLED = new Color(140, 140, 140);
     /*public static final Color OUTLINE = new Color(190, 198, 200);
     public static final Color TEXT = new Color(63, 63, 63);
+    public static final Color TEXT_OUTLINE = new Color(190, 198, 200);
     public static final Color TEXT_DISABLED = new Color(153, 153, 153);*/
     
     public static final float BUTTON_HEIGHT = 24.0f;
