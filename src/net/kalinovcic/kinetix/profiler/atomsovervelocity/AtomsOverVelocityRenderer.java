@@ -1,18 +1,8 @@
 package net.kalinovcic.kinetix.profiler.atomsovervelocity;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.util.Locale;
-
-import net.kalinovcic.kinetix.KinetixUI;
-import net.kalinovcic.kinetix.physics.Atom;
-import net.kalinovcic.kinetix.physics.SimulationState;
-import net.kalinovcic.kinetix.physics.reaction.Reactions;
-
 public class AtomsOverVelocityRenderer
 {
+    /*
     public AtomsOverVelocity profiler;
     
     public AtomsOverVelocityRenderer(AtomsOverVelocity profiler)
@@ -155,4 +145,5 @@ public class AtomsOverVelocityRenderer
 
         profiler.swapBuffers();
     }
+    */
 }

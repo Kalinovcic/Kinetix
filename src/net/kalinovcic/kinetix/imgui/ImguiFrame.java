@@ -76,7 +76,7 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, MouseL
     protected void paintComponent(Graphics g1)
     {
         super.paintComponent(g1);
-
+        
         Graphics2D g = (Graphics2D) g1;
         imgui.context = context;
         imgui.g = g;

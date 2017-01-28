@@ -1,13 +1,8 @@
 package net.kalinovcic.kinetix.profiler.atomsovervelocity;
 
-import java.awt.event.KeyEvent;
-
-import javax.swing.KeyStroke;
-
-import net.kalinovcic.kinetix.profiler.ProfilerAction;
-
-public class AtomsOverVelocityAction extends ProfilerAction
+public class AtomsOverVelocityAction
 {
+    /*
 	@Override
 	public void initialize()
 	{
@@ -95,4 +90,5 @@ public class AtomsOverVelocityAction extends ProfilerAction
 		} break;
 		}
 	}
+	*/
 }

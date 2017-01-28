@@ -1,11 +1,8 @@
 package net.kalinovcic.kinetix.profiler.atomsovervelocity;
 
-import net.kalinovcic.kinetix.physics.reaction.Reactions;
-import net.kalinovcic.kinetix.profiler.Profiler;
-import net.kalinovcic.kinetix.profiler.ProfilerWindow;
-
-public class AtomsOverVelocity extends Profiler
+public class AtomsOverVelocity
 {
+    /*
     private static final long serialVersionUID = 1L;
 
     public static final int DISPLAY_SINGLE = 0;
@@ -36,4 +33,5 @@ public class AtomsOverVelocity extends Profiler
         thread = new AtomsOverVelocityThread(this);
         thread.start();
     }
+    */
 }

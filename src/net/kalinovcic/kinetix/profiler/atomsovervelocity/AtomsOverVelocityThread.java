@@ -1,12 +1,8 @@
 package net.kalinovcic.kinetix.profiler.atomsovervelocity;
 
-import net.kalinovcic.kinetix.KinetixThread;
-import net.kalinovcic.kinetix.physics.Atom;
-import net.kalinovcic.kinetix.physics.SimulationState;
-import net.kalinovcic.kinetix.physics.reaction.Reactions;
-
-public class AtomsOverVelocityThread extends KinetixThread
+public class AtomsOverVelocityThread
 {
+    /*
     public AtomsOverVelocity profiler;
     public AtomsOverVelocityRenderer renderer;
     
@@ -94,4 +90,5 @@ public class AtomsOverVelocityThread extends KinetixThread
             if (state.paused) profiler.paused = true;
     	}
     }
+    */
 }

@@ -6,6 +6,7 @@ import java.awt.Font;
 public class ImguiTheme
 {
     public static final Font FONT = new Font("Segoe UI", Font.PLAIN, 12);
+    public static final Font SMALL_FONT = new Font("Segoe UI", Font.PLAIN, 9);
     public static final Font BIG_FONT = new Font("Segoe UI", Font.PLAIN, 32);
     
     public static final Color DESKTOP_NORMAL = new Color(0, 95, 179);

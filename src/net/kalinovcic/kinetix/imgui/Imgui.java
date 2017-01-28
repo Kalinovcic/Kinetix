@@ -350,6 +350,12 @@ public abstract class Imgui
         return doTabs(text, r, current);
     }
     
+    public int doTabs(String[] text, float width, int current)
+    {
+        Rectangle2D.Float r = pushBox(width, -FOLD_HEIGHT);
+        return doTabs(text, r, current);
+    }
+    
     public int doTabs(String[] text, Rectangle2D.Float r, int current)
     {
         Shape shape = rounded(r, FOLD_ROUNDED_RADIUS);

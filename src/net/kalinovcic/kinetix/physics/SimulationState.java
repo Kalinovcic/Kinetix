@@ -10,6 +10,8 @@ import net.kalinovcic.kinetix.simulation.animation.Animation;
 
 public class SimulationState
 {
+    public Object instanceID = new Object();
+    
     public boolean readyToUse;
 	public SimulationSettings settings;
 	public Reaction[] reactions;
@@ -56,6 +58,8 @@ public class SimulationState
     	
     	nextSnapshotIndex = 0;
     	nextSnapshotDelta = 0;
+
+        instanceID = new Object();
     }
     
     public void takeSnapshot()
