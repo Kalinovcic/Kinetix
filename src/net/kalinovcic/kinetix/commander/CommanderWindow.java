@@ -63,7 +63,7 @@ public class CommanderWindow extends ImguiFrame
     
     public CommanderWindow(MainWindow mainWindow)
     {
-        super(mainWindow, "Commander", 20, 20, 400, 530, false, new CommanderUI());
+        super(mainWindow, "Commander", 20, 20, 400, 700, false, new CommanderUI());
         myMainWindow = mainWindow;
     }
     
@@ -194,7 +194,7 @@ public class CommanderWindow extends ImguiFrame
             popBounds();
             popLayout();
             pushLayout(new ImguiVerticalLayout());
-            doSpace(0, 235);
+            doSpace(0, 400);
 
             beginRow();
             simulateSteric = doCheckbox("Steric", columnWidth(3), 0, simulateSteric);
