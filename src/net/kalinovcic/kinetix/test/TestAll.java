@@ -19,6 +19,8 @@ public class TestAll
     private static void initAtom(TestingUnit unit, String type, int count)
     {
         int unique = Reactions.uniqueAtoms.get(type);
+        if (unit.atomTypes[unique] != null)
+            return;
         unit.atomTypes[unique] = new AtomType();
         unit.atomTypes[unique].name = type;
         unit.atomTypes[unique].unique = unique;
@@ -51,8 +53,8 @@ public class TestAll
         initAtom(unit, unit.reaction.reactant2, count);
         initAtom(unit, unit.reaction.product1, 0);
         initAtom(unit, unit.reaction.product2, 0);
-        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reaction.reactant1)].reactantInReaction = unit.reaction;
-        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reaction.reactant2)].reactantInReaction = unit.reaction;
+        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reaction.reactant1)].reactantInReactions.add(unit.reaction);
+        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reaction.reactant2)].reactantInReactions.add(unit.reaction);
     }
     
     public static void testAll(MainWindow mainWindow)

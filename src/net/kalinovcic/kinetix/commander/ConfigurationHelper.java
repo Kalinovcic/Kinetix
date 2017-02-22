@@ -64,8 +64,8 @@ public class ConfigurationHelper
             reactions[index].temperature = settings.temperature;
             reactions[index].recalculate();
             
-            atomTypes[unique1].reactantInReaction = reactions[index];
-            atomTypes[unique2].reactantInReaction = reactions[index];
+            atomTypes[unique1].reactantInReactions.add(reactions[index]);
+            atomTypes[unique2].reactantInReactions.add(reactions[index]);
         }
     }
     

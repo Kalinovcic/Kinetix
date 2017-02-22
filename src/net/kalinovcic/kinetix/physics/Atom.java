@@ -105,70 +105,67 @@ public class Atom
 
 	public boolean onCollide(SimulationState state, Atom other, CollisionData data)
 	{
-        if (type.reactantInReaction == null)
-            return false;
         if (state.simulationTime < state.settings.reactionStartTime)
             return false;
-        
-        int typeA = type.reactantInReaction.reactant1_unique;
-        int typeB = type.reactantInReaction.reactant2_unique;
-        int typeC = type.reactantInReaction.product1_unique;
-        int typeD = type.reactantInReaction.product2_unique;
-        
-        if ((type.unique != typeA || other.type.unique != typeB) &&
-            (type.unique != typeB || other.type.unique != typeA))
-            return false;
-
-        double energy = type.reactantInReaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
-        double activationEnergy = state.settings.activationEnergy;
-        if (activationEnergy < 0.0)
-            activationEnergy = type.reactantInReaction.activationEnergy;
-        if (energy < activationEnergy)
-            return false;
-        
-        if (state.settings.doSteric)
+        for (Reaction reaction : type.reactantInReactions)
         {
-            type.reactantInReaction._stericRemaining -= 1.0;
-            if (type.reactantInReaction._stericRemaining <= 0)
+            int typeA = reaction.reactant1_unique;
+            int typeB = reaction.reactant2_unique;
+            int typeC = reaction.product1_unique;
+            int typeD = reaction.product2_unique;
+            
+            if ((type.unique != typeA || other.type.unique != typeB) &&
+                (type.unique != typeB || other.type.unique != typeA))
+                continue;
+
+            double energy = reaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
+            double activationEnergy = state.settings.activationEnergy;
+            if (activationEnergy < 0.0)
+                activationEnergy = reaction.activationEnergy;
+            if (energy < activationEnergy)
+                break;
+        
+            if (state.settings.doSteric)
             {
-                type.reactantInReaction._stericRemaining += 1.0 / type.reactantInReaction.steric;
+                reaction._stericRemaining -= 1.0;
+                if (reaction._stericRemaining <= 0)
+                    reaction._stericRemaining += 1.0 / reaction.steric;
+                else
+                    break;
+            }
+    
+            double massC = state.atomTypes[typeC].mass * Reaction.DALTON;
+            double massD = state.atomTypes[typeD].mass * Reaction.DALTON;
+            
+            double kineticA = 0.5 * (mass * Reaction.DALTON) * velocity.length() * velocity.length();
+            double kineticB = 0.5 * (other.mass * Reaction.DALTON) * other.velocity.length() * other.velocity.length();
+            double kinetic1 = kineticA + kineticB;
+            
+            double velocityC, velocityD;
+            if (state.settings.doV)
+            {
+                velocityC = Math.sqrt(2 * kinetic1 / (massC + massD));
+                velocityD = Math.sqrt(2 * kinetic1 / (massC + massD));
             }
             else
             {
-                return false;
+                double kineticC = 0.5 * kinetic1;
+                double kineticD = 0.5 * kinetic1;
+                velocityC = Math.sqrt(2 * kineticC / massC);
+                velocityD = Math.sqrt(2 * kineticD / massD);
             }
+    
+    		state.removeAtom(this);
+    		state.removeAtom(other);
+    
+    		Atom atomC = new Atom(state.atomTypes[typeC], position, velocity.normal().mul(velocityC));
+    		Atom atomD = new Atom(state.atomTypes[typeD], other.position, other.velocity.normal().mul(velocityD));
+    		
+    		state.addAtom(atomC);
+    		state.addAtom(atomD);
+    		
+    		return true;
         }
-
-        double massC = state.atomTypes[typeC].mass * Reaction.DALTON;
-        double massD = state.atomTypes[typeD].mass * Reaction.DALTON;
-        
-        double kineticA = 0.5 * (mass * Reaction.DALTON) * velocity.length() * velocity.length();
-        double kineticB = 0.5 * (other.mass * Reaction.DALTON) * other.velocity.length() * other.velocity.length();
-        double kinetic1 = kineticA + kineticB;
-        
-        double velocityC, velocityD;
-        if (state.settings.doV)
-        {
-            velocityC = Math.sqrt(2 * kinetic1 / (massC + massD));
-            velocityD = Math.sqrt(2 * kinetic1 / (massC + massD));
-        }
-        else
-        {
-            double kineticC = 0.5 * kinetic1;
-            double kineticD = 0.5 * kinetic1;
-            velocityC = Math.sqrt(2 * kineticC / massC);
-            velocityD = Math.sqrt(2 * kineticD / massD);
-        }
-
-		state.removeAtom(this);
-		state.removeAtom(other);
-
-		Atom atomC = new Atom(state.atomTypes[typeC], position, velocity.normal().mul(velocityC));
-		Atom atomD = new Atom(state.atomTypes[typeD], other.position, other.velocity.normal().mul(velocityD));
-		
-		state.addAtom(atomC);
-		state.addAtom(atomD);
-		
-		return true;
+        return false;
 	}
 }

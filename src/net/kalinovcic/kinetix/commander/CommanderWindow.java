@@ -71,7 +71,11 @@ public class CommanderWindow extends ImguiFrame
     {
         for (AtomType type : atomTypes)
             if (type.name.equals(name))
+            {
+                if (type.initialCount < initialCount)
+                    type.initialCount = initialCount;
                 return type;
+            }
         
         AtomType type = new AtomType();
         type.name = name;
@@ -80,7 +84,6 @@ public class CommanderWindow extends ImguiFrame
         type.mass = Reactions.findMass(name);
         type.radius = Reactions.findRadius(name);
         type.color = Color.BLACK;
-        type.reactantInReaction = null;
 
         type.initialCountInput = new ImguiIntegerInput() {
             @Override public int getInitial() { return type.initialCount; }
@@ -121,8 +124,8 @@ public class CommanderWindow extends ImguiFrame
         
         for (Reaction reaction : reactions)
         {
-            addAtom(reaction.reactant1, 100).reactantInReaction = reaction;
-            addAtom(reaction.reactant2, 100).reactantInReaction = reaction;
+            addAtom(reaction.reactant1, 100).reactantInReactions.add(reaction);
+            addAtom(reaction.reactant2, 100).reactantInReactions.add(reaction);
         }
         for (Reaction reaction : reactions)
         {
@@ -156,7 +159,7 @@ public class CommanderWindow extends ImguiFrame
         {
             boolean reactionsReady = reactions != null && atomTypes != null;
             
-            pushBounds(new ImguiBounds(0, 0, context.bounds.width, 226));
+            pushBounds(new ImguiBounds(0, 0, context.bounds.width, 400 - PADDING_VERTICAL));
             if (reactionsReady)
             {
                 for (Reaction reaction : reactions)
