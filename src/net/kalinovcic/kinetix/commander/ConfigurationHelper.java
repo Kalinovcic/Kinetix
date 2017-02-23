@@ -25,7 +25,6 @@ public class ConfigurationHelper
         settings.doSteric = CommanderWindow.simulateSteric;
         settings.do2D = CommanderWindow.simulate2D;
         settings.doV = CommanderWindow.simulateV;
-        settings.activationEnergy = CommanderWindow.activationEnergyInput.value;
         settings.reactionStartTime = CommanderWindow.reactionStartTimeInput.value;
         settings.timeFactor = CommanderWindow.timeFactorInput.value;
         settings.temperature = CommanderWindow.temperatureInput.value;
@@ -63,6 +62,7 @@ public class ConfigurationHelper
             reactions[index].radius2 = atomTypes[unique2].radius;
             reactions[index].temperature = settings.temperature;
             reactions[index].recalculate();
+            reactions[index].activationEnergy = reaction.activationEnergyInput.value;
             
             atomTypes[unique1].reactantInReactions.add(reactions[index]);
             atomTypes[unique2].reactantInReactions.add(reactions[index]);

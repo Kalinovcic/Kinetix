@@ -4,6 +4,8 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+import net.kalinovcic.kinetix.imgui.ImguiDoubleInput;
+
 public class Reaction
 {
 	private static DecimalFormatSymbols otherSymbols = new DecimalFormatSymbols(Locale.US);
@@ -85,6 +87,8 @@ public class Reaction
     public int product1_unique;
     public int product2_unique;
 	public double _stericRemaining;
+	
+	public ImguiDoubleInput activationEnergyInput;
 	
 	public static String partName(int i)
 	{

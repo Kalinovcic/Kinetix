@@ -36,7 +36,6 @@ public class CommanderWindow extends ImguiFrame
     public static boolean simulate2D;
     public static boolean simulateV;
     
-    public static ImguiDoubleInput activationEnergyInput = new ImguiDoubleInput(-1);
     public static ImguiDoubleInput reactionStartTimeInput = new ImguiDoubleInput(0, 0, Double.MAX_VALUE);
     public static ImguiDoubleInput timeFactorInput = new ImguiDoubleInput(1, Double.MIN_VALUE, Double.MAX_VALUE);
     public static ImguiDoubleInput temperatureInput = new ImguiDoubleInput(3600, 0, Double.MAX_VALUE);
@@ -126,6 +125,7 @@ public class CommanderWindow extends ImguiFrame
         {
             addAtom(reaction.reactant1, 100).reactantInReactions.add(reaction);
             addAtom(reaction.reactant2, 100).reactantInReactions.add(reaction);
+            reaction.activationEnergyInput = new ImguiDoubleInput(reaction.activationEnergy, 0, Double.MAX_VALUE);
         }
         for (Reaction reaction : reactions)
         {
@@ -165,7 +165,10 @@ public class CommanderWindow extends ImguiFrame
                 for (Reaction reaction : reactions)
                 {
                     String formula = reaction.reactant1 + " + " + reaction.reactant2 + " → " + reaction.product1 + " + " + reaction.product2;
-                    doLabel(formula, columnWidth(1), 0.5f, FONT, null);
+                    beginRow();
+                    doLabel(formula, (context.bounds.width - PADDING_HORIZONTAL) * 0.6f, 0.5f, FONT, null);
+                    doInput("Eₐ:", (context.bounds.width - PADDING_HORIZONTAL) * 0.4f, reaction.activationEnergyInput, "kJ ⁄ mol");
+                    endRow();
                 }
                 doSpace(0, 4);
                 
@@ -206,8 +209,7 @@ public class CommanderWindow extends ImguiFrame
             endRow();
 
             beginRow();
-            doInput("Eₐ:", columnWidth(2), activationEnergyInput, "J ⁄ mol");
-            doInput("x:", columnWidth(2), reactionStartTimeInput, "s");
+            doInput("x:", columnWidth(1), reactionStartTimeInput, "s");
             endRow();
             
             beginRow();
