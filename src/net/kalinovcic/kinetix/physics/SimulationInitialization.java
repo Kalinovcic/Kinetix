@@ -2,9 +2,7 @@ package net.kalinovcic.kinetix.physics;
 
 import java.util.Random;
 
-import net.kalinovcic.kinetix.math.Distribution;
 import net.kalinovcic.kinetix.math.Vector3;
-import net.kalinovcic.kinetix.math.Distribution.Packing;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class SimulationInitialization
@@ -42,71 +40,77 @@ public class SimulationInitialization
         	}
         }
 
-        int equalAmountsTemp = -1;
-        boolean equalAmounts = true;
-        int[] amountPlaced = new int[Reactions.ATOM_TYPE_COUNT];
         int totalCount = 0;
         for (AtomType type : state.atomTypes)
             if (type != null)
-            {
                 totalCount += type.initialCount;
-                amountPlaced[type.unique] = 0;
-                if (type.initialCount > 0)
-                {
-                    if (equalAmountsTemp == -1)
-                        equalAmountsTemp = type.initialCount; 
-                    else if (equalAmountsTemp != type.initialCount)
-                        equalAmounts = false;
-                }
-            }
-        equalAmountsTemp = 0;
-
-        Packing packing = Distribution.findOptimalPacking(state.settings.width, state.settings.height, totalCount);
-        int gridX = 0;
-        int gridY = 0;
         
-        for (int i = 0; i < totalCount; i++)
+        double cubeSize;
+        if (state.settings.do2D)
         {
-            AtomType type;
-            int typeIndex;
-            if (equalAmounts)
-            {
-                do
-                {
-                    equalAmountsTemp++;
-                    if (equalAmountsTemp >= state.atomTypes.length)
-                        equalAmountsTemp = 0;
-                    typeIndex = equalAmountsTemp;
-                    type = state.atomTypes[typeIndex];
-                }
-                while (type == null || type.initialCount == 0);
-            }
+        	int area = state.settings.width * state.settings.height;
+            cubeSize = Math.sqrt((double) area / (double) totalCount);
+        }
+        else
+        {
+        	int volume = state.settings.width * state.settings.height * state.settings.depth;
+            cubeSize = Math.cbrt((double) volume / (double) totalCount);
+        }
+        
+        int countX, countY, countZ, cubeCount, error;
+        while (true)
+        {
+            countX = (int)(state.settings.width  / cubeSize);
+            countY = (int)(state.settings.height / cubeSize);
+            if (state.settings.do2D)
+            	countZ = 1;
             else
-            {
-                do
-                {
-                    typeIndex = random.nextInt(state.atomTypes.length);
-                    type = state.atomTypes[typeIndex];
-                }
-                while (type == null || amountPlaced[type.unique] >= type.initialCount);
-                amountPlaced[type.unique]++;
-            }
-            
-            double x = packing.startX + packing.width * 0.5 * (gridY % 2) + packing.width * gridX;
-            double y = packing.startY + packing.height * gridY;
-            double z = state.settings.do2D ? 0 : (random.nextDouble() * (state.settings.depth - 10) + 5);
-            
-            gridX++;
-            if ((gridY % 2) == 0 ? (gridX >= packing.countX) : (gridX >= packing.countX - 1))
-            {
-                gridX = 0;
-                gridY++;
-            }
-            
-            // double x = random.nextDouble() * (state.settings.width - 2 * type.radius) + type.radius;
-            // double y = random.nextDouble() * (state.settings.height - 2 * type.radius) + type.radius;
+            	countZ = (int)(state.settings.depth  / cubeSize);
+            cubeCount = countX * countY * countZ;
+            error = totalCount - cubeCount;
+            if (error <= 0) break;
+            cubeSize *= 0.999;
+        }
 
-            double randomArea = random.nextDouble() * sumProbabilities[type.unique];
+        int[] distribution = new int[cubeCount];
+        int currentIndex = 0;
+        for (AtomType type : state.atomTypes)
+            if (type != null)
+            	for (int i = 0; i < type.initialCount; i++)
+            	{
+	            	distribution[currentIndex] = type.unique;
+	            	currentIndex++;
+            	}
+        for (; currentIndex < distribution.length; currentIndex++)
+        	distribution[currentIndex] = -1;
+        
+        for (int i = 0; i < distribution.length * 256; i++)
+        {
+        	int index1 = random.nextInt(distribution.length);
+        	int index2 = random.nextInt(distribution.length);
+        	
+        	int temp = distribution[index1];
+        	distribution[index1] = distribution[index2];
+        	distribution[index2] = temp;
+        }
+        
+        for (int i = 0; i < distribution.length; i++)
+        {
+        	int ix = i % countX;
+        	int iy = (i / countX) % countY;
+        	int iz = (i / countX / countY) % countZ;
+        	
+        	int unique = distribution[i];
+        	if (unique == -1) continue;
+        	
+        	AtomType type = state.atomTypes[unique];
+
+        	double x = (ix + 0.5) * cubeSize + (state.settings.width  - countX * cubeSize) / 2;
+        	double y = (iy + 0.5) * cubeSize + (state.settings.height - countY * cubeSize) / 2;
+        	double z = (iz + 0.5) * cubeSize + (state.settings.depth  - countZ * cubeSize) / 2;
+        	if (state.settings.do2D) z = 0;
+        	
+        	double randomArea = random.nextDouble() * sumProbabilities[type.unique];
             int velocity = 0;
             while (velocity < MAXIMUM_VELOCITY && randomArea > probabilities[velocity][type.unique])
                 randomArea -= probabilities[velocity++][type.unique];
