@@ -13,6 +13,7 @@ import net.kalinovcic.kinetix.imgui.ImguiFrame;
 import net.kalinovcic.kinetix.imgui.ImguiIntegerInput;
 import net.kalinovcic.kinetix.imgui.ImguiVerticalLayout;
 import net.kalinovcic.kinetix.physics.AtomType;
+import net.kalinovcic.kinetix.physics.SimulationSeries;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 import net.kalinovcic.kinetix.physics.reaction.chooser.ReactionChooserWindow;
@@ -43,9 +44,24 @@ public class CommanderWindow extends ImguiFrame
     public static ImguiIntegerInput widthInput = new ImguiIntegerInput(600, 1, Integer.MAX_VALUE);
     public static ImguiIntegerInput heightInput = new ImguiIntegerInput(600, 1, Integer.MAX_VALUE);
     public static ImguiIntegerInput depthInput = new ImguiIntegerInput(600, 1, Integer.MAX_VALUE);
+    
+    public static final int NO_SERIES = 0;
+    public static final int SERIES_TEMPERATURE = 1;
+    public static final String[] SERIES_OPTION_NAMES = new String[] { "No series", "Series: temperature" };
+    public static int seriesOption = 0;
+    public static ImguiIntegerInput seriesCountInput = new ImguiIntegerInput(1, 1, Integer.MAX_VALUE);
+    public static ImguiDoubleInput[] seriesTemperatureInputs;
 
-    public static ImguiIntegerInput autoRepeatInput = new ImguiIntegerInput(0, 0, Integer.MAX_VALUE);
-    public static ImguiDoubleInput repeatTimeInput = new ImguiDoubleInput(0, Double.MIN_VALUE, Double.MAX_VALUE);
+    public static final int DONT_REPEAT = 0;
+    public static final int REPEAT_WITH_END_TIME = 1;
+    public static final int REPEAT_WITH_HALF_LIFE = 2;
+    public static final String[] REPEAT_OPTION_NAMES = new String[] { "No repeat", "Repeat: end time", "Repeat: half-life" };
+    public static int repeatOption = 0;
+    
+    public static ImguiIntegerInput seriesRepeatInput = new ImguiIntegerInput(1, 1, Integer.MAX_VALUE);
+    public static ImguiDoubleInput seriesEndTimeInput = new ImguiDoubleInput(0, Double.MIN_VALUE, Double.MAX_VALUE);
+    public static ImguiIntegerInput seriesHalfLifeInput = new ImguiIntegerInput(10, 0, Integer.MAX_VALUE);
+    public static int seriesHalfLifeAtom;
 
     public static List<ImguiDoubleInput> testsTimeInputs = new ArrayList<ImguiDoubleInput>();
     public static List<ImguiIntegerInput> testsRepeatInputs = new ArrayList<ImguiIntegerInput>();
@@ -159,7 +175,7 @@ public class CommanderWindow extends ImguiFrame
         {
             boolean reactionsReady = reactions != null && atomTypes != null;
             
-            pushBounds(new ImguiBounds(0, 0, context.bounds.width, 400 - PADDING_VERTICAL));
+            pushBounds(new ImguiBounds(0, 0, context.bounds.width, 320 - PADDING_VERTICAL));
             if (reactionsReady)
             {
                 for (Reaction reaction : reactions)
@@ -200,7 +216,7 @@ public class CommanderWindow extends ImguiFrame
             popBounds();
             popLayout();
             pushLayout(new ImguiVerticalLayout());
-            doSpace(0, 400);
+            doSpace(0, 320);
 
             beginRow();
             simulateSteric = doCheckbox("Steric", columnWidth(3), 0, simulateSteric);
@@ -218,8 +234,54 @@ public class CommanderWindow extends ImguiFrame
             endRow();
             
             beginRow();
-            doInput("Repeat:", columnWidth(2), autoRepeatInput);
-            doInput("End time:", columnWidth(2), repeatTimeInput);
+            if (doButton(REPEAT_OPTION_NAMES[repeatOption], columnWidth(2), 0))
+                repeatOption = (repeatOption + 1) % 3;
+            if (repeatOption != DONT_REPEAT)
+                doInput("Repeat:", columnWidth(2), seriesRepeatInput);
+            endRow();
+
+            beginRow();
+            if (repeatOption == DONT_REPEAT)
+            {
+                doSpace(0, BUTTON_HEIGHT);
+            }
+            else if (repeatOption == REPEAT_WITH_END_TIME)
+            {
+                doInput("End time:", columnWidth(1), seriesEndTimeInput);
+            }
+            else if (repeatOption == REPEAT_WITH_HALF_LIFE)
+            {
+                doInput("Half-life:", columnWidth(2), seriesHalfLifeInput);
+                if (atomTypes != null && atomTypes.size() > 0)
+                    if (doButton(atomTypes.get(seriesHalfLifeAtom).name, columnWidth(2), 0))
+                        seriesHalfLifeAtom = (seriesHalfLifeAtom + 1) % atomTypes.size();
+            }
+            endRow();
+            
+            beginRow();
+            if (doButton(SERIES_OPTION_NAMES[seriesOption], columnWidth(2), 0))
+                seriesOption = (seriesOption + 1) % 2;
+            if (seriesOption != NO_SERIES)
+                doInput("Series:", columnWidth(2), seriesCountInput);
+            endRow();
+
+            beginRow();
+            if (seriesOption == NO_SERIES)
+            {
+                doSpace(0, BUTTON_HEIGHT);
+            }
+            else if (seriesOption == SERIES_TEMPERATURE)
+            {
+                if (seriesTemperatureInputs == null || seriesTemperatureInputs.length != seriesCountInput.value)
+                {
+                    seriesTemperatureInputs = new ImguiDoubleInput[seriesCountInput.value];
+                    for (int i = 0; i < seriesCountInput.value; i++)
+                        seriesTemperatureInputs[i] = new ImguiDoubleInput(3600, 0, Double.MAX_VALUE);
+                }
+                
+                for (int i = 0; i < seriesCountInput.value; i++)
+                    doInput("", columnWidth(seriesCountInput.value), seriesTemperatureInputs[i]);
+            }
             endRow();
             
             beginRow();
@@ -250,11 +312,41 @@ public class CommanderWindow extends ImguiFrame
                     Kinetix.STATE.reactions = ConfigurationHelper.reactions;
                     Kinetix.STATE.atomTypes = ConfigurationHelper.atomTypes;
                     
-                    if (autoRepeatInput.value > 0)
+                    SimulationSeries firstSeries = new SimulationSeries();
+                    int seriesCount = (seriesOption == NO_SERIES) ? 1 : seriesCountInput.value;
+                    SimulationSeries currentSeries = null;
+                    for (int seriesIndex = 0; seriesIndex < seriesCount; seriesIndex++)
                     {
-                        Kinetix.STATE.autoRestartCounter = autoRepeatInput.value;
-                        Kinetix.STATE.endTime = repeatTimeInput.value;
+                        if (currentSeries == null)
+                            currentSeries = firstSeries;
+                        else
+                        {
+                            SimulationSeries series = new SimulationSeries();
+                            currentSeries.next = series;
+                            currentSeries = series;
+                        }
+                        
+                        if (seriesOption == SERIES_TEMPERATURE)
+                            currentSeries.temperature = seriesTemperatureInputs[seriesIndex].value;
+                        else
+                            currentSeries.temperature = temperatureInput.value;
+                        
+                        currentSeries.repeatRemaining = seriesRepeatInput.value;
+                        currentSeries.endTime = Double.MAX_VALUE;
+                        currentSeries.halfLife = Integer.MAX_VALUE;
+                        if (repeatOption == REPEAT_WITH_END_TIME)
+                        {
+                            currentSeries.endTime = seriesEndTimeInput.value;
+                        }
+                        else if (repeatOption == REPEAT_WITH_HALF_LIFE)
+                        {
+                            currentSeries.halfLife = seriesHalfLifeInput.value;
+                            currentSeries.halfLifeUnique = atomTypes.get(seriesHalfLifeAtom).unique;
+                        }
                     }
+                    
+                    Kinetix.STATE.settings.temperature = firstSeries.temperature;
+                    Kinetix.STATE.series = firstSeries;
                     
                     Kinetix.restart = true;
                 }
@@ -278,6 +370,7 @@ public class CommanderWindow extends ImguiFrame
                 doInput("", columnWidth(3), testsTimeInputs.get(i));
                 doInput("", columnWidth(3), testsRepeatInputs.get(i));
                 doInput("", columnWidth(3), testsScaleInputs.get(i));
+                context.bounds.width += BUTTON_HEIGHT + PADDING_HORIZONTAL;
                 if (doButton("-", BUTTON_HEIGHT, BUTTON_HEIGHT))
                 {
                     testsTimeInputs.remove(i);
@@ -285,6 +378,7 @@ public class CommanderWindow extends ImguiFrame
                     testsScaleInputs.remove(i);
                     i--;
                 }
+                context.bounds.width -= BUTTON_HEIGHT + PADDING_HORIZONTAL;
                 endRow();
             }
             context.bounds.width += BUTTON_HEIGHT + PADDING_HORIZONTAL;
@@ -300,7 +394,7 @@ public class CommanderWindow extends ImguiFrame
             pushLayout(new ImguiVerticalLayout());
             doSpace(0, listHeight);
 
-            boolean testingReady = reactions != null && atomTypes != null && reactions.size() == 1;
+            boolean testingReady = reactions != null && atomTypes != null && reactions.size() >= 1;
             if (doButton("Start testing", columnWidth(1), 0, testingReady))
             {
                 ConfigurationHelper.configureTesting();

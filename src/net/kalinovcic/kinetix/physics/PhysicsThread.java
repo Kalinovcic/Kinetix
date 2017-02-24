@@ -49,11 +49,11 @@ public class PhysicsThread extends KinetixThread
     		deltaTime = timeout;
     	
     	boolean restartAfterThisUpdate = false;
-    	if (state.autoRestartCounter > 0)
+    	if (state.series != null)
     	{
-    	    if (state.simulationTime + deltaTime >= state.endTime)
+    	    if (state.simulationTime + deltaTime >= state.series.endTime)
     	    {
-    	        deltaTime = state.endTime - state.simulationTime;
+    	        deltaTime = state.series.endTime - state.simulationTime;
     	        restartAfterThisUpdate = true;
     	    }
     	}
@@ -62,13 +62,35 @@ public class PhysicsThread extends KinetixThread
         
         CommanderWindow.simulationTime = "Time: " + String.format(Locale.US, "%.2f", state.simulationTime) + " s";
         
-        if (restartAfterThisUpdate)
+        if (state.series != null)
         {
-            restart(state);
-            
-            state.autoRestartCounter--;
-            if (state.autoRestartCounter > 0)
-                state.paused = false;
+            int halfLifeAtomCount = 0;
+            for (Atom atom : state.atoms)
+                if (atom.type.unique == state.series.halfLifeUnique)
+                    halfLifeAtomCount++;
+            if (halfLifeAtomCount >= state.series.halfLife)
+                restartAfterThisUpdate = true;
+
+            if (restartAfterThisUpdate)
+            {
+                boolean doContinue = false;
+                state.series.repeatRemaining--;
+                if (state.series.repeatRemaining > 0)
+                    doContinue = true;
+                else
+                {
+                    state.series = state.series.next;
+                    if (state.series != null)
+                    {
+                        state.settings.temperature = state.series.temperature;
+                        doContinue = true;
+                    }
+                }
+                
+                restart(state);
+                if (doContinue)
+                    state.paused = false;
+            }
         }
     }
 }

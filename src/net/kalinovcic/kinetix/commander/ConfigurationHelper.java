@@ -89,7 +89,7 @@ public class ConfigurationHelper
             unit.scale = CommanderWindow.testsScaleInputs.get(i).value;
 
             unit.settings = settings;
-            unit.reaction = reactions[0];
+            unit.reactions = reactions;
             unit.atomTypes = atomTypes;
         }
     }

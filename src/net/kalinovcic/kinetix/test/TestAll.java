@@ -36,9 +36,10 @@ public class TestAll
         unit.repeat = REPEAT;
         unit.scale = 1.0;
 
-        unit.reaction = reaction.clone();
-        unit.reaction.temperature = temperature;
-        unit.reaction.recalculate();
+        unit.reactions = new Reaction[1];
+        unit.reactions[0].clone();
+        unit.reactions[0].temperature = temperature;
+        unit.reactions[0].recalculate();
         
         unit.settings = new SimulationSettings();
         unit.settings.doSteric = false;
@@ -49,12 +50,12 @@ public class TestAll
         unit.settings.depth = 1000;
         
         unit.atomTypes = new AtomType[Reactions.ATOM_TYPE_COUNT];
-        initAtom(unit, unit.reaction.reactant1, count);
-        initAtom(unit, unit.reaction.reactant2, count);
-        initAtom(unit, unit.reaction.product1, 0);
-        initAtom(unit, unit.reaction.product2, 0);
-        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reaction.reactant1)].reactantInReactions.add(unit.reaction);
-        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reaction.reactant2)].reactantInReactions.add(unit.reaction);
+        initAtom(unit, unit.reactions[0].reactant1, count);
+        initAtom(unit, unit.reactions[0].reactant2, count);
+        initAtom(unit, unit.reactions[0].product1, 0);
+        initAtom(unit, unit.reactions[0].product2, 0);
+        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reactions[0].reactant1)].reactantInReactions.add(unit.reactions[0]);
+        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reactions[0].reactant2)].reactantInReactions.add(unit.reactions[0]);
     }
     
     public static void testAll(MainWindow mainWindow)

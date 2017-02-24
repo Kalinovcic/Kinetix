@@ -17,7 +17,7 @@ public class TestingConfiguration
 		public double scale;
 		
 		public SimulationSettings settings;
-	    public Reaction reaction;
+	    public Reaction[] reactions;
 	    public AtomType[] atomTypes;
 	}
 }

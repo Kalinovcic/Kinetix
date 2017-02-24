@@ -5,11 +5,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JFileChooser;
 
 import net.kalinovcic.kinetix.MainWindow;
+import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.SimulationInitialization;
 import net.kalinovcic.kinetix.physics.SimulationState;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
@@ -26,12 +28,10 @@ public class TestingThread extends Thread
 	public File file;
 	public FileWriter fileWriter;
 	public BufferedWriter bufferedWriter;
-	
-	public int theReactant1;
-	public int theReactant2;
 
-	public List<Double> times;
-	public List<Double> averages;
+    public List<Double> times;
+	@SuppressWarnings("unchecked")
+    public List<Double>[] averages = new List[Reactions.ATOM_TYPE_COUNT];
 	
 	public double testingCurrentTime = 0.0;
 	public double testingTotalTime = 0.0;
@@ -57,9 +57,16 @@ public class TestingThread extends Thread
 	{
 	    bufferedWriter.write("UNIT\n");
         bufferedWriter.write(String.format("time=%.2f repeat=%d\n", unit.time, unit.repeat));
-        bufferedWriter.write(String.format("temp=%.2f N1=%d N2=%d\n", unit.reaction.temperature, unit.atomTypes[theReactant1].initialCount, unit.atomTypes[theReactant2].initialCount));
-        bufferedWriter.write(String.format("%s + %s -> %s + %s\n", Reactions.simpleName(unit.reaction.reactant1), Reactions.simpleName(unit.reaction.reactant2),
-                                                                   Reactions.simpleName(unit.reaction.product1), Reactions.simpleName(unit.reaction.product2)));
+        bufferedWriter.write(String.format("temp=%.2f ", unit.settings.temperature));
+        for (int unique = 0; unique < Reactions.ATOM_TYPE_COUNT; unique++)
+            if (unit.atomTypes[unique] != null)
+                bufferedWriter.write(String.format("N(%s)=%d ", Reactions.simpleName(unit.atomTypes[unique].name), unit.atomTypes[unique].initialCount));
+        bufferedWriter.write("\n");
+        for (Reaction reaction : unit.reactions)
+        {
+            bufferedWriter.write(String.format("%s + %s -> %s + %s\n", Reactions.simpleName(reaction.reactant1), Reactions.simpleName(reaction.reactant2),
+                                                                       Reactions.simpleName(reaction.product1), Reactions.simpleName(reaction.product2)));
+        }
         bufferedWriter.write("\n");
 	}
 	
@@ -71,8 +78,12 @@ public class TestingThread extends Thread
 		state.doesSnapshots = false;
 		state.readyToUse = true;
 		state.paused = false;
-
-        bufferedWriter.write("STEP ");
+        
+        int[] currentCount = new int[Reactions.ATOM_TYPE_COUNT];
+        @SuppressWarnings("unchecked")
+        List<Integer>[] atomCount = new List[Reactions.ATOM_TYPE_COUNT];
+        for (int i = 0; i < atomCount.length; i++)
+            atomCount[i] = new ArrayList<Integer>();
         
 		int index = 0;
 		double current = 0;
@@ -95,20 +106,33 @@ public class TestingThread extends Thread
 
 	        state.update(delta);
 	        
-	        int count = state.collisionInfo[theReactant1][theReactant2][1];
-			bufferedWriter.write(String.format("%d\t", count));
-			
-			if (averages.size() <= index)
-			{
-				averages.add((double) count);
-				times.add(current);
-			}
-			else
-				averages.set(index, averages.get(index) + (double) count);
+	        Arrays.fill(currentCount, 0);
+	        for (Atom atom : state.atoms)
+	            currentCount[atom.type.unique]++;
+	        
+	        for (int i = 0; i < Reactions.ATOM_TYPE_COUNT; i++)
+	        {
+	            int count = currentCount[i];
+	            atomCount[i].add(count);
+	            if (times.size() < index)
+	                times.add(current);
+    			if (averages[i].size() <= index)
+    				averages[i].add((double) count);
+    			else
+    				averages[i].set(index, averages[i].get(index) + (double) count);
+	        }
 			index++;
 		}
-		
-		bufferedWriter.write("\n");
+
+        bufferedWriter.write("STEP\n");
+        for (int i = 0; i < Reactions.ATOM_TYPE_COUNT; i++)
+            if (state.atomTypes[i] != null)
+            {
+                bufferedWriter.write(state.atomTypes[i].name + ":\t");
+                for (int count : atomCount[i])
+                    bufferedWriter.write(String.format("%d\t", count));
+                bufferedWriter.write("\n");
+            }
 		
 		long stepTimeEnd = System.nanoTime();
 		double stepTime = (stepTimeEnd - stepTimeStart) / 1000000000.0;
@@ -155,14 +179,13 @@ public class TestingThread extends Thread
 	    	    state = new SimulationState();
                 state.paused = false;
                 state.settings = unit.settings;
-                state.reactions = new Reaction[] { unit.reaction };
+                state.reactions = unit.reactions;
                 state.atomTypes = unit.atomTypes;
-                theReactant1 = Reactions.uniqueAtoms.get(unit.reaction.reactant1);
-                theReactant2 = Reactions.uniqueAtoms.get(unit.reaction.reactant2);
                 window.unitUpdate();
 	    	    
 	    		times = new ArrayList<Double>();
-	    		averages = new ArrayList<Double>();
+	    		for (int i = 0; i < Reactions.ATOM_TYPE_COUNT; i++)
+	    		    averages[i] = new ArrayList<Double>();
 	    		
 	    		unitHeader();
 
@@ -181,12 +204,19 @@ public class TestingThread extends Thread
 	    	        window.update();
 	    		}
 
-	    		bufferedWriter.write("\n");
-	    		for (Double value : times)
-	    			bufferedWriter.write(String.format("%.2f\t", value.doubleValue()));
-	    		bufferedWriter.write("\n");
-	    		for (Double value : averages)
-	    			bufferedWriter.write(String.format("%.2f\t", value.doubleValue() / (double) unit.repeat));
+                bufferedWriter.write("\n");
+                bufferedWriter.write("T");
+                for (Double value : times)
+                    bufferedWriter.write(String.format("\t%.2f", value.doubleValue()));
+                bufferedWriter.write("\n");
+	            for (int i = 0; i < Reactions.ATOM_TYPE_COUNT; i++)
+	                if (state.atomTypes[i] != null)
+	                {
+	                    bufferedWriter.write(Reactions.simpleName(state.atomTypes[i].name));
+	                    for (Double value : averages[i])
+	                        bufferedWriter.write(String.format("\t%.2f", value.doubleValue() / (double) unit.repeat));
+	                    bufferedWriter.write("\n");
+	                }
                 bufferedWriter.write("\n\n");
 	    		
 	    		unit = unit.next;
