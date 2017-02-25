@@ -2,4 +2,5 @@ eclipse.preferences.version=1
 encoding//src/net/kalinovcic/kinetix/commander/CommanderWindow.java=UTF-8
 encoding//src/net/kalinovcic/kinetix/physics/reaction/Reaction.java=UTF-8
 encoding//src/net/kalinovcic/kinetix/physics/reaction/Reactions.java=UTF-8
+encoding//src/net/kalinovcic/kinetix/profiler/atomsovertime/AtomsOverTime.java=UTF-8
 encoding//src/net/kalinovcic/kinetix/test/TestingWindow.java=UTF-8
