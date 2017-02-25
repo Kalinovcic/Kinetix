@@ -2,6 +2,7 @@ package net.kalinovcic.kinetix.physics;
 
 public class SimulationSeries
 {
+    public Object id;
     public SimulationSeries next;
     
     public double temperature;

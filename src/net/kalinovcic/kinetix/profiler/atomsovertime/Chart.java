@@ -3,9 +3,11 @@ package net.kalinovcic.kinetix.profiler.atomsovertime;
 import static net.kalinovcic.kinetix.imgui.ImguiTheme.SMALL_FONT;
 import static net.kalinovcic.kinetix.imgui.ImguiTheme.TEXT;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -49,6 +51,13 @@ public class Chart
     
     public boolean doLeastSquare;
     
+    public static class Series
+    {
+        public ArrayList<DataSet> dataSets = new ArrayList<DataSet>();
+        public float totalX;
+        public float continuationX;
+    }
+    
     public static class DataSet
     {
         public ArrayList<Line> lines = new ArrayList<Line>();
@@ -64,9 +73,10 @@ public class Chart
         public float y1;
         public float y2;
     }
-    
+
+    public ArrayList<Series> series = new ArrayList<Series>();
+    public Series activeSeries;
     public DataSet activeDataSet;
-    public ArrayList<DataSet> dataSets = new ArrayList<DataSet>();
 
     public Graphics2D g;
     public Color uniqueColors[] = new Color[Reactions.ATOM_TYPE_COUNT];
@@ -76,7 +86,18 @@ public class Chart
     public void clear()
     {
         activeDataSet = null;
-        dataSets.clear();
+        series.clear();
+    }
+    
+    public void addSeries()
+    {
+        float continuationX = 0.0f;
+        if (activeSeries != null)
+            continuationX = activeSeries.continuationX + activeSeries.totalX;
+        
+        activeSeries = new Series();
+        activeSeries.continuationX = continuationX;
+        series.add(activeSeries);
     }
     
     public void addDataSet()
@@ -87,7 +108,7 @@ public class Chart
         
         activeDataSet = new DataSet();
         activeDataSet.continuationX = continuationX;
-        dataSets.add(activeDataSet);
+        activeSeries.dataSets.add(activeDataSet);
     }
     
     public void addLine(int unique, float x1, float x2, float y1, float y2)
@@ -101,6 +122,7 @@ public class Chart
         
         activeDataSet.lines.add(line);
         activeDataSet.totalX = Math.max(activeDataSet.totalX, line.x2);
+        activeSeries.totalX = Math.max(activeSeries.totalX, activeDataSet.continuationX + activeDataSet.totalX);
     }
     
     private void renderAxes()
@@ -214,26 +236,64 @@ public class Chart
         if (renderMode == RENDER_CONTINUE)
         {
             float offset = 0.0f;
-            for (DataSet dataSet : dataSets)
+            for (Series aSeries : series)
             {
-                boolean end = false;
+                float seriesOffset = offset;
                 
-                float length = dataSet.totalX;
-                if ((offset + length > horMaximum) || (dataSet == activeDataSet))
+                for (DataSet dataSet : aSeries.dataSets)
                 {
-                    length = horMaximum - offset;
-                    end = true;
+                    boolean end = false;
+                    
+                    float length = dataSet.totalX;
+                    if ((offset + length > horMaximum) || (dataSet == activeDataSet))
+                    {
+                        length = horMaximum - offset;
+                        end = true;
+                    }
+                    
+                    markHorizontalAxis(offset, length);
+                    
+                    offset += length;
+                    
+                    if (end) break;
                 }
                 
-                markHorizontalAxis(offset, length);
-                offset += length;
-                
-                if (end) break;
+                line2D.x2 = (line2D.x1 = horX1 + seriesOffset * horPixelsPerUnit);
+                line2D.y1 = verY1; line2D.y2 = verY2;
+                Stroke stroke = g.getStroke();
+                g.setStroke(new BasicStroke(2.0f));
+                g.setColor(Color.YELLOW);
+                g.draw(line2D);
+                g.setColor(STRUCTURE_COLOR);
+                g.setStroke(stroke);
             }
         }
         else
         {
-            markHorizontalAxis(0, horMaximum);
+            float offset = 0.0f;
+            for (Series aSeries : series)
+            {
+                float maxTotalX = 0;
+                for (DataSet dataSet : aSeries.dataSets)
+                    maxTotalX = Math.max(maxTotalX, dataSet.totalX);
+                    
+                float length = maxTotalX;
+                if ((offset + length > horMaximum) || (aSeries == activeSeries))
+                    length = horMaximum - offset;
+
+                markHorizontalAxis(offset, length);
+
+                line2D.x2 = (line2D.x1 = horX1 + offset * horPixelsPerUnit);
+                line2D.y1 = verY1; line2D.y2 = verY2;
+                Stroke stroke = g.getStroke();
+                g.setStroke(new BasicStroke(2.0f));
+                g.setColor(Color.YELLOW);
+                g.draw(line2D);
+                g.setColor(STRUCTURE_COLOR);
+                g.setStroke(stroke);
+                
+                offset += length;
+            }
         }
     }
 
@@ -242,118 +302,123 @@ public class Chart
     private float currentAverageCount[] = new float[Reactions.ATOM_TYPE_COUNT];
     
     public void renderGraph()
-    {
-        float maxCommonTime = Float.MAX_VALUE;
-        
+    {   
         float offset = 0.0f;
-        for (DataSet dataSet : dataSets)
+        for (Series aSeries : series)
         {
-            for (Line line : dataSet.lines)
+            float maxTotalX = 0;
+            float maxCommonTime = Float.MAX_VALUE;
+            for (DataSet dataSet : aSeries.dataSets)
             {
-                line2D.x1 = horX1 + (offset + line.x1) * horPixelsPerUnit;
-                line2D.x2 = horX1 + (offset + line.x2) * horPixelsPerUnit;
-                line2D.y1 = verY1 - line.y1 * verPixelsPerUnit;
-                line2D.y2 = verY1 - line.y2 * verPixelsPerUnit;
-
-                Color color = uniqueColors[line.unique];
-                if (renderMode == RENDER_AVERAGE)
-                    g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 10));
-                else
-                    g.setColor(color);
-                g.draw(line2D);
-                
-                if (offset + line.x2 >= horMaximum)
-                    break;
-            }
-            
-            if (renderMode == RENDER_CONTINUE)
-            {
-                if (offset + dataSet.totalX >= horMaximum)
-                    break;
-                offset += dataSet.totalX;
-            }
-            else if (renderMode == RENDER_AVERAGE)
-            {
-                if (dataSet != activeDataSet)
+                for (Line line : dataSet.lines)
                 {
-                    maxCommonTime = Math.min(maxCommonTime, dataSet.totalX);
-                }
-            }
-        }
-        
-        if (renderMode == RENDER_AVERAGE)
-        {
-            Arrays.fill(previousAverage, -1);
-            
-            float n, maxX, sumX, sumY, sumXY, sumXX;
-            n = maxX = sumX = sumY = sumXY = sumXX = 0;
-
-            float previousX = horX1;
-            for (float x = horX1; x <= horX2; x += 10.0f)
-            {
-                float value = (x - horX1) / horPixelsPerUnit;
-                if (value >= maxCommonTime)
-                    break;
-
-                Arrays.fill(currentAverageSum, 0);
-                Arrays.fill(currentAverageCount, 0);
-                
-                for (DataSet dataSet : dataSets)
-                    for (Line line : dataSet.lines)
-                    {
-                        if (value < line.x1 || value >= line.x2) continue;
-                        
-                        currentAverageSum[line.unique] += line.y1;
-                        currentAverageCount[line.unique]++;
-                    }
-                
-                for (int unique = 0; unique < currentAverageSum.length; unique++)
-                {
-                    if (currentAverageCount[unique] == 0) continue;
-                    
-                    float avgCurrent = currentAverageSum[unique] / (float) currentAverageCount[unique];
-                    float avgPrevious = previousAverage[unique];
-                    
-                    previousAverage[unique] = avgCurrent;
-                    if (avgPrevious < 0) continue;
-
-                    line2D.x1 = previousX;
-                    line2D.x2 = x;
-                    line2D.y1 = verY1 - avgPrevious * verPixelsPerUnit;
-                    line2D.y2 = verY1 - avgCurrent * verPixelsPerUnit;
-                    
-                    sumX += value;
-                    sumY += avgCurrent;
-                    sumXY += value * avgCurrent;
-                    sumXX += value * value;
-                    maxX = Math.max(maxX, value);
-                    n += 1;
-
-                    g.setColor(uniqueColors[unique]);
+                    line2D.x1 = horX1 + (offset + line.x1) * horPixelsPerUnit;
+                    line2D.x2 = horX1 + (offset + line.x2) * horPixelsPerUnit;
+                    line2D.y1 = verY1 - line.y1 * verPixelsPerUnit;
+                    line2D.y2 = verY1 - line.y2 * verPixelsPerUnit;
+    
+                    Color color = uniqueColors[line.unique];
+                    if (renderMode == RENDER_AVERAGE)
+                        g.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 10));
+                    else
+                        g.setColor(color);
                     g.draw(line2D);
+                    
+                    if (offset + line.x2 >= horMaximum)
+                        break;
+                }
+
+                maxTotalX = Math.max(maxTotalX, dataSet.totalX);
+                if (renderMode == RENDER_CONTINUE)
+                {
+                    if (offset + dataSet.totalX >= horMaximum)
+                        break;
+                    offset += dataSet.totalX;
+                }
+                else if (renderMode == RENDER_AVERAGE)
+                {
+                    if (dataSet != activeDataSet)
+                    {
+                        maxCommonTime = Math.min(maxCommonTime, dataSet.totalX);
+                    }
+                }
+            }
+            if (maxCommonTime == Float.MAX_VALUE)
+                maxCommonTime = 0;
+            
+            if (renderMode == RENDER_AVERAGE)
+            {
+                Arrays.fill(previousAverage, -1);
+                
+                float n, sumX, sumY, sumXY, sumXX;
+                n = sumX = sumY = sumXY = sumXX = 0;
+    
+                float previousValue = 0;
+                for (float value = 0; value <= maxCommonTime; value += 0.1f)
+                {
+                    Arrays.fill(currentAverageSum, 0);
+                    Arrays.fill(currentAverageCount, 0);
+                    
+                    for (DataSet dataSet : aSeries.dataSets)
+                        for (Line line : dataSet.lines)
+                        {
+                            if (value < line.x1 || value >= line.x2) continue;
+                            
+                            currentAverageSum[line.unique] += line.y1;
+                            currentAverageCount[line.unique]++;
+                        }
+                    
+                    for (int unique = 0; unique < currentAverageSum.length; unique++)
+                    {
+                        if (currentAverageCount[unique] == 0) continue;
+                        
+                        float avgCurrent = currentAverageSum[unique] / (float) currentAverageCount[unique];
+                        float avgPrevious = previousAverage[unique];
+                        
+                        previousAverage[unique] = avgCurrent;
+                        if (avgPrevious < 0) continue;
+    
+                        line2D.x1 = horX1 + (previousValue + offset) * horPixelsPerUnit;
+                        line2D.x2 = horX1 + (value + offset) * horPixelsPerUnit;
+                        line2D.y1 = verY1 - avgPrevious * verPixelsPerUnit;
+                        line2D.y2 = verY1 - avgCurrent * verPixelsPerUnit;
+                        
+                        float value2 = value * 1e-10f;
+                        sumX += value2;
+                        sumY += avgCurrent;
+                        sumXY += value2 * avgCurrent;
+                        sumXX += value2 * value2;
+                        n += 1;
+    
+                        g.setColor(uniqueColors[unique]);
+                        g.draw(line2D);
+                    }
+                    
+                    previousValue = value;
                 }
                 
-                previousX = x;
+                if (doLeastSquare)
+                {
+                    float a = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+                    float b = (sumXX * sumY - sumX * sumXY) / (n * sumXX - sumX * sumX);
+    
+                    line2D.x1 = horX1 + offset * horPixelsPerUnit;
+                    line2D.x2 = horX1 + (maxCommonTime + offset) * horPixelsPerUnit;
+                    line2D.y1 = verY1 - b * verPixelsPerUnit;
+                    line2D.y2 = verY1 - (a * maxCommonTime * 1e-10f + b) * verPixelsPerUnit;
+    
+                    g.setColor(Color.WHITE);
+                    g.draw(line2D);
+    
+                    FontMetrics metrics = g.getFontMetrics();
+                    float height = metrics.getHeight();
+                    float ascent = metrics.getAscent();
+                    g.drawString(String.format(Locale.US, "k = %.3e, a = %.3e", a, 1.0 / b), horX1 + offset * horPixelsPerUnit + 5, verY1 - height + ascent);
+                }
             }
             
-            if (doLeastSquare)
-            {
-                float a = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-                float b = (sumXX * sumY - sumX * sumXY) / (n * sumXX - sumX * sumX);
-
-                line2D.x1 = horX1;
-                line2D.x2 = horX1 + maxX * horPixelsPerUnit;
-                line2D.y1 = verY1 - (a * ((line2D.x1 - horX1) / horPixelsPerUnit) + b) * verPixelsPerUnit;
-                line2D.y2 = verY1 - (a * ((line2D.x2 - horX1) / horPixelsPerUnit) + b) * verPixelsPerUnit;
-
-                g.setColor(Color.WHITE);
-                g.draw(line2D);
-
-                FontMetrics metrics = g.getFontMetrics();
-                float height = metrics.getHeight();
-                float ascent = metrics.getAscent();
-                g.drawString(String.format(Locale.US, "k = %.6f, a = %.2f", a, 1.0 / b), horX1 + 5, verY1 - height + ascent);
-            }
+            if (renderMode != RENDER_CONTINUE)
+                offset += maxTotalX;
         }
     }
     
@@ -413,23 +478,26 @@ public class Chart
 
             float textY = horY - height + ascent;
             
-            for (DataSet dataSet : dataSets)
+            for (Series aSeries : series)
             {
-                if (renderMode != RENDER_CONTINUE)
-                    dataSet = activeDataSet;
-                
-                if (x > dataSet.totalX)
+                for (DataSet dataSet : aSeries.dataSets)
                 {
                     if (renderMode != RENDER_CONTINUE)
-                        break;
+                        dataSet = activeDataSet;
                     
-                    if (dataSet != activeDataSet)
-                        x -= dataSet.totalX;
-                    continue;
+                    if (x > dataSet.totalX)
+                    {
+                        if (renderMode != RENDER_CONTINUE)
+                            break;
+                        
+                        if (dataSet != activeDataSet)
+                            x -= dataSet.totalX;
+                        continue;
+                    }
+                    
+                    sample(dataSet, x);
+                    break;
                 }
-                
-                sample(dataSet, x);
-                break;
             }
             
             Arrays.sort(samples);

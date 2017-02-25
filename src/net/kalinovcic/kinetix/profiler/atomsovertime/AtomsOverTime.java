@@ -59,7 +59,9 @@ public class AtomsOverTime extends Profiler
         if (ui.doButton("clear", 0, 18))
         {
             maximumCount = 0;
+            maximumInverseCount = 0;
             activeInstance = null;
+            activeSeries = null;
             firstChart.clear();
             secondChart.clear();
         }
@@ -97,8 +99,9 @@ public class AtomsOverTime extends Profiler
         
         ui.endRow();
     }
-    
+
     private Object activeInstance = null;
+    private Object activeSeries = null;
     
     private int maximumCount = 0;
     private float maximumInverseCount = 0;
@@ -113,6 +116,14 @@ public class AtomsOverTime extends Profiler
     {
         synchronized (state)
         {
+            if (state.series != null && state.series.id != activeSeries)
+            {
+                activeSeries = state.series.id;
+                firstChart.addSeries();
+                secondChart.addSeries();
+                activeInstance = null;
+            }
+            
             if (state.instanceID != activeInstance)
             {
                 activeInstance = state.instanceID;
@@ -137,8 +148,13 @@ public class AtomsOverTime extends Profiler
 
             {
                 int unique = state.reactions[0].reactant1_unique;
-                float inverseCount1 = 1.0f / Math.max(previousCounts[unique], 1);
-                float inverseCount2 = 1.0f / Math.max(newCounts[unique], 1);
+
+                int c1 = Math.max(previousCounts[unique], 1);
+                int c2 = Math.max(newCounts[unique], 1);
+                float c1glupo = (float)(c1 / Math.pow(state.settings.width / 100, 3) / 100 / 6.022);
+                float c2glupo = (float)(c2 / Math.pow(state.settings.width / 100, 3) / 100 / 6.022);
+                float inverseCount1 = 1.0f / c1glupo;
+                float inverseCount2 = 1.0f / c2glupo;
                 maximumInverseCount = Math.max(maximumInverseCount, inverseCount2);
                 secondChart.addLine(unique, previousTime, newTime, inverseCount1, inverseCount2);
             }

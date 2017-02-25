@@ -325,6 +325,8 @@ public class CommanderWindow extends ImguiFrame
                             currentSeries.next = series;
                             currentSeries = series;
                         }
+
+                        currentSeries.id = new Object();
                         
                         if (seriesOption == SERIES_TEMPERATURE)
                             currentSeries.temperature = seriesTemperatureInputs[seriesIndex].value;
