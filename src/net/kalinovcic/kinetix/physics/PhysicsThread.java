@@ -38,8 +38,15 @@ public class PhysicsThread extends KinetixThread
     {
     	if (Kinetix.restart)
     		restart(state);
-    	
-        if (state.paused) return;
+
+        if (!state.realtime)
+            state.paused = false;
+
+        if (state.paused)
+        {
+            doUPS = true;
+            return;
+        }
 
         double timeout = (1.0 / targetUPS) * state.settings.timeFactor;
         // if (timeout > 1.5) timeout = 1.5; // You can't wait for more than 1.5 seconds
@@ -47,6 +54,8 @@ public class PhysicsThread extends KinetixThread
         deltaTime *= state.settings.timeFactor;
     	if (deltaTime > timeout)
     		deltaTime = timeout;
+    	if (!state.realtime)
+    	    deltaTime = 1.0 / 20.0;
     	
     	boolean restartAfterThisUpdate = false;
     	if (state.series != null)
@@ -90,7 +99,11 @@ public class PhysicsThread extends KinetixThread
                 restart(state);
                 if (doContinue)
                     state.paused = false;
+                else
+                    state.realtime = true;
             }
         }
+        
+        doUPS = state.realtime;
     }
 }

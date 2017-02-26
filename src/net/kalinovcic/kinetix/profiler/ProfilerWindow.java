@@ -13,15 +13,20 @@ public class ProfilerWindow extends ImguiFrame
     
     public ProfilerWindow(MainWindow mainWindow)
     {
-        super(mainWindow, "Profiler", 20, mainWindow.getHeight() - 400, 600, 300, true, new ProfilerUI());
+        super(mainWindow, "Profiler", 20, mainWindow.getHeight() - 450, 700, 400, true, new ProfilerUI());
 
         InternalFrameListener exitListener = new InternalFrameAdapter()
         {
         	public void internalFrameClosing(InternalFrameEvent e)
         	{
-        		// onClose();
+        		onClose();
         	}
         };
         addInternalFrameListener(exitListener);
+    }
+    
+    public void onClose()
+    {
+        imgui.onClose();
     }
 }

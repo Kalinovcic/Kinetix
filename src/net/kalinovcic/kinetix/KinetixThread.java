@@ -7,6 +7,8 @@ public abstract class KinetixThread extends Thread
     public int targetUPS;
     public boolean terminate = false;
     
+    public boolean doUPS = true;
+    
     public KinetixThread(int targetUPS)
     {
         this.targetUPS = targetUPS;
@@ -44,7 +46,10 @@ public abstract class KinetixThread extends Thread
                     long remainingNano = targetNano - frameNano;
                     try
                     {
-                        Thread.sleep(remainingNano / 1000000, (int) (remainingNano % 1000000));
+                        if (doUPS)
+                        {
+                            Thread.sleep(remainingNano / 1000000, (int) (remainingNano % 1000000));
+                        }
                     }
                     catch (InterruptedException e) {}
                 }

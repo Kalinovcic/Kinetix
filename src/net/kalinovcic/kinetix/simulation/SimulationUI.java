@@ -31,6 +31,7 @@ public class SimulationUI extends Imgui
     @Override
     public void update()
     {
+        if (!Kinetix.STATE.realtime) return;
         synchronized (Kinetix.STATE)
         {
             state = Kinetix.STATE;

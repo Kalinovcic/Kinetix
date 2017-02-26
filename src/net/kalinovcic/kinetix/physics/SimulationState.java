@@ -1,6 +1,8 @@
 package net.kalinovcic.kinetix.physics;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
@@ -33,6 +35,9 @@ public class SimulationState
     public SimulationSnapshot[] snapshots;
     public double nextSnapshotDelta;
     public int nextSnapshotIndex;
+    
+    public boolean realtime = true;
+    public List<SimulationUpdateListener> updateListeners = new ArrayList<SimulationUpdateListener>();
     
     public double lookback = 0.0;
     
@@ -213,5 +218,8 @@ public class SimulationState
 			System.out.println(sumEnergies);
 			*/
 		}
+		
+		for (SimulationUpdateListener listener : updateListeners)
+		    listener.onSimulationUpdate(this);
 	}
 }

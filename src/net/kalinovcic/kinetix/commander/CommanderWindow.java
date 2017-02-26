@@ -36,6 +36,7 @@ public class CommanderWindow extends ImguiFrame
     public static boolean simulateSteric;
     public static boolean simulate2D;
     public static boolean simulateV;
+    public static boolean simulateRealtime = true;
     
     public static ImguiDoubleInput reactionStartTimeInput = new ImguiDoubleInput(0, 0, Double.MAX_VALUE);
     public static ImguiDoubleInput timeFactorInput = new ImguiDoubleInput(1, Double.MIN_VALUE, Double.MAX_VALUE);
@@ -219,9 +220,10 @@ public class CommanderWindow extends ImguiFrame
             doSpace(0, 320);
 
             beginRow();
-            simulateSteric = doCheckbox("Steric", columnWidth(3), 0, simulateSteric);
-            simulate2D = doCheckbox("2D", columnWidth(3), 0, simulate2D);
-            simulateV = doCheckbox("V", columnWidth(3), 0, simulateV);
+            simulateSteric = doCheckbox("Steric", columnWidth(4), 0, simulateSteric);
+            simulate2D = doCheckbox("2D", columnWidth(4), 0, simulate2D);
+            simulateV = doCheckbox("V", columnWidth(4), 0, simulateV);
+            simulateRealtime = doCheckbox("realtime", columnWidth(4), 0, simulateRealtime);
             endRow();
 
             beginRow();
@@ -311,6 +313,7 @@ public class CommanderWindow extends ImguiFrame
                     Kinetix.STATE.settings = ConfigurationHelper.settings;
                     Kinetix.STATE.reactions = ConfigurationHelper.reactions;
                     Kinetix.STATE.atomTypes = ConfigurationHelper.atomTypes;
+                    Kinetix.STATE.realtime = simulateRealtime;
                     
                     SimulationSeries firstSeries = new SimulationSeries();
                     int seriesCount = (seriesOption == NO_SERIES) ? 1 : seriesCountInput.value;

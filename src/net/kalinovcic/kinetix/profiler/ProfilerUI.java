@@ -58,4 +58,11 @@ public class ProfilerUI extends Imgui
         popLayout();
         popBounds();
     }
+    
+    @Override
+    public void onClose()
+    {
+        for (Profiler profiler : profilers)
+            profiler.onClose(this);
+    }
 }

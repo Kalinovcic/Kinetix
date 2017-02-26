@@ -22,8 +22,9 @@ public abstract class Imgui
 {
     public ImguiContext context;
     public Graphics2D g;
-    
+
     public abstract void update();
+    public void onClose() {}
     
     public void pushBounds(ImguiBounds bounds)
     {

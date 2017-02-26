@@ -30,6 +30,7 @@ public class Chart
     public float verY2;
     public float verPixelsPerUnit;
     public float verMarkEvery;
+    public float verMinimum;
     public float verMaximum;
     
     public String horLabel;
@@ -85,6 +86,7 @@ public class Chart
     
     public void clear()
     {
+        activeSeries = null;
         activeDataSet = null;
         series.clear();
     }
@@ -111,6 +113,13 @@ public class Chart
         activeSeries.dataSets.add(activeDataSet);
     }
     
+    public void addLine(Line line)
+    {
+        activeDataSet.lines.add(line);
+        activeDataSet.totalX = Math.max(activeDataSet.totalX, line.x2);
+        activeSeries.totalX = Math.max(activeSeries.totalX, activeDataSet.continuationX + activeDataSet.totalX);
+    }
+    
     public void addLine(int unique, float x1, float x2, float y1, float y2)
     {
         Line line = new Line();
@@ -120,9 +129,7 @@ public class Chart
         line.y1 = y1;
         line.y2 = y2;
         
-        activeDataSet.lines.add(line);
-        activeDataSet.totalX = Math.max(activeDataSet.totalX, line.x2);
-        activeSeries.totalX = Math.max(activeSeries.totalX, activeDataSet.continuationX + activeDataSet.totalX);
+        addLine(line);
     }
     
     private void renderAxes()
@@ -152,10 +159,10 @@ public class Chart
         float height = metrics.getHeight();
         float ascent = metrics.getAscent();
         
-        for (float value = verMarkEvery; value <= verMaximum; value += verMarkEvery)
+        for (float value = verMinimum + verMarkEvery; value <= verMaximum; value += verMarkEvery)
         {
             line2D.x2 = (line2D.x1 = verX) - 2;
-            line2D.y2 = (line2D.y1 = verY1 - value * verPixelsPerUnit);
+            line2D.y2 = (line2D.y1 = verY1 - (value - verMinimum) * verPixelsPerUnit);
             g.draw(line2D);
 
             String text = String.format(Locale.US, "%.1f", value);
@@ -178,7 +185,7 @@ public class Chart
                     }
                     
                     float gridValue = value - (i / (float) GRID_DIV) * verMarkEvery;
-                    line2D.y2 = (line2D.y1 = verY1 - gridValue * verPixelsPerUnit);
+                    line2D.y2 = (line2D.y1 = verY1 - (gridValue - verMinimum) * verPixelsPerUnit);
                     g.draw(line2D);
                     g.setColor(STRUCTURE_COLOR);
                 }
@@ -314,8 +321,8 @@ public class Chart
                 {
                     line2D.x1 = horX1 + (offset + line.x1) * horPixelsPerUnit;
                     line2D.x2 = horX1 + (offset + line.x2) * horPixelsPerUnit;
-                    line2D.y1 = verY1 - line.y1 * verPixelsPerUnit;
-                    line2D.y2 = verY1 - line.y2 * verPixelsPerUnit;
+                    line2D.y1 = verY1 - (line.y1 - verMinimum) * verPixelsPerUnit;
+                    line2D.y2 = verY1 - (line.y2 - verMinimum) * verPixelsPerUnit;
     
                     Color color = uniqueColors[line.unique];
                     if (renderMode == RENDER_AVERAGE)
@@ -344,11 +351,11 @@ public class Chart
                 }
             }
             if (maxCommonTime == Float.MAX_VALUE)
-                maxCommonTime = 0;
+                maxCommonTime = horMaximum - offset;
             
             if (renderMode == RENDER_AVERAGE)
             {
-                Arrays.fill(previousAverage, -1);
+                Arrays.fill(previousAverage, Float.MIN_VALUE);
                 
                 float n, sumX, sumY, sumXY, sumXX;
                 n = sumX = sumY = sumXY = sumXX = 0;
@@ -376,12 +383,12 @@ public class Chart
                         float avgPrevious = previousAverage[unique];
                         
                         previousAverage[unique] = avgCurrent;
-                        if (avgPrevious < 0) continue;
+                        if (avgPrevious == Float.MIN_VALUE) continue;
     
                         line2D.x1 = horX1 + (previousValue + offset) * horPixelsPerUnit;
                         line2D.x2 = horX1 + (value + offset) * horPixelsPerUnit;
-                        line2D.y1 = verY1 - avgPrevious * verPixelsPerUnit;
-                        line2D.y2 = verY1 - avgCurrent * verPixelsPerUnit;
+                        line2D.y1 = verY1 - (avgPrevious - verMinimum) * verPixelsPerUnit;
+                        line2D.y2 = verY1 - (avgCurrent - verMinimum) * verPixelsPerUnit;
                         
                         float value2 = value * 1e-10f;
                         sumX += value2;
@@ -399,13 +406,14 @@ public class Chart
                 
                 if (doLeastSquare)
                 {
+                    // System.out.println(n + " " + sumX + " " + sumXX + " " + sumY + " " + sumXY);
                     float a = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
                     float b = (sumXX * sumY - sumX * sumXY) / (n * sumXX - sumX * sumX);
     
                     line2D.x1 = horX1 + offset * horPixelsPerUnit;
                     line2D.x2 = horX1 + (maxCommonTime + offset) * horPixelsPerUnit;
-                    line2D.y1 = verY1 - b * verPixelsPerUnit;
-                    line2D.y2 = verY1 - (a * maxCommonTime * 1e-10f + b) * verPixelsPerUnit;
+                    line2D.y1 = verY1 - (b - verMinimum) * verPixelsPerUnit;
+                    line2D.y2 = verY1 - (a * maxCommonTime * 1e-10f + b - verMinimum) * verPixelsPerUnit;
     
                     g.setColor(Color.WHITE);
                     g.draw(line2D);
