@@ -198,9 +198,15 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             }
         }
     }
+
+    private float desiredWidth = Float.NaN;
+    private float desiredHeight = Float.NaN;
     
     public void updateInput()
     {
+        if (Float.isNaN(desiredWidth)) desiredWidth = context.currentFrameWidth;
+        if (Float.isNaN(desiredHeight)) desiredHeight = context.currentFrameHeight;
+        
         ui.beginRow();
         if (ui.doButton("clear", 0, 18))
         {
@@ -223,10 +229,13 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             secondChart.horMaximum /= 2.0f;
             secondChart.horMarkEvery /= 2.0f;
         }
-        if (ui.doButton("+ W", 0, 18)) context.nextFrameWidth += 50;
-        if (ui.doButton("- W", 0, 18)) context.nextFrameWidth -= 50;
-        if (ui.doButton("+ H", 0, 18)) context.nextFrameHeight += 50;
-        if (ui.doButton("- H", 0, 18)) context.nextFrameHeight -= 50;
+        if (ui.doButton("+ W", 0, 18)) desiredWidth += 50;
+        if (ui.doButton("- W", 0, 18)) desiredWidth -= 50;
+        if (ui.doButton("+ H", 0, 18)) desiredHeight += 50;
+        if (ui.doButton("- H", 0, 18)) desiredHeight -= 50;
+        
+        context.nextFrameWidth = (int) desiredWidth;
+        context.nextFrameHeight = (int) desiredHeight;
 
         secondChart.major = firstChart.major = ui.doCheckbox("major", 0, 18, firstChart.major);
         secondChart.minor = firstChart.minor = ui.doCheckbox("minor", 0, 18, firstChart.minor);

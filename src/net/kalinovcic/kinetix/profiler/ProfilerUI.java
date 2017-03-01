@@ -7,6 +7,7 @@ import net.kalinovcic.kinetix.imgui.Imgui;
 import net.kalinovcic.kinetix.imgui.ImguiBounds;
 import net.kalinovcic.kinetix.imgui.ImguiVerticalLayout;
 import net.kalinovcic.kinetix.profiler.atomsovertime.AtomsOverTime;
+import net.kalinovcic.kinetix.profiler.collisioninfo.CollisionInfo;
 
 import static net.kalinovcic.kinetix.imgui.ImguiTheme.*;
 
@@ -24,7 +25,7 @@ public class ProfilerUI extends Imgui
     
     public ProfilerUI()
     {
-        profilers = new Profiler[] { new AtomsOverTime() };
+        profilers = new Profiler[] { new AtomsOverTime(), new CollisionInfo() };
         
         names = new String[profilers.length];
         for (int i = 0; i < names.length; i++)

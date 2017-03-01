@@ -27,10 +27,12 @@ public class ImguiTheme
 
     public static final float SMALL_FONT_SIZE = 9.0f;
     public static final float REGULAR_FONT_SIZE = 12.0f;
+    public static final float BIGGER_FONT_SIZE = 24.0f;
     public static final float BIG_FONT_SIZE = 32.0f;
 
     public static final Font SMALL_FONT = SEGOEUI_REGULAR.deriveFont(SMALL_FONT_SIZE);
     public static final Font FONT = SEGOEUI_REGULAR.deriveFont(REGULAR_FONT_SIZE);
+    public static final Font BIGGER_FONT = SEGOEUI_REGULAR.deriveFont(BIGGER_FONT_SIZE);
     public static final Font BIG_FONT = SEGOEUI_REGULAR.deriveFont(BIG_FONT_SIZE);
     
     public static final Font BOLD_FONT = SEGOEUI_BOLD.deriveFont(REGULAR_FONT_SIZE);
