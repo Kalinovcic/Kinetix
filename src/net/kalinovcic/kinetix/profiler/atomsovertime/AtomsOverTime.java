@@ -16,7 +16,7 @@ import net.kalinovcic.kinetix.profiler.atomsovertime.Chart.Series;
 
 public class AtomsOverTime extends Profiler implements SimulationUpdateListener
 {
-    private static final float PADDING_LEFT = 30.0f;
+    private static final float PADDING_LEFT = 45.0f;
     private static final float PADDING_BOTTOM = 15.0f;
     private static final float PADDING_RIGHT = 10.0f;
     private static final float PADDING_TOP = 36.0f;
@@ -52,10 +52,6 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
     private Object activeInstance = null;
     private Object activeSeries = null;
     
-    private int maximumCount = 0;
-    private float minimumSecondChart = 0;
-    private float maximumSecondChart = 0;
-    
     private float previousTime;
     private int[] previousCounts = new int[Reactions.ATOM_TYPE_COUNT];
 
@@ -75,30 +71,18 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
         {
             float a1 = line.y1;
             float a2 = line.y2;
-            minimumSecondChart = Math.min(minimumSecondChart, a1);
-            minimumSecondChart = Math.min(minimumSecondChart, a2);
-            maximumSecondChart = Math.max(maximumSecondChart, a1);
-            maximumSecondChart = Math.max(maximumSecondChart, a2);
             secondChart.addLine(line.unique, line.x1, line.x2, a1, a2);
         }
         else if (secondChartType == SECOND_CHART_INV_C_OVER_T)
         {
             float inverseCount1 = 1.0f / c1glupo;
             float inverseCount2 = 1.0f / c2glupo;
-            minimumSecondChart = Math.min(minimumSecondChart, inverseCount1);
-            minimumSecondChart = Math.min(minimumSecondChart, inverseCount2);
-            maximumSecondChart = Math.max(maximumSecondChart, inverseCount1);
-            maximumSecondChart = Math.max(maximumSecondChart, inverseCount2);
             secondChart.addLine(line.unique, line.x1, line.x2, inverseCount1, inverseCount2);
         }
         else if (secondChartType == SECOND_CHART_LN_C_OVER_T)
         {
             float lnCount1 = (float) Math.log(c1glupo);
             float lnCount2 = (float) Math.log(c2glupo);
-            minimumSecondChart = Math.min(minimumSecondChart, lnCount1);
-            minimumSecondChart = Math.min(minimumSecondChart, lnCount2);
-            maximumSecondChart = Math.max(maximumSecondChart, lnCount1);
-            maximumSecondChart = Math.max(maximumSecondChart, lnCount2);
             secondChart.addLine(line.unique, line.x1, line.x2, lnCount1, lnCount2);
         }
     }
@@ -106,9 +90,6 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
     public void rebuildSecondChart()
     {
         secondChart.clear();
-        minimumSecondChart = Float.MAX_VALUE;
-        maximumSecondChart = -Float.MAX_VALUE;
-        
         for (Series aSeries : firstChart.series)
         {
             secondChart.addSeries();
@@ -167,9 +148,6 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             firstChart.addLine(line);
             tryAddLineToSecondChart(line);
             
-            if (newCounts[unique] > maximumCount)
-                maximumCount = newCounts[unique];
-            
             previousCounts[unique] = newCounts[unique];
         }
         
@@ -209,13 +187,13 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
     
             firstChart.renderGraph();
             firstChart.renderStructure();
-            firstChart.interactive(ui.mousePoint());
+            firstChart.interactive(ui);
             
             if (secondChartType != SECOND_CHART_NONE)
             {
                 secondChart.renderGraph();
                 secondChart.renderStructure();
-                secondChart.interactive(ui.mousePoint());
+                secondChart.interactive(ui);
             }
         }
     }
@@ -225,7 +203,6 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
         ui.beginRow();
         if (ui.doButton("clear", 0, 18))
         {
-            maximumCount = 0;
             activeInstance = null;
             activeSeries = null;
             firstChart.clear();
@@ -292,10 +269,8 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             firstChart.verX = PADDING_LEFT;
             firstChart.verY1 = bottom;
             firstChart.verY2 = top;
-            firstChart.verPixelsPerUnit = (firstChart.verY1 - firstChart.verY2) * 0.9f / maximumCount;
-            firstChart.verMarkEvery = 20.0f;
-            firstChart.verMinimum = 0;
-            firstChart.verMaximum = (maximumCount == 0 ? 100 : maximumCount);
+            firstChart.noScalePadding = true;
+            firstChart.scaleVerticalAxis();
             
             firstChart.horLabel = "t [s]";
             firstChart.horY = bottom;
@@ -308,12 +283,6 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
         {
             float top = PADDING_TOP + (context.bounds.height - PADDING_BOTTOM - PADDING_MIDDLE - PADDING_TOP) / 2 + PADDING_MIDDLE;
             float bottom = context.bounds.height - PADDING_BOTTOM;
-
-            float verMin = minimumSecondChart;
-            float verMax = maximumSecondChart;
-            if (verMin > 0) verMin = 0;
-            else verMin -= 1.5;
-            if (verMax < 0) verMax += 1.5;
             
             secondChart.doLeastSquare = true;
             
@@ -326,10 +295,7 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             secondChart.verX = PADDING_LEFT;
             secondChart.verY1 = bottom;
             secondChart.verY2 = top;
-            secondChart.verPixelsPerUnit = (secondChart.verY1 - secondChart.verY2) * 0.9f / (verMax - verMin);
-            secondChart.verMarkEvery = (verMax - verMin) * 0.2f;
-            secondChart.verMinimum = verMin;
-            secondChart.verMaximum = verMax;
+            secondChart.scaleVerticalAxis();
             
             secondChart.horLabel = "t [s]";
             secondChart.horY = bottom;

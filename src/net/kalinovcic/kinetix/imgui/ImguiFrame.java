@@ -17,6 +17,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.geom.Rectangle2D;
 
 import javax.swing.JInternalFrame;
@@ -28,7 +30,7 @@ import net.kalinovcic.kinetix.MainWindow;
 
 import static net.kalinovcic.kinetix.imgui.ImguiTheme.*;
 
-public class ImguiFrame extends JInternalFrame implements ActionListener, FocusListener, MouseListener, MouseMotionListener, KeyListener
+public class ImguiFrame extends JInternalFrame implements ActionListener, FocusListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyListener
 {
     private static final long serialVersionUID = 1L;
 
@@ -71,6 +73,7 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
         addFocusListener(this);
         addMouseListener(this);
         addMouseMotionListener(this);
+        addMouseWheelListener(this);
         addKeyListener(this);
         setVisible(true);
         mainWindow.desktop.add(this);
@@ -152,6 +155,7 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
         imgui.popBounds();
         
         context.typedChars.clear();
+        context.mouseScrollDelta = 0;
 
         if (mainWindow.desktop.getWidth() != 0)
             if (context.currentFrameWidth > mainWindow.desktop.getWidth())
@@ -174,7 +178,6 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
             
             resizeToMatchContext();
         }
-        moveToMatchContext();
         
         g.dispose();
     }
@@ -239,6 +242,12 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
         context.mouseY = e.getY();
         context.mouseScreenX = e.getXOnScreen();
         context.mouseScreenY = e.getYOnScreen();
+    }
+    
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e)
+    {
+        context.mouseScrollDelta += e.getWheelRotation();
     }
     
     @Override public void keyPressed(KeyEvent e) {}

@@ -7,13 +7,16 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 
+import net.kalinovcic.kinetix.imgui.Imgui;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class Chart
@@ -83,12 +86,22 @@ public class Chart
     public Color uniqueColors[] = new Color[Reactions.ATOM_TYPE_COUNT];
     
     private Line2D.Float line2D = new Line2D.Float();
+
+    private final float TOP_PADDING = 0.05f;
+    private float maximumY = -Float.MAX_VALUE;
+    private float minimumY =  Float.MAX_VALUE;
+    private boolean scaleToFit = true;
+    public boolean noScalePadding = false;
     
     public void clear()
     {
         activeSeries = null;
         activeDataSet = null;
         series.clear();
+        maximumY = -Float.MAX_VALUE;
+        minimumY =  Float.MAX_VALUE;
+        scaleToFit = true;
+        noScalePadding = false;
     }
     
     public void addSeries()
@@ -115,6 +128,11 @@ public class Chart
     
     public void addLine(Line line)
     {
+        if (line.y1 > maximumY) maximumY = line.y1;
+        if (line.y2 > maximumY) maximumY = line.y2;
+        if (line.y1 < minimumY) minimumY = line.y1;
+        if (line.y2 < minimumY) minimumY = line.y2;
+        
         activeDataSet.lines.add(line);
         activeDataSet.totalX = Math.max(activeDataSet.totalX, line.x2);
         activeSeries.totalX = Math.max(activeSeries.totalX, activeDataSet.continuationX + activeDataSet.totalX);
@@ -130,6 +148,34 @@ public class Chart
         line.y2 = y2;
         
         addLine(line);
+    }
+    
+    public void scaleVerticalAxis()
+    {
+        if (maximumY == -Float.MAX_VALUE || minimumY == Float.MAX_VALUE)
+        {
+            verPixelsPerUnit = 1;
+            verMarkEvery = 1;
+            verMinimum = 0;
+            verMaximum = 1;
+            return;
+        }
+        
+        if (scaleToFit)
+        {
+            float verticalRange = maximumY - minimumY;
+            float verticalRangeWithPadding = noScalePadding ? verticalRange : (verticalRange / 0.9f);
+            float padding = verticalRangeWithPadding - verticalRange;
+            
+            float minimumAndPadding = minimumY - padding * 0.5f;
+            float maximumAndPadding = maximumY + padding * 0.5f;
+            
+            verMinimum = minimumAndPadding;
+            verMaximum = maximumAndPadding;
+        }
+        
+        verPixelsPerUnit = (verY1 - verY2) / (verMaximum - verMinimum) * (1 - TOP_PADDING);
+        verMarkEvery = (verMaximum - verMinimum) * 0.1f;
     }
     
     private void renderAxes()
@@ -159,13 +205,17 @@ public class Chart
         float height = metrics.getHeight();
         float ascent = metrics.getAscent();
         
-        for (float value = verMinimum + verMarkEvery; value <= verMaximum; value += verMarkEvery)
+        for (float value = verMinimum; value <= verMaximum; value += verMarkEvery)
         {
             line2D.x2 = (line2D.x1 = verX) - 2;
             line2D.y2 = (line2D.y1 = verY1 - (value - verMinimum) * verPixelsPerUnit);
             g.draw(line2D);
 
-            String text = String.format(Locale.US, "%.1f", value);
+            String text;
+            if (verMarkEvery < 1)
+                text = String.format(Locale.US, "%.3f", value);
+            else
+                text = String.format(Locale.US, "%.1f", value);
             g.drawString(text, line2D.x1 - metrics.stringWidth(text) - 5, line2D.y1 - height * 0.5f + ascent);
             
             if (major || minor)
@@ -313,6 +363,18 @@ public class Chart
         float offset = 0.0f;
         for (Series aSeries : series)
         {
+            Shape previousClip = g.getClip();
+
+            float clipLeft = horX1 + aSeries.continuationX * horPixelsPerUnit;
+            float clipRight = horX1 + (aSeries.continuationX + aSeries.totalX) * horPixelsPerUnit;
+            if (clipLeft > horX2) break;
+            if (clipRight > horX2) clipRight = horX2;
+            
+            float clipBottom = verY1;
+            float clipTop = clipBottom + (verY2 - verY1) * (1 - TOP_PADDING);
+            Shape newClip = new Rectangle2D.Float(clipLeft, clipTop, clipRight - clipLeft, clipBottom - clipTop);
+            g.setClip(newClip);
+            
             float maxTotalX = 0;
             float maxCommonTime = Float.MAX_VALUE;
             for (DataSet dataSet : aSeries.dataSets)
@@ -425,6 +487,7 @@ public class Chart
                 }
             }
             
+            g.setClip(previousClip);
             if (renderMode != RENDER_CONTINUE)
                 offset += maxTotalX;
         }
@@ -464,7 +527,7 @@ public class Chart
             }
     }
     
-    public void interactive(Point2D.Float mouse)
+    public void interactive(Imgui imgui)
     {
         if (activeDataSet == null) return;
         
@@ -472,6 +535,35 @@ public class Chart
         FontMetrics metrics = g.getFontMetrics();
         float height = metrics.getHeight();
         float ascent = metrics.getAscent();
+        
+        Point2D.Float mouse = imgui.mousePoint();
+        if (mouse.x >= horX1 && mouse.x <= horX2)
+        {
+            if (mouse.y >= verY2 && mouse.y <= verY1)
+            {
+                if (imgui.context.mouseReleased)
+                {
+                    scaleToFit = true;
+                    scaleVerticalAxis();
+                }
+                
+                if (imgui.context.mouseScrollDelta != 0)
+                {
+                    scaleToFit = false;
+                    
+                    float verticalRange = verMaximum - verMinimum;
+                    float newVerticalRange = verticalRange / (1 + imgui.context.mouseScrollDelta * 0.1f);
+                    
+                    float centerY = verY1 -  mouse.y;
+                    float centerYValue = verMinimum + centerY / verPixelsPerUnit;
+
+                    verMinimum = centerYValue - (centerYValue - verMinimum) * (newVerticalRange / verticalRange);
+                    verMaximum = centerYValue + (verMaximum - centerYValue) * (newVerticalRange / verticalRange);
+                    
+                    scaleVerticalAxis();
+                }
+            }
+        }
         
         if (mouse.x >= horX1 && mouse.x <= horX2)
         {
