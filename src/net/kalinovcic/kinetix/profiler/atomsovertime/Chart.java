@@ -1,12 +1,12 @@
 package net.kalinovcic.kinetix.profiler.atomsovertime;
 
-import static net.kalinovcic.kinetix.imgui.ImguiTheme.SMALL_FONT;
-import static net.kalinovcic.kinetix.imgui.ImguiTheme.TEXT;
+import static net.kalinovcic.kinetix.imgui.ImguiTheme.*;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Line2D;
@@ -22,7 +22,7 @@ import net.kalinovcic.kinetix.physics.reaction.Reactions;
 public class Chart
 {
     public static final Color STRUCTURE_COLOR = TEXT;
-    public static final Color TIME_FRAME_COLOR = new Color(255, 0, 0, 100);
+    public static final Color TIME_FRAME_COLOR = new Color(255, 255, 255, 100);
     public static final Color MAJOR_COLOR = new Color(TEXT.getRed(), TEXT.getGreen(), TEXT.getBlue(), 40);
     public static final Color MINOR_COLOR = new Color(TEXT.getRed(), TEXT.getGreen(), TEXT.getBlue(), 10);
     public static final int GRID_DIV = 5;
@@ -60,8 +60,9 @@ public class Chart
         public ArrayList<DataSet> dataSets = new ArrayList<DataSet>();
         public float totalX;
         public float continuationX;
+        public float displayX;
         
-        public Shape clip(float offset)
+        public Shape clip(float offset, boolean clipVertical)
         {
             float clipLeft = horX1 + offset * horPixelsPerUnit;
             float clipRight = horX1 + (offset + totalX) * horPixelsPerUnit;
@@ -72,6 +73,12 @@ public class Chart
 
             float clipBottom = verY1;
             float clipTop = clipBottom + (verY2 - verY1) * (1 - TOP_PADDING);
+            if (!clipVertical)
+            {
+                Rectangle clipBounds = g.getClipBounds();
+                clipTop = clipBounds.y;
+                clipBottom = clipTop + clipBounds.height;
+            }
             Shape newClip = new Rectangle2D.Float(clipLeft, clipTop, clipRight - clipLeft, clipBottom - clipTop);
             return newClip;
         }
@@ -82,6 +89,7 @@ public class Chart
         public ArrayList<Line> lines = new ArrayList<Line>();
         public float totalX;
         public float continuationX;
+        public float displayX;
     }
     
     public static class Line
@@ -290,8 +298,12 @@ public class Chart
             if (majorValue)
             {
                 g.draw(line2D);
-                
-                String text = String.format(Locale.US, "%.0f", value);
+
+                String text;
+                if (horMarkEvery < 1)
+                    text = String.format(Locale.US, "%.2f", value);
+                else
+                    text = String.format(Locale.US, "%.0f", value);
                 g.drawString(text, line2D.x1 - metrics.stringWidth(text) * 0.5f, line2D.y1 + ascent + 4);
             }
             
@@ -320,41 +332,12 @@ public class Chart
             float offset = globalOffset;
             for (Series aSeries : series)
             {
-                Shape previousClip = g.getClip();
-                Shape newClip = aSeries.clip(offset);
-                if (newClip == null) continue;
-                g.setClip(newClip);
-                
-                float seriesOffset = offset;
-                
+                aSeries.displayX = offset;
                 for (DataSet dataSet : aSeries.dataSets)
                 {
-                    boolean end = false;
-                    
-                    float length = dataSet.totalX;
-                    if ((offset + length > horMaximum) || (dataSet == activeDataSet))
-                    {
-                        length = horMaximum - offset;
-                        end = true;
-                    }
-                    
-                    markHorizontalAxis(offset, length);
-                    
-                    offset += length;
-                    
-                    if (end) break;
+                    dataSet.displayX = offset;
+                    offset += dataSet.totalX;
                 }
-                
-                line2D.x2 = (line2D.x1 = horX1 + seriesOffset * horPixelsPerUnit);
-                line2D.y1 = verY1; line2D.y2 = verY2;
-                Stroke stroke = g.getStroke();
-                g.setStroke(new BasicStroke(2.0f));
-                g.setColor(Color.YELLOW);
-                g.draw(line2D);
-                g.setColor(STRUCTURE_COLOR);
-                g.setStroke(stroke);
-                
-                g.setClip(previousClip);
             }
         }
         else
@@ -362,34 +345,44 @@ public class Chart
             float offset = globalOffset;
             for (Series aSeries : series)
             {
-                Shape previousClip = g.getClip();
-                Shape newClip = aSeries.clip(offset);
-                if (newClip == null) continue;
-                g.setClip(newClip);
-                
+                aSeries.displayX = offset;
                 float maxTotalX = 0;
                 for (DataSet dataSet : aSeries.dataSets)
+                {
+                    dataSet.displayX = offset;
                     maxTotalX = Math.max(maxTotalX, dataSet.totalX);
-                    
-                float length = maxTotalX;
-                if ((offset + length > horMaximum) || (aSeries == activeSeries))
-                    length = horMaximum - offset;
-
-                markHorizontalAxis(offset, length);
-
-                line2D.x2 = (line2D.x1 = horX1 + offset * horPixelsPerUnit);
-                line2D.y1 = verY1; line2D.y2 = verY2;
-                Stroke stroke = g.getStroke();
-                g.setStroke(new BasicStroke(2.0f));
-                g.setColor(Color.YELLOW);
-                g.draw(line2D);
-                g.setColor(STRUCTURE_COLOR);
-                g.setStroke(stroke);
-                
-                offset += length;
-                
-                g.setClip(previousClip);
+                }
+                offset += maxTotalX;
             }
+        }
+        
+        for (Series aSeries : series)
+        {            
+            Shape previousClip = g.getClip();
+            Shape newClip = aSeries.clip(aSeries.displayX, false);
+            if (newClip == null) continue;
+            g.setClip(newClip);
+            
+            float maxTotalX = 0;
+            for (DataSet dataSet : aSeries.dataSets)
+            {
+                if (renderMode == RENDER_CONTINUE)
+                    markHorizontalAxis(dataSet.displayX, dataSet.totalX);
+                maxTotalX = Math.max(maxTotalX, dataSet.totalX);
+            }
+            if (renderMode != RENDER_CONTINUE)
+                markHorizontalAxis(aSeries.displayX, maxTotalX);
+            
+            line2D.x2 = (line2D.x1 = horX1 + aSeries.displayX * horPixelsPerUnit);
+            line2D.y1 = verY1; line2D.y2 = verY2;
+            Stroke stroke = g.getStroke();
+            g.setStroke(new BasicStroke(2.0f));
+            g.setColor(Color.YELLOW);
+            g.draw(line2D);
+            g.setColor(STRUCTURE_COLOR);
+            g.setStroke(stroke);
+            
+            g.setClip(previousClip);
         }
     }
 
@@ -399,11 +392,10 @@ public class Chart
     
     public void renderGraph()
     {   
-        float offset = globalOffset;
         for (Series aSeries : series)
         {
             Shape previousClip = g.getClip();
-            Shape newClip = aSeries.clip(offset);
+            Shape newClip = aSeries.clip(aSeries.displayX, true);
             if (newClip == null) continue;
             g.setClip(newClip);
             
@@ -413,8 +405,8 @@ public class Chart
             {
                 for (Line line : dataSet.lines)
                 {
-                    line2D.x1 = horX1 + (offset + line.x1) * horPixelsPerUnit;
-                    line2D.x2 = horX1 + (offset + line.x2) * horPixelsPerUnit;
+                    line2D.x1 = horX1 + (dataSet.displayX + line.x1) * horPixelsPerUnit;
+                    line2D.x2 = horX1 + (dataSet.displayX + line.x2) * horPixelsPerUnit;
                     line2D.y1 = verY1 - (line.y1 - verMinimum) * verPixelsPerUnit;
                     line2D.y2 = verY1 - (line.y2 - verMinimum) * verPixelsPerUnit;
     
@@ -425,16 +417,16 @@ public class Chart
                         g.setColor(color);
                     g.draw(line2D);
                     
-                    if (offset + line.x2 >= horMaximum)
+                    if (dataSet.displayX + line.x2 >= horMaximum)
                         break;
                 }
 
                 maxTotalX = Math.max(maxTotalX, dataSet.totalX);
                 if (renderMode == RENDER_CONTINUE)
                 {
-                    if (offset + dataSet.totalX >= horMaximum)
+                    if (dataSet.displayX + dataSet.totalX >= horMaximum)
                         break;
-                    offset += dataSet.totalX;
+                    dataSet.displayX += dataSet.totalX;
                 }
                 else if (renderMode == RENDER_AVERAGE)
                 {
@@ -445,7 +437,7 @@ public class Chart
                 }
             }
             if (maxCommonTime == Float.MAX_VALUE)
-                maxCommonTime = horMaximum - offset;
+                maxCommonTime = horMaximum - aSeries.displayX;
             
             if (renderMode == RENDER_AVERAGE)
             {
@@ -479,8 +471,8 @@ public class Chart
                         previousAverage[unique] = avgCurrent;
                         if (avgPrevious == Float.MIN_VALUE) continue;
     
-                        line2D.x1 = horX1 + (previousValue + offset) * horPixelsPerUnit;
-                        line2D.x2 = horX1 + (value + offset) * horPixelsPerUnit;
+                        line2D.x1 = horX1 + (previousValue + aSeries.displayX) * horPixelsPerUnit;
+                        line2D.x2 = horX1 + (value + aSeries.displayX) * horPixelsPerUnit;
                         line2D.y1 = verY1 - (avgPrevious - verMinimum) * verPixelsPerUnit;
                         line2D.y2 = verY1 - (avgCurrent - verMinimum) * verPixelsPerUnit;
                         
@@ -504,8 +496,8 @@ public class Chart
                     float a = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
                     float b = (sumXX * sumY - sumX * sumXY) / (n * sumXX - sumX * sumX);
     
-                    line2D.x1 = horX1 + offset * horPixelsPerUnit;
-                    line2D.x2 = horX1 + (maxCommonTime + offset) * horPixelsPerUnit;
+                    line2D.x1 = horX1 + aSeries.displayX * horPixelsPerUnit;
+                    line2D.x2 = horX1 + (maxCommonTime + aSeries.displayX) * horPixelsPerUnit;
                     line2D.y1 = verY1 - (b - verMinimum) * verPixelsPerUnit;
                     line2D.y2 = verY1 - (a * maxCommonTime * 1e-10f + b - verMinimum) * verPixelsPerUnit;
     
@@ -515,19 +507,18 @@ public class Chart
                     FontMetrics metrics = g.getFontMetrics();
                     float height = metrics.getHeight();
                     float ascent = metrics.getAscent();
-                    g.drawString(String.format(Locale.US, "k = %.3e, a = %.3e", a, 1.0 / b), horX1 + offset * horPixelsPerUnit + 5, verY1 - height + ascent);
+                    g.drawString(String.format(Locale.US, "k = %.3e, a = %.3e", a, 1.0 / b), horX1 + aSeries.displayX * horPixelsPerUnit + 5, verY1 - height + ascent);
                 }
             }
             
             g.setClip(previousClip);
-            if (renderMode != RENDER_CONTINUE)
-                offset += maxTotalX;
         }
     }
     
     private static class SampleInfo implements Comparable<SampleInfo>
     {
         public int unique;
+        public int count;
         public float y;
         
         @Override public int compareTo(SampleInfo o) { return Float.compare(o.y, y); }
@@ -542,20 +533,29 @@ public class Chart
     
     private void clearSamples()
     {
+        sampleUniqueCount = 0;
         for (int i = 0; i < samples.length; i++)
-            samples[i].y = -1;
+        {
+            samples[i].count = 0;
+            samples[i].y = -Float.MAX_VALUE;
+        }
     }
     
     private void sample(DataSet dataSet, float x)
     {
-        sampleUniqueCount = 0;
         for (Line line : dataSet.lines)
             if (line.x1 <= x && x < line.x2)
             {
-                if (samples[line.unique].y < 0)
+                if (samples[line.unique].count <= 0)
                     sampleUniqueCount++;
                 samples[line.unique].unique = line.unique;
-                samples[line.unique].y = line.y1;
+                
+                int oldCount = samples[line.unique].count;
+                int newCount = oldCount + 1;
+                float oldY = samples[line.unique].y;
+                float newY = (oldCount * oldY + line.y1) / newCount;
+                samples[line.unique].y = newY;
+                samples[line.unique].count = newCount;
             }
     }
     
@@ -563,63 +563,59 @@ public class Chart
     {
         if (activeDataSet == null) return;
         
-        g.setFont(SMALL_FONT);
+        g.setFont(FONT);
         FontMetrics metrics = g.getFontMetrics();
         float height = metrics.getHeight();
         float ascent = metrics.getAscent();
         
         Point2D.Float mouse = imgui.mousePoint();
-        if (mouse.x >= horX1 && mouse.x <= horX2)
+        if (mouse.x >= horX1 && mouse.x <= horX2 && mouse.y >= verY2 && mouse.y <= verY1)
         {
-            if (mouse.y >= verY2 && mouse.y <= verY1)
+            if (imgui.context.mouseReleased)
             {
-                if (imgui.context.mouseReleased)
-                {
-                    scaleToFit = true;
-                    scaleVerticalAxis();
-                }
-                
-                if (imgui.context.mouseVerticalScrollDelta != 0)
-                {
-                    scaleToFit = false;
-
-                    scaleVerticalAxis();
-                    
-                    float verticalRange = verMaximum - verMinimum;
-                    float newVerticalRange = verticalRange / (1 + imgui.context.mouseVerticalScrollDelta * 0.1f);
-                    
-                    float centerY = verY1 -  mouse.y;
-                    float centerYValue = verMinimum + centerY / verPixelsPerUnit;
-
-                    verMinimum = centerYValue - (centerYValue - verMinimum) * (newVerticalRange / verticalRange);
-                    verMaximum = centerYValue + (verMaximum - centerYValue) * (newVerticalRange / verticalRange);
-                    
-                    if (verMinimum < scaledVerMinimum)
-                    {
-                        verMaximum += scaledVerMinimum - verMinimum;
-                        verMinimum = scaledVerMinimum;
-                        if (verMaximum > scaledVerMaximum)
-                            scaleToFit = true;
-                    }
-                    if (verMaximum > scaledVerMaximum)
-                    {
-                        verMinimum -= verMaximum - scaledVerMaximum;
-                        verMaximum = scaledVerMaximum;
-                        if (verMinimum < scaledVerMinimum)
-                            scaleToFit = true;
-                    }
-                    
-                    scaleVerticalAxis();
-                }
-                
-                globalOffset += imgui.context.mouseHorizontalScrollDelta * 1.0f;
-                if (globalOffset > 0)
-                    globalOffset = 0;
+                scaleToFit = true;
+                scaleVerticalAxis();
             }
-        }
-        
-        if (mouse.x >= horX1 && mouse.x <= horX2)
-        {
+            
+            if (imgui.context.mouseVerticalScrollDelta != 0)
+            {
+                scaleToFit = false;
+
+                scaleVerticalAxis();
+                
+                float verticalRange = verMaximum - verMinimum;
+                float newVerticalRange = verticalRange / (1 + imgui.context.mouseVerticalScrollDelta * 0.1f);
+                
+                float centerY = verY1 -  mouse.y;
+                float centerYValue = verMinimum + centerY / verPixelsPerUnit;
+
+                verMinimum = centerYValue - (centerYValue - verMinimum) * (newVerticalRange / verticalRange);
+                verMaximum = centerYValue + (verMaximum - centerYValue) * (newVerticalRange / verticalRange);
+                
+                if (verMinimum < scaledVerMinimum)
+                {
+                    verMaximum += scaledVerMinimum - verMinimum;
+                    verMinimum = scaledVerMinimum;
+                    if (verMaximum > scaledVerMaximum)
+                        scaleToFit = true;
+                }
+                if (verMaximum > scaledVerMaximum)
+                {
+                    verMinimum -= verMaximum - scaledVerMaximum;
+                    verMaximum = scaledVerMaximum;
+                    if (verMinimum < scaledVerMinimum)
+                        scaleToFit = true;
+                }
+                
+                scaleVerticalAxis();
+            }
+            
+            globalOffset += imgui.context.mouseHorizontalScrollDelta * 1.0f;
+            if (globalOffset > 0)
+                globalOffset = 0;
+            
+            // time frame
+
             float x = (globalOffset + mouse.x - horX1) / horPixelsPerUnit;
             
             line2D.x2 = (line2D.x1 = mouse.x);
@@ -632,38 +628,31 @@ public class Chart
             float textY = horY - height + ascent;
             
             for (Series aSeries : series)
-            {
                 for (DataSet dataSet : aSeries.dataSets)
-                {
-                    if (renderMode != RENDER_CONTINUE)
-                        dataSet = activeDataSet;
-                    
-                    if (x > dataSet.totalX)
-                    {
-                        if (renderMode != RENDER_CONTINUE)
-                            break;
-                        
-                        if (dataSet != activeDataSet)
-                            x -= dataSet.totalX;
-                        continue;
-                    }
-                    
-                    sample(dataSet, x);
-                    break;
-                }
-            }
+                    if (x >= dataSet.displayX && x < dataSet.displayX + dataSet.totalX)
+                        sample(dataSet, x - dataSet.displayX);
             
             Arrays.sort(samples);
             textY -= (sampleUniqueCount + 1) * height;
+            
+            float boxX = mouse.x + 8;
+            float boxWidth = 100.0f;
+            float boxHeight = (sampleUniqueCount + 1) * height + ascent;
+            Shape box = imgui.rounded(new Rectangle2D.Float(boxX, textY, boxWidth, boxHeight), 8.0f);
+            
+            g.setColor(WINDOW_NORMAL);
+            g.fill(box);
+            g.setColor(WINDOW_FOCUS);
+            g.draw(box);
+            
             g.setColor(STRUCTURE_COLOR);
-            g.drawString(String.format(Locale.US, "%.2f s", x), mouse.x + 2, textY += height);
-            for (SampleInfo info : samples)
+            g.drawString(String.format(Locale.US, "%.2f s", x), boxX + 2, textY += height);
+            for (int i = 0; i < sampleUniqueCount; i++)
             {
-                if (info.y < 0) break;
-                
+                SampleInfo info = samples[i];
                 String text = String.format(Locale.US, "%s: %.2f", Reactions.findName(info.unique), info.y);
-                g.setColor(uniqueColors[info.unique]);
-                g.drawString(text, mouse.x + 6, textY += height);
+                g.setColor(uniqueColors[info.unique].brighter().brighter());
+                g.drawString(text, boxX + 6, textY += height);
             }
         }
     }
