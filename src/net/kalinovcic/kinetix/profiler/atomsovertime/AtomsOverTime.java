@@ -175,14 +175,15 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
 
         synchronized (state)
         {
+            updateInput();
+
             if (!state.readyToUse) return;
             
             if (framesToSkip > 0)
                 framesToSkip--;
             if (!state.realtime && framesToSkip == 0)
                 framesToSkip = 8;
-
-            updateInput();
+            
             updateGraph();
     
             firstChart.renderGraph();

@@ -238,7 +238,7 @@ public class Chart
         float height = metrics.getHeight();
         float ascent = metrics.getAscent();
         
-        for (float value = verMinimum; value <= verMaximum; value += verMarkEvery)
+        for (float value = verMinimum + verMarkEvery; value <= verMaximum; value += verMarkEvery)
         {
             line2D.x2 = (line2D.x1 = verX) - 2;
             line2D.y2 = (line2D.y1 = verY1 - (value - verMinimum) * verPixelsPerUnit);
@@ -626,33 +626,40 @@ public class Chart
             clearSamples();
 
             float textY = horY - height + ascent;
+            float time = Float.NaN;
             
             for (Series aSeries : series)
                 for (DataSet dataSet : aSeries.dataSets)
                     if (x >= dataSet.displayX && x < dataSet.displayX + dataSet.totalX)
-                        sample(dataSet, x - dataSet.displayX);
+                    {
+                        time = x - dataSet.displayX;
+                        sample(dataSet, time);
+                    }
             
-            Arrays.sort(samples);
-            textY -= (sampleUniqueCount + 1) * height;
-            
-            float boxX = mouse.x + 8;
-            float boxWidth = 100.0f;
-            float boxHeight = (sampleUniqueCount + 1) * height + ascent;
-            Shape box = imgui.rounded(new Rectangle2D.Float(boxX, textY, boxWidth, boxHeight), 8.0f);
-            
-            g.setColor(WINDOW_NORMAL);
-            g.fill(box);
-            g.setColor(WINDOW_FOCUS);
-            g.draw(box);
-            
-            g.setColor(STRUCTURE_COLOR);
-            g.drawString(String.format(Locale.US, "%.2f s", x), boxX + 2, textY += height);
-            for (int i = 0; i < sampleUniqueCount; i++)
+            if (!Float.isNaN(time))
             {
-                SampleInfo info = samples[i];
-                String text = String.format(Locale.US, "%s: %.2f", Reactions.findName(info.unique), info.y);
-                g.setColor(uniqueColors[info.unique].brighter().brighter());
-                g.drawString(text, boxX + 6, textY += height);
+                Arrays.sort(samples);
+                textY -= (sampleUniqueCount + 1) * height;
+                
+                float boxX = mouse.x + 8;
+                float boxWidth = 100.0f;
+                float boxHeight = (sampleUniqueCount + 1) * height + ascent;
+                Shape box = imgui.rounded(new Rectangle2D.Float(boxX, textY, boxWidth, boxHeight), 8.0f);
+                
+                g.setColor(WINDOW_NORMAL);
+                g.fill(box);
+                g.setColor(WINDOW_FOCUS);
+                g.draw(box);
+                
+                g.setColor(STRUCTURE_COLOR);
+                g.drawString(String.format(Locale.US, "%.2f s", time), boxX + 2, textY += height);
+                for (int i = 0; i < sampleUniqueCount; i++)
+                {
+                    SampleInfo info = samples[i];
+                    String text = String.format(Locale.US, "%s: %.2f", Reactions.findName(info.unique), info.y);
+                    g.setColor(uniqueColors[info.unique].brighter().brighter());
+                    g.drawString(text, boxX + 6, textY += height);
+                }
             }
         }
     }
