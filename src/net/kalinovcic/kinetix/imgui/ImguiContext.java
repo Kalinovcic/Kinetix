@@ -37,8 +37,9 @@ public class ImguiContext
     public boolean mouseDownPrevious;
     public boolean mousePressed;
     public boolean mouseReleased;
-    
-    public float mouseScrollDelta;
+
+    public float mouseVerticalScrollDelta;
+    public float mouseHorizontalScrollDelta;
     
     public List<Character> typedChars = new ArrayList<Character>();
 }

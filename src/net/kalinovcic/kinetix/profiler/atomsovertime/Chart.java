@@ -55,11 +55,26 @@ public class Chart
     
     public boolean doLeastSquare;
     
-    public static class Series
+    public class Series
     {
         public ArrayList<DataSet> dataSets = new ArrayList<DataSet>();
         public float totalX;
         public float continuationX;
+        
+        public Shape clip(float offset)
+        {
+            float clipLeft = horX1 + offset * horPixelsPerUnit;
+            float clipRight = horX1 + (offset + totalX) * horPixelsPerUnit;
+            if (clipLeft < horX1) clipLeft = horX1;
+            if (clipLeft > horX2) return null;
+            if (clipRight < horX1) return null;
+            if (clipRight > horX2) clipRight = horX2;
+
+            float clipBottom = verY1;
+            float clipTop = clipBottom + (verY2 - verY1) * (1 - TOP_PADDING);
+            Shape newClip = new Rectangle2D.Float(clipLeft, clipTop, clipRight - clipLeft, clipBottom - clipTop);
+            return newClip;
+        }
     }
     
     public static class DataSet
@@ -91,7 +106,10 @@ public class Chart
     private float maximumY = -Float.MAX_VALUE;
     private float minimumY =  Float.MAX_VALUE;
     private boolean scaleToFit = true;
+    private float scaledVerMinimum;
+    private float scaledVerMaximum;
     public boolean noScalePadding = false;
+    private float globalOffset = 0;
     
     public void clear()
     {
@@ -102,6 +120,7 @@ public class Chart
         minimumY =  Float.MAX_VALUE;
         scaleToFit = true;
         noScalePadding = false;
+        globalOffset = 0;
     }
     
     public void addSeries()
@@ -160,22 +179,28 @@ public class Chart
             verMaximum = 1;
             return;
         }
+
+        float verticalRange = maximumY - minimumY;
+        float verticalRangeWithPadding = noScalePadding ? verticalRange : (verticalRange / 0.9f);
+        float padding = verticalRangeWithPadding - verticalRange;
+        
+        float minimumAndPadding = minimumY - padding * 0.5f;
+        float maximumAndPadding = maximumY + padding * 0.5f;
+        
+        scaledVerMinimum = minimumAndPadding;
+        scaledVerMaximum = maximumAndPadding;
         
         if (scaleToFit)
         {
-            float verticalRange = maximumY - minimumY;
-            float verticalRangeWithPadding = noScalePadding ? verticalRange : (verticalRange / 0.9f);
-            float padding = verticalRangeWithPadding - verticalRange;
-            
-            float minimumAndPadding = minimumY - padding * 0.5f;
-            float maximumAndPadding = maximumY + padding * 0.5f;
-            
-            verMinimum = minimumAndPadding;
-            verMaximum = maximumAndPadding;
+            verMinimum = scaledVerMinimum;
+            verMaximum = scaledVerMaximum;
         }
         
         verPixelsPerUnit = (verY1 - verY2) / (verMaximum - verMinimum) * (1 - TOP_PADDING);
         verMarkEvery = (verMaximum - verMinimum) * 0.1f;
+        
+        double base = Math.sqrt(10);
+        verMarkEvery = (float) Math.pow(base, Math.round(Math.log(verMarkEvery) / Math.log(base))); // round to nearest power of 10
     }
     
     private void renderAxes()
@@ -292,9 +317,14 @@ public class Chart
 
         if (renderMode == RENDER_CONTINUE)
         {
-            float offset = 0.0f;
+            float offset = globalOffset;
             for (Series aSeries : series)
             {
+                Shape previousClip = g.getClip();
+                Shape newClip = aSeries.clip(offset);
+                if (newClip == null) continue;
+                g.setClip(newClip);
+                
                 float seriesOffset = offset;
                 
                 for (DataSet dataSet : aSeries.dataSets)
@@ -323,13 +353,20 @@ public class Chart
                 g.draw(line2D);
                 g.setColor(STRUCTURE_COLOR);
                 g.setStroke(stroke);
+                
+                g.setClip(previousClip);
             }
         }
         else
         {
-            float offset = 0.0f;
+            float offset = globalOffset;
             for (Series aSeries : series)
             {
+                Shape previousClip = g.getClip();
+                Shape newClip = aSeries.clip(offset);
+                if (newClip == null) continue;
+                g.setClip(newClip);
+                
                 float maxTotalX = 0;
                 for (DataSet dataSet : aSeries.dataSets)
                     maxTotalX = Math.max(maxTotalX, dataSet.totalX);
@@ -350,6 +387,8 @@ public class Chart
                 g.setStroke(stroke);
                 
                 offset += length;
+                
+                g.setClip(previousClip);
             }
         }
     }
@@ -360,19 +399,12 @@ public class Chart
     
     public void renderGraph()
     {   
-        float offset = 0.0f;
+        float offset = globalOffset;
         for (Series aSeries : series)
         {
             Shape previousClip = g.getClip();
-
-            float clipLeft = horX1 + aSeries.continuationX * horPixelsPerUnit;
-            float clipRight = horX1 + (aSeries.continuationX + aSeries.totalX) * horPixelsPerUnit;
-            if (clipLeft > horX2) break;
-            if (clipRight > horX2) clipRight = horX2;
-            
-            float clipBottom = verY1;
-            float clipTop = clipBottom + (verY2 - verY1) * (1 - TOP_PADDING);
-            Shape newClip = new Rectangle2D.Float(clipLeft, clipTop, clipRight - clipLeft, clipBottom - clipTop);
+            Shape newClip = aSeries.clip(offset);
+            if (newClip == null) continue;
             g.setClip(newClip);
             
             float maxTotalX = 0;
@@ -547,12 +579,14 @@ public class Chart
                     scaleVerticalAxis();
                 }
                 
-                if (imgui.context.mouseScrollDelta != 0)
+                if (imgui.context.mouseVerticalScrollDelta != 0)
                 {
                     scaleToFit = false;
+
+                    scaleVerticalAxis();
                     
                     float verticalRange = verMaximum - verMinimum;
-                    float newVerticalRange = verticalRange / (1 + imgui.context.mouseScrollDelta * 0.1f);
+                    float newVerticalRange = verticalRange / (1 + imgui.context.mouseVerticalScrollDelta * 0.1f);
                     
                     float centerY = verY1 -  mouse.y;
                     float centerYValue = verMinimum + centerY / verPixelsPerUnit;
@@ -560,14 +594,33 @@ public class Chart
                     verMinimum = centerYValue - (centerYValue - verMinimum) * (newVerticalRange / verticalRange);
                     verMaximum = centerYValue + (verMaximum - centerYValue) * (newVerticalRange / verticalRange);
                     
+                    if (verMinimum < scaledVerMinimum)
+                    {
+                        verMaximum += scaledVerMinimum - verMinimum;
+                        verMinimum = scaledVerMinimum;
+                        if (verMaximum > scaledVerMaximum)
+                            scaleToFit = true;
+                    }
+                    if (verMaximum > scaledVerMaximum)
+                    {
+                        verMinimum -= verMaximum - scaledVerMaximum;
+                        verMaximum = scaledVerMaximum;
+                        if (verMinimum < scaledVerMinimum)
+                            scaleToFit = true;
+                    }
+                    
                     scaleVerticalAxis();
                 }
+                
+                globalOffset += imgui.context.mouseHorizontalScrollDelta * 1.0f;
+                if (globalOffset > 0)
+                    globalOffset = 0;
             }
         }
         
         if (mouse.x >= horX1 && mouse.x <= horX2)
         {
-            float x = (mouse.x - horX1) / horPixelsPerUnit;
+            float x = (globalOffset + mouse.x - horX1) / horPixelsPerUnit;
             
             line2D.x2 = (line2D.x1 = mouse.x);
             line2D.y1 = verY1; line2D.y2 = verY2;

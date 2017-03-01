@@ -155,7 +155,8 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
         imgui.popBounds();
         
         context.typedChars.clear();
-        context.mouseScrollDelta = 0;
+        context.mouseVerticalScrollDelta = 0;
+        context.mouseHorizontalScrollDelta = 0;
 
         if (mainWindow.desktop.getWidth() != 0)
             if (context.currentFrameWidth > mainWindow.desktop.getWidth())
@@ -247,7 +248,10 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
     @Override
     public void mouseWheelMoved(MouseWheelEvent e)
     {
-        context.mouseScrollDelta += e.getWheelRotation();
+        if (e.isShiftDown())
+            context.mouseHorizontalScrollDelta += e.getWheelRotation();
+        else
+            context.mouseVerticalScrollDelta += e.getWheelRotation();
     }
     
     @Override public void keyPressed(KeyEvent e) {}
