@@ -90,14 +90,19 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
     public void rebuildSecondChart()
     {
         secondChart.clear();
-        for (Series aSeries : firstChart.series)
+
+        synchronized (state)
         {
-            secondChart.addSeries();
-            for (DataSet dataSet : aSeries.dataSets)
+            if (!state.readyToUse) return;
+            for (Series aSeries : firstChart.series)
             {
-                secondChart.addDataSet();
-                for (Line line : dataSet.lines)
-                    tryAddLineToSecondChart(line);
+                secondChart.addSeries();
+                for (DataSet dataSet : aSeries.dataSets)
+                {
+                    secondChart.addDataSet();
+                    for (Line line : dataSet.lines)
+                        tryAddLineToSecondChart(line);
+                }
             }
         }
     }
@@ -173,30 +178,33 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
         secondChart.g = firstChart.g = ui.g;
         context = ui.context;
 
-        synchronized (state)
-        {
-            updateInput();
+        updateInput();
 
-            if (!state.readyToUse) return;
-            
-            if (framesToSkip > 0)
-                framesToSkip--;
-            if (!state.realtime && framesToSkip == 0)
-                framesToSkip = 8;
-            
-            updateGraph();
-    
-            firstChart.renderGraph();
-            firstChart.renderStructure();
-            firstChart.interactive(ui);
-            
-            if (secondChartType != SECOND_CHART_NONE)
+        if (framesToSkip > 0)
+        {
+            framesToSkip--;
+        }
+        else
+        {
+            synchronized (state)
             {
-                secondChart.renderGraph();
-                secondChart.renderStructure();
-                secondChart.interactive(ui);
+                if (!state.readyToUse) return;
+                updateGraph();
+
+                firstChart.renderGraph();
+                firstChart.renderStructure();
+                firstChart.interactive(ui);
+                
+                if (secondChartType != SECOND_CHART_NONE)
+                {
+                    secondChart.renderGraph();
+                    secondChart.renderStructure();
+                    secondChart.interactive(ui);
+                }
             }
         }
+        if (!state.realtime && framesToSkip == 0)
+            framesToSkip = 8;
     }
 
     private float desiredWidth = Float.NaN;

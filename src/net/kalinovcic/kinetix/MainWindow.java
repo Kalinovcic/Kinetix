@@ -9,8 +9,6 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.KeyStroke;
 
-import net.kalinovcic.kinetix.video.VideoThread;
-
 public class MainWindow extends JFrame
 {
 	private static final long serialVersionUID = 1L;
@@ -19,8 +17,6 @@ public class MainWindow extends JFrame
 	
 	public MainWindow()
 	{
-		final MainWindow mainWindow = this;
-		
 		Dimension size = new Dimension(1400, 800);
 		setTitle("Kinetix");
 		setSize(size);
@@ -46,16 +42,6 @@ public class MainWindow extends JFrame
             	{
                     Kinetix.restart = true;
 				}
-            }
-        });
-
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0), "OpenVideo");
-        getRootPane().getActionMap().put("OpenVideo", new AbstractAction()
-        {
-            private static final long serialVersionUID = 1L;
-            public void actionPerformed(ActionEvent e)
-            {
-            	new VideoThread(mainWindow).start();
             }
         });
 	}
