@@ -13,32 +13,105 @@ public class SimulationInitialization
         
         state.reset();
         
-        final int MAXIMUM_VELOCITY = 10000;
-
-        double[] sumProbabilities = new double[Reactions.ATOM_TYPE_COUNT];
-        double[][] probabilities = new double[MAXIMUM_VELOCITY][Reactions.ATOM_TYPE_COUNT];
-        
         double temperature = state.settings.temperature;
-        for (int velocity = 0; velocity < MAXIMUM_VELOCITY; velocity++)
-        {
-        	int velocitySq = velocity * velocity;
-        	
-        	for (AtomType type : state.atomTypes)
-        	{
-        	    if (type == null) continue;
-        		double mass = type.mass;
+        
+        // distribute velocities
 
-        		final double BOLTZMANN = 1.38064852;
-        		final double DALTON = 1.660539040;
-        		
-        		double a = Math.pow((mass * DALTON * 0.0001) / (2 * Math.PI * BOLTZMANN * temperature), 1.5);
-        		double b = Math.exp(-mass * DALTON * 0.0001 * velocitySq / (2 * BOLTZMANN * temperature));
-        		double probability = 4 * Math.PI * a * velocitySq * b;
-        		
-        		probabilities[velocity][type.unique] = probability;
-        		sumProbabilities[type.unique] += probability;
-        	}
+        final double BOLTZMANN = 1.38064852;
+        final double DALTON = 1.660539040;
+        double maximumVelocity = 0;
+        int totalAtomCount = 0;
+
+        for (int i = 0; i < state.atomTypes.length; i++)
+        {
+            if (state.atomTypes[i] == null) continue;
+            AtomType type = state.atomTypes[i];
+            if (type.initialCount == 0) continue;
+                
+            double mass = type.mass;
+            
+            double velocity = 0;
+            double probabilitySum = 0;
+            while (probabilitySum < 0.999)
+            {
+                double velocitySq = velocity * velocity;
+                
+                double a = Math.pow((mass * DALTON * 0.0001) / (2 * Math.PI * BOLTZMANN * temperature), 1.5);
+                double b = Math.exp(-mass * DALTON * 0.0001 * velocitySq / (2 * BOLTZMANN * temperature));
+                double probability = 4 * Math.PI * a * velocitySq * b;
+                probabilitySum += probability;
+                
+                velocity += 1;
+            }
+
+            maximumVelocity = Math.max(maximumVelocity, velocity);
+            totalAtomCount += type.initialCount;
         }
+        int velocityColumnCount = totalAtomCount / 10;
+        double velocityColumnWidth = maximumVelocity / velocityColumnCount;
+        
+        double[][] velocityFunction = new double[Reactions.ATOM_TYPE_COUNT][];
+        double[][] velocities = new double[Reactions.ATOM_TYPE_COUNT][];
+        int[] amountPlaced = new int[Reactions.ATOM_TYPE_COUNT];
+        for (int i = 0; i < state.atomTypes.length; i++)
+        {
+            if (state.atomTypes[i] == null) continue;
+            AtomType type = state.atomTypes[i];
+            double mass = type.mass;
+            
+            double sumProbabilities = 0;
+            velocityFunction[i] = new double[velocityColumnCount];
+        	for (int j = 0; j < velocityFunction[i].length; j++)
+        	{
+                double velocity = (j + 0.5) * velocityColumnWidth;
+                double velocitySq = velocity * velocity;
+                
+                double a = Math.pow((mass * DALTON * 0.0001) / (2 * Math.PI * BOLTZMANN * temperature), 1.5);
+                double b = Math.exp(-mass * DALTON * 0.0001 * velocitySq / (2 * BOLTZMANN * temperature));
+                double probability = 4 * Math.PI * a * velocitySq * b;
+                
+                velocityFunction[i][j] = probability;
+                sumProbabilities += probability;
+        	}
+        	
+            velocities[i] = new double[type.initialCount];
+            
+            int k = 0;
+        	for (int j = 0; j < velocityFunction[i].length; j++)
+        	{
+                double velocity = (j + 0.5) * velocityColumnWidth;
+        	    int count = (int) Math.round(velocityFunction[i][j] * type.initialCount / sumProbabilities);
+        	    while (count-- != 0)
+        	        if (k < velocities[i].length)
+        	            velocities[i][k++] = velocity;
+        	}
+        	
+        	while (k < velocities[i].length)
+        	{
+                int maximumJ = 0;
+                for (int j = 0; j < velocityFunction[i].length; j++)
+                    if (velocityFunction[i][j] > velocityFunction[i][maximumJ])
+                        maximumJ = j;
+                velocityFunction[i][maximumJ] -= 1;
+                double velocity = (maximumJ + 0.5) / velocityColumnWidth;
+                velocities[i][k++] = velocity;
+        	}
+        	
+            for (int j = 0; j < velocities[i].length; j++)
+                velocities[i][j] += (random.nextDouble() - 0.5) * velocityColumnWidth;
+        	
+            for (int jj = 0; jj < velocities[i].length * 256; jj++)
+            {
+                int index1 = random.nextInt(velocities[i].length);
+                int index2 = random.nextInt(velocities[i].length);
+                
+                double temp = velocities[i][index1];
+                velocities[i][index1] = velocities[i][index2];
+                velocities[i][index2] = temp;
+            }
+        }
+        
+        // distribute positions
 
         int totalCount = 0;
         for (AtomType type : state.atomTypes)
@@ -110,16 +183,14 @@ public class SimulationInitialization
         	double z = (iz + 0.5) * cubeSize + (state.settings.depth  - countZ * cubeSize) / 2;
         	if (state.settings.do2D) z = 0;
         	
-        	double randomArea = random.nextDouble() * sumProbabilities[type.unique];
-            int velocity = 0;
-            while (velocity < MAXIMUM_VELOCITY && randomArea > probabilities[velocity][type.unique])
-                randomArea -= probabilities[velocity++][type.unique];
+        	double velocity = velocities[unique][amountPlaced[unique]++];
             
             Vector3 vel = new Vector3(random.nextDouble() - 0.5, random.nextDouble() - 0.5,
                     state.settings.do2D ? 0 : (random.nextDouble() - 0.5)).normalize().mul(velocity);
             state.addAtom(new Atom(type, new Vector3(x, y, z), vel));
         }
-        
+
         state.paused = true;
+        state.informListeners();
     }
 }

@@ -219,7 +219,12 @@ public class SimulationState
 			*/
 		}
 		
-		for (SimulationUpdateListener listener : updateListeners)
-		    listener.onSimulationUpdate(this);
+		informListeners();
+	}
+	
+	public void informListeners()
+	{
+	    for (SimulationUpdateListener listener : updateListeners)
+            listener.onSimulationUpdate(this);
 	}
 }
