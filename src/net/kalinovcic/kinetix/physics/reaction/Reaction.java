@@ -47,40 +47,35 @@ public class Reaction
 	public static String[] vUnits = { "mol⁄dm³⁄s", "mol⁄cm³⁄s", "č⁄dm³⁄s", "č⁄cm³⁄s", "č⁄(1000Å)³⁄ns" };
 	public static double[] vFactors = { 1.0, 1.0 / 1000.0, AVOGADRO, AVOGADRO / 1000.0, AVOGADRO / 1e27 };
 	
-	public String reactant1;						// R1
-	public String reactant2;						// R2
-	public String product1;							// P1
-	public String product2;							// P2
-	public double mass1;							// M1
-	public double mass2;							// M2
-	public double radius1;							// r1
-	public double radius2;							// r2
-	public double temperatureRange_low;				// T(raspon)
-	public double temperatureRange_high;			// T(raspon)
-    public boolean temperatureRange_known;
-	public double preExponentialFactor_experimental;// A(eksp)
-	public double b;								// B
-	public double ratio;							// Ea/R
+	public String reactant1;
+	public String reactant2;
+	public String product1;
+	public String product2;
+	public double mass1;
+	public double mass2;
+	public double radius1;
+	public double radius2;
+	public double t_low;
+	public double t_high;
+	public double A_exp;
+	public double n;
+    public double Ea;
+    public int    red;
 	
-	public double reducedMass;						// μ
-	public double sigma;							// σ
-	public double activationEnergy;					// Ea
-	
-	public double temperature;						// T
-	
-	public double relativeSpeed;					// U(rel)
-	public double x;								// Ea/RT
-	public double expMinusX;						// e-Ea/RT
-	public double preExponentialFactor_theoretical;	// A(teor)
-	public double speedCoefficient_experimental;	// k(eksp)
-	public double speedCoefficient_theoretical;		// k(teor)
-	public double steric;							// k(eksp)/k(teor)
-	
-	public double concentration1;					// c1
-	public double concentration2;					// c2
-	
-	public double rate_experimental;				// v(eksp)
-	public double rate_theoretical;					// v(teor)
+	public double reducedMass;
+	public double sigma;
+	public double temperature;
+	public double relativeSpeed;
+	public double x;
+	public double expMinusX;
+	public double preExponentialFactor_theoretical;
+	public double speedCoefficient_experimental;
+	public double speedCoefficient_theoretical;
+	public double steric;
+	public double concentration1;
+	public double concentration2;
+	public double rate_experimental;
+	public double rate_theoretical;
 
     public int reactant1_unique;
     public int reactant2_unique;
@@ -105,23 +100,9 @@ public class Reaction
 		case 7:  return "r₂ [Å]";
 		case 8:  return "T(raspon) [K]";
 		case 9:  return "A(eksp) [" + akUnits[akUnit] + "]";
-		case 10: return "B [1]";
-		case 11: return "Eₐ⁄R [K]";
-		case 12: return "μ [kg]";
-		case 13: return "σ [m²]";
-		case 14: return "Eₐ [kJ⁄mol]";
-		case 15: return "T [K]";
-		case 16: return "U(rel) [m⁄s]";
-		case 17: return "Eₐ⁄RT [1]";
-		case 18: return "exp(-Eₐ⁄RT) [1]";
-		case 19: return "A(teor) [" + akUnits[akUnit] + "]";
-		case 20: return "k(eksp) [" + akUnits[akUnit] + "]";
-		case 21: return "k(teor) [" + akUnits[akUnit] + "]";
-		case 22: return "k(eksp)⁄k(teor) [1]";
-		case 23: return "c₁ [" + cUnits[cUnit] + "]";
-		case 24: return "c₂ [" + cUnits[cUnit] + "]";
-		case 25: return "v(eksp) [" + vUnits[vUnit] + "]";
-		case 26: return "v(teor) [" + vUnits[vUnit] + "]";
+		case 10: return "n [1]";
+        case 11: return "Eₐ [kJ⁄mol]";
+        case 12: return "red";
 		default: return null;
 		}
 	}
@@ -139,25 +120,11 @@ public class Reaction
 		case 5:  return normal.format(mass2);
 		case 6:  return normal.format(radius1);
 		case 7:  return normal.format(radius2);
-		case 8:  return temperatureRange_known ? (normal.format(temperatureRange_low) + "-" + normal.format(temperatureRange_high)) : "-";
-		case 9:  return scientific.format(preExponentialFactor_experimental * akFactors[akUnit]);
-		case 10: return normal.format(b);
-		case 11: return normal.format(ratio);
-		case 12: return scientific.format(reducedMass);
-		case 13: return scientific.format(sigma);
-		case 14: return normal.format(activationEnergy);
-		case 15: return normal.format(temperature);
-		case 16: return normal.format(relativeSpeed);
-		case 17: return normal.format(x);
-		case 18: return scientific.format(expMinusX);
-		case 19: return scientific.format(preExponentialFactor_theoretical * akFactors[akUnit]);
-		case 20: return scientific.format(speedCoefficient_experimental * akFactors[akUnit]);
-		case 21: return scientific.format(speedCoefficient_theoretical * akFactors[akUnit]);
-		case 22: return scientific.format(steric);
-		case 23: return normal.format(concentration1 * cFactors[cUnit]);
-		case 24: return normal.format(concentration2 * cFactors[cUnit]);
-		case 25: return ((vUnit == 4) ? normal : scientific).format(rate_experimental * vFactors[vUnit]);
-		case 26: return ((vUnit == 4) ? normal : scientific).format(rate_theoretical * vFactors[vUnit]);
+		case 8:  return normal.format(t_low) + "-" + normal.format(t_high);
+		case 9:  return scientific.format(A_exp * akFactors[akUnit]);
+		case 10: return normal.format(n);
+		case 11: return normal.format(Ea);
+		case 12: return Integer.toString(red);
 		default: return null;
 		}
 	}
@@ -165,7 +132,7 @@ public class Reaction
 	public String toString()
 	{
 		String full = "Reaction(";
-		for (int i = 0; i < 27; i++)
+		for (int i = 0; i <= 12; i++)
 		{
 			if (i != 0) full += ", ";
 			full += partToString(i);
@@ -177,13 +144,12 @@ public class Reaction
 	{
 		reducedMass = (mass1 * mass2) / (mass1 + mass2) * DALTON;
 		sigma = (radius1 + radius2)*(radius1 + radius2) * Math.PI * 1e-20;
-		activationEnergy = ratio * (IDEAL_GAS / 1000);
 		
 		relativeSpeed = Math.sqrt((8 * BOLTZMANN * temperature) / (Math.PI * reducedMass));
-		x = (activationEnergy * 1000) / (IDEAL_GAS * temperature);
+		x = (Ea * 1000) / (IDEAL_GAS * temperature);
 		expMinusX = Math.exp(-x);
 		preExponentialFactor_theoretical = sigma * relativeSpeed * AVOGADRO * Math.exp(0.5) * 1000;
-		speedCoefficient_experimental = preExponentialFactor_experimental * Math.pow(temperature, b) * expMinusX;
+		speedCoefficient_experimental = A_exp * Math.pow(temperature, n) * expMinusX;
 		speedCoefficient_theoretical = preExponentialFactor_theoretical * expMinusX;
 		steric = speedCoefficient_experimental / speedCoefficient_theoretical;
 
@@ -193,40 +159,41 @@ public class Reaction
 	
 	public Reaction clone()
 	{
-	    Reaction n = new Reaction();
-	    n.reactant1 = reactant1;
-	    n.reactant2 = reactant2;
-	    n.product1 = product1;
-	    n.product2 = product2;
-	    n.mass1 = mass1;
-	    n.mass2 = mass2;
-	    n.radius1 = radius1;
-	    n.radius2 = radius2;
-	    n.temperatureRange_low = temperatureRange_low;
-	    n.temperatureRange_high = temperatureRange_high;
-	    n.temperatureRange_known = temperatureRange_known;
-	    n.preExponentialFactor_experimental = preExponentialFactor_experimental;
-	    n.b = b;
-	    n.ratio = ratio;
-	    n.reducedMass = reducedMass;
-	    n.sigma = sigma;
-	    n.activationEnergy = activationEnergy;
-	    n.temperature = temperature;
-	    n.relativeSpeed = relativeSpeed;
-	    n.x = x;
-	    n.expMinusX = expMinusX;
-	    n.preExponentialFactor_theoretical = preExponentialFactor_theoretical;
-	    n.speedCoefficient_experimental = speedCoefficient_experimental;
-	    n.speedCoefficient_theoretical = speedCoefficient_theoretical;
-	    n.steric = steric;
-	    n.concentration1 = concentration1;
-	    n.concentration2 = concentration2;
-	    n.rate_experimental = rate_experimental;
-	    n.rate_theoretical = rate_theoretical;
-        n.reactant1_unique = reactant1_unique;
-        n.reactant2_unique = reactant2_unique;
-        n.product1_unique = product1_unique;
-        n.product2_unique = product2_unique;
-	    return n;
+	    Reaction nn = new Reaction();
+	    nn.reactant1 = reactant1;
+	    nn.reactant2 = reactant2;
+	    nn.product1 = product1;
+	    nn.product2 = product2;
+	    nn.mass1 = mass1;
+	    nn.mass2 = mass2;
+	    nn.radius1 = radius1;
+	    nn.radius2 = radius2;
+	    nn.t_low = t_low;
+	    nn.t_high = t_high;
+	    nn.A_exp = A_exp;
+	    nn.n = n;
+        nn.Ea = Ea;
+        nn.red = red;
+        
+	    nn.reducedMass = reducedMass;
+	    nn.sigma = sigma;
+	    nn.temperature = temperature;
+	    nn.relativeSpeed = relativeSpeed;
+	    nn.x = x;
+	    nn.expMinusX = expMinusX;
+	    nn.preExponentialFactor_theoretical = preExponentialFactor_theoretical;
+	    nn.speedCoefficient_experimental = speedCoefficient_experimental;
+	    nn.speedCoefficient_theoretical = speedCoefficient_theoretical;
+	    nn.steric = steric;
+	    nn.concentration1 = concentration1;
+	    nn.concentration2 = concentration2;
+	    nn.rate_experimental = rate_experimental;
+	    nn.rate_theoretical = rate_theoretical;
+	    
+        nn.reactant1_unique = reactant1_unique;
+        nn.reactant2_unique = reactant2_unique;
+        nn.product1_unique = product1_unique;
+        nn.product2_unique = product2_unique;
+	    return nn;
 	}
 }

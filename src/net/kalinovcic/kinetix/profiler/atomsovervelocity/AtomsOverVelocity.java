@@ -32,9 +32,6 @@ public class AtomsOverVelocity extends Profiler implements SimulationUpdateListe
     private static final float PADDING_TOP = 24.0f;
     
     public static final Color STRUCTURE_COLOR = TEXT;
-    public static final Color MAJOR_COLOR = new Color(TEXT.getRed(), TEXT.getGreen(), TEXT.getBlue(), 40);
-    public static final Color MINOR_COLOR = new Color(TEXT.getRed(), TEXT.getGreen(), TEXT.getBlue(), 10);
-    public static final int GRID_DIV = 5;
     
     public AtomsOverVelocity()
     {
@@ -315,7 +312,7 @@ public class AtomsOverVelocity extends Profiler implements SimulationUpdateListe
                 boolean eligable = false;
                 for (Reaction reaction : state.atomTypes[unique].reactantInReactions)
                 {
-                    double v = Math.sqrt(2 * reaction.activationEnergy / reaction.reducedMass / Reaction.AVOGADRO * 1000) / 2;
+                    double v = Math.sqrt(2 * reaction.Ea / reaction.reducedMass / Reaction.AVOGADRO * 1000) / 2;
                     if (velocity >= v)
                     {
                         eligable = true;

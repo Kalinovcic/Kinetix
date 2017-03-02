@@ -62,7 +62,7 @@ public class ConfigurationHelper
             reactions[index].radius2 = atomTypes[unique2].radius;
             reactions[index].temperature = settings.temperature;
             reactions[index].recalculate();
-            reactions[index].activationEnergy = reaction.activationEnergyInput.value;
+            reactions[index].Ea = reaction.activationEnergyInput.value;
             
             atomTypes[unique1].reactantInReactions.add(reactions[index]);
             atomTypes[unique2].reactantInReactions.add(reactions[index]);

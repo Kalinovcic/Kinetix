@@ -23,7 +23,7 @@ public class ReactionChooserModel extends AbstractTableModel
 	@Override
 	public int getColumnCount()
 	{
-		return 28;
+		return 14;
 	}
 
 	@Override
@@ -58,11 +58,11 @@ public class ReactionChooserModel extends AbstractTableModel
 			fireTableDataChanged();
 		}
 		
-		if (!(aValue instanceof String)) return;
+		/*if (!(aValue instanceof String)) return;
 		String value = (String) aValue;
 		try
 		{
-			double v = Double.parseDouble(value);
+		    double v = Double.parseDouble(value);
 			if (columnIndex == 15) Reactions.reactions.get(rowIndex).temperature = v;
 			if (columnIndex == 24) Reactions.reactions.get(rowIndex).concentration1 = v / Reaction.cFactors[Reaction.cUnit];
 			if (columnIndex == 25) Reactions.reactions.get(rowIndex).concentration2 = v / Reaction.cFactors[Reaction.cUnit];
@@ -71,12 +71,12 @@ public class ReactionChooserModel extends AbstractTableModel
 		}
 		catch (Exception ex)
 		{
-		}
+		}*/
 	}
 
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex)
 	{
-		return columnIndex == 0 || columnIndex == 16 || columnIndex == 24 || columnIndex == 25;
+		return columnIndex == 0; // || columnIndex == 16 || columnIndex == 24 || columnIndex == 25;
 	}
 }

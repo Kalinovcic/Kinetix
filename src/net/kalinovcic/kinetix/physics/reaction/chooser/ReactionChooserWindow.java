@@ -18,8 +18,6 @@ import javax.swing.JScrollPane;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.JTable;
 
@@ -32,7 +30,7 @@ public class ReactionChooserWindow extends JInternalFrame
 	{
         super("Reaction chooser", false, true, false, false);
 
-        Dimension size = new Dimension(1300, 600);
+        Dimension size = new Dimension(1000, 600);
         setSize(size);
         setMinimumSize(size);
         setMaximumSize(size);
@@ -76,7 +74,7 @@ public class ReactionChooserWindow extends JInternalFrame
 			}
 		});
         
-        table.getTableHeader().addMouseListener(new MouseAdapter() {
+        /*table.getTableHeader().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 int col2 = table.columnAtPoint(e.getPoint());
@@ -117,6 +115,6 @@ public class ReactionChooserWindow extends JInternalFrame
                 	model.fireTableDataChanged();
                 }
             }
-        });
+        });*/
 	}
 }

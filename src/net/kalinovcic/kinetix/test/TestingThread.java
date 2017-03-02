@@ -60,12 +60,12 @@ public class TestingThread extends Thread
         bufferedWriter.write(String.format("temp=%.2f ", unit.settings.temperature));
         for (int unique = 0; unique < Reactions.ATOM_TYPE_COUNT; unique++)
             if (unit.atomTypes[unique] != null)
-                bufferedWriter.write(String.format("N(%s)=%d ", Reactions.simpleName(unit.atomTypes[unique].name), unit.atomTypes[unique].initialCount));
+                bufferedWriter.write(String.format("N(%s)=%d ", Reactions.toSimpleName(unit.atomTypes[unique].name), unit.atomTypes[unique].initialCount));
         bufferedWriter.write("\n");
         for (Reaction reaction : unit.reactions)
         {
-            bufferedWriter.write(String.format("%s + %s -> %s + %s\n", Reactions.simpleName(reaction.reactant1), Reactions.simpleName(reaction.reactant2),
-                                                                       Reactions.simpleName(reaction.product1), Reactions.simpleName(reaction.product2)));
+            bufferedWriter.write(String.format("%s + %s -> %s + %s\n", Reactions.toSimpleName(reaction.reactant1), Reactions.toSimpleName(reaction.reactant2),
+                                                                       Reactions.toSimpleName(reaction.product1), Reactions.toSimpleName(reaction.product2)));
         }
         bufferedWriter.write("\n");
 	}
@@ -212,7 +212,7 @@ public class TestingThread extends Thread
 	            for (int i = 0; i < Reactions.ATOM_TYPE_COUNT; i++)
 	                if (state.atomTypes[i] != null)
 	                {
-	                    bufferedWriter.write(Reactions.simpleName(state.atomTypes[i].name));
+	                    bufferedWriter.write(Reactions.toSimpleName(state.atomTypes[i].name));
 	                    for (Double value : averages[i])
 	                        bufferedWriter.write(String.format("\t%.2f", value.doubleValue() / (double) unit.repeat));
 	                    bufferedWriter.write("\n");

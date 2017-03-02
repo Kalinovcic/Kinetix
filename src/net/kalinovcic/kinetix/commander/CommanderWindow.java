@@ -14,6 +14,7 @@ import net.kalinovcic.kinetix.imgui.ImguiIntegerInput;
 import net.kalinovcic.kinetix.imgui.ImguiVerticalLayout;
 import net.kalinovcic.kinetix.physics.AtomType;
 import net.kalinovcic.kinetix.physics.SimulationSeries;
+import net.kalinovcic.kinetix.physics.reaction.AtomData;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 import net.kalinovcic.kinetix.physics.reaction.chooser.ReactionChooserWindow;
@@ -95,11 +96,14 @@ public class CommanderWindow extends ImguiFrame
         
         AtomType type = new AtomType();
         type.name = name;
-        type.unique = Reactions.uniqueAtoms.get(name);
+        type.unique = Reactions.findUnique(name);
         type.initialCount = initialCount;
-        type.mass = Reactions.findMass(name);
-        type.radius = Reactions.findRadius(name);
+        type.mass = AtomData.calculateMass(name);
+        type.radius = AtomData.getRadius(name);
         type.color = Color.BLACK;
+        
+        if (type.mass < 0) throw new IllegalStateException();
+        if (type.radius < 0) throw new IllegalStateException();
 
         type.initialCountInput = new ImguiIntegerInput() {
             @Override public int getInitial() { return type.initialCount; }
@@ -138,11 +142,13 @@ public class CommanderWindow extends ImguiFrame
         for (int i = 0; i < newReactions.length; i++)
             reactions.add(newReactions[i].clone());
         
+        temperatureInput = new ImguiDoubleInput(newReactions[0].t_high, 0, Double.MAX_VALUE);
+        
         for (Reaction reaction : reactions)
         {
             addAtom(reaction.reactant1, 100).reactantInReactions.add(reaction);
             addAtom(reaction.reactant2, 100).reactantInReactions.add(reaction);
-            reaction.activationEnergyInput = new ImguiDoubleInput(reaction.activationEnergy, 0, Double.MAX_VALUE);
+            reaction.activationEnergyInput = new ImguiDoubleInput(reaction.Ea, 0, Double.MAX_VALUE);
         }
         for (Reaction reaction : reactions)
         {

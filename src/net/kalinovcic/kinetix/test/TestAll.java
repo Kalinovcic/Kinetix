@@ -5,6 +5,7 @@ import java.awt.Color;
 import net.kalinovcic.kinetix.MainWindow;
 import net.kalinovcic.kinetix.physics.AtomType;
 import net.kalinovcic.kinetix.physics.SimulationSettings;
+import net.kalinovcic.kinetix.physics.reaction.AtomData;
 import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 import net.kalinovcic.kinetix.test.TestingConfiguration.TestingUnit;
@@ -18,16 +19,19 @@ public class TestAll
     
     private static void initAtom(TestingUnit unit, String type, int count)
     {
-        int unique = Reactions.uniqueAtoms.get(type);
+        int unique = Reactions.findUnique(type);
         if (unit.atomTypes[unique] != null)
             return;
         unit.atomTypes[unique] = new AtomType();
         unit.atomTypes[unique].name = type;
         unit.atomTypes[unique].unique = unique;
         unit.atomTypes[unique].initialCount = count;
-        unit.atomTypes[unique].mass = Reactions.findMass(type);
-        unit.atomTypes[unique].radius = Reactions.findRadius(type);
+        unit.atomTypes[unique].mass = AtomData.calculateMass(type);
+        unit.atomTypes[unique].radius = AtomData.getRadius(type);
         unit.atomTypes[unique].color = Color.BLACK;
+
+        if (unit.atomTypes[unique].mass < 0) throw new IllegalStateException();
+        if (unit.atomTypes[unique].radius < 0) throw new IllegalStateException();
     }
     
     private static void initUnit(TestingUnit unit, Reaction reaction, double temperature, int count)
@@ -54,8 +58,8 @@ public class TestAll
         initAtom(unit, unit.reactions[0].reactant2, count);
         initAtom(unit, unit.reactions[0].product1, 0);
         initAtom(unit, unit.reactions[0].product2, 0);
-        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reactions[0].reactant1)].reactantInReactions.add(unit.reactions[0]);
-        unit.atomTypes[Reactions.uniqueAtoms.get(unit.reactions[0].reactant2)].reactantInReactions.add(unit.reactions[0]);
+        unit.atomTypes[Reactions.findUnique(unit.reactions[0].reactant1)].reactantInReactions.add(unit.reactions[0]);
+        unit.atomTypes[Reactions.findUnique(unit.reactions[0].reactant2)].reactantInReactions.add(unit.reactions[0]);
     }
     
     public static void testAll(MainWindow mainWindow)
@@ -66,13 +70,8 @@ public class TestAll
         
         for (Reaction reaction : Reactions.reactions)
         {
-            double tempBegin = 200;
-            double tempEnd = 3800;
-            if (reaction.temperatureRange_known)
-            {
-                tempBegin = reaction.temperatureRange_low;
-                tempEnd = reaction.temperatureRange_high;
-            }
+            double tempBegin = reaction.t_low;
+            double tempEnd = reaction.t_high;
             
             for (int i = 0; i <= TEMP_DIV; i++)
             {

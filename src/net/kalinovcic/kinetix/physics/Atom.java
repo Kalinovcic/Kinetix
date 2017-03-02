@@ -119,7 +119,7 @@ public class Atom
                 continue;
 
             double energy = reaction.reducedMass * data.dvnc * data.dvnc / 2000 * Reaction.AVOGADRO;
-            if (energy < reaction.activationEnergy)
+            if (energy < reaction.Ea)
                 break;
         
             if (state.settings.doSteric)
