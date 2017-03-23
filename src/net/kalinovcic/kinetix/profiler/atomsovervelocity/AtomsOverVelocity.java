@@ -211,14 +211,8 @@ public class AtomsOverVelocity extends Profiler implements SimulationUpdateListe
             framesToSkip = 8;
     }
 
-    private float desiredWidth = Float.NaN;
-    private float desiredHeight = Float.NaN;
-    
     public void updateInput()
     {
-        if (Float.isNaN(desiredWidth)) desiredWidth = context.currentFrameWidth;
-        if (Float.isNaN(desiredHeight)) desiredHeight = context.currentFrameHeight;
-        
         ui.beginRow();
         ui.doLabel("T=" + String.format(Locale.US, "%.0f", timeInterval) + "s", 0);
         if (ui.doButton("+ T", 0, 18)) timeInterval += 1;
@@ -226,10 +220,6 @@ public class AtomsOverVelocity extends Profiler implements SimulationUpdateListe
         ui.doLabel("R=" + String.format(Locale.US, "%.1f", velocityInterval), 0);
         if (ui.doButton("+ R", 0, 18)) { velocityInterval /= 2; recreateGraph(); }
         if (ui.doButton("- R", 0, 18)) { velocityInterval *= 2; recreateGraph(); }
-        if (ui.doButton("+ W", 0, 18)) desiredWidth += 50;
-        if (ui.doButton("- W", 0, 18)) desiredWidth -= 50;
-        if (ui.doButton("+ H", 0, 18)) desiredHeight += 50;
-        if (ui.doButton("- H", 0, 18)) desiredHeight -= 50;
         
         String displayModeText = null;
         switch (displayMode)
@@ -240,8 +230,6 @@ public class AtomsOverVelocity extends Profiler implements SimulationUpdateListe
         if (ui.doButton(displayModeText, 0, 18))
             displayMode = (displayMode + 1) % 2;
         
-        context.nextFrameWidth = (int) desiredWidth;
-        context.nextFrameHeight = (int) desiredHeight;
         ui.endRow();
     }
 

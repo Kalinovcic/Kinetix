@@ -9,7 +9,7 @@ public class ReactionChooserWindow extends ImguiFrame
     
     public ReactionChooserWindow(MainWindow mainWindow)
     {
-        super(mainWindow, "Reaction Chooser", 100, 100, 930, 500, true, new ReactionChooserUI());
+        super(mainWindow, "Reaction Chooser", 100, 100, 930, 495, true, new ReactionChooserUI());
         requestFocus();
         toFront();
         repaint();

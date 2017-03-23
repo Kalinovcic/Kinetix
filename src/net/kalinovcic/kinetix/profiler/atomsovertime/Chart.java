@@ -27,7 +27,7 @@ public class Chart
     public static final Color MINOR_COLOR = new Color(TEXT.getRed(), TEXT.getGreen(), TEXT.getBlue(), 10);
     public static final int GRID_DIV = 5;
     
-    public String verLabel;
+    public String verLabel = "";
     public float verX;
     public float verY1;
     public float verY2;
@@ -36,7 +36,7 @@ public class Chart
     public float verMinimum;
     public float verMaximum;
     
-    public String horLabel;
+    public String horLabel = "";
     public float horY;
     public float horX1;
     public float horX2;
@@ -61,6 +61,10 @@ public class Chart
         public float totalX;
         public float continuationX;
         public float displayX;
+
+        public float temperature;
+        public float calculatedK;
+        public float calculatedA;
         
         public Shape clip(float offset, boolean clipVertical)
         {
@@ -497,24 +501,34 @@ public class Chart
                     // System.out.println(n + " " + sumX + " " + sumXX + " " + sumY + " " + sumXY);
                     float a = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
                     float b = (sumXX * sumY - sumX * sumXY) / (n * sumXX - sumX * sumX);
-    
-                    line2D.x1 = horX1 + aSeries.displayX * horPixelsPerUnit;
-                    line2D.x2 = horX1 + (maxCommonTime + aSeries.displayX) * horPixelsPerUnit;
-                    line2D.y1 = verY1 - (b - verMinimum) * verPixelsPerUnit;
-                    line2D.y2 = verY1 - (a * maxCommonTime * 1e-10f + b - verMinimum) * verPixelsPerUnit;
-    
-                    g.setColor(Color.WHITE);
-                    g.draw(line2D);
-    
-                    FontMetrics metrics = g.getFontMetrics();
-                    float height = metrics.getHeight();
-                    float ascent = metrics.getAscent();
-                    g.drawString(String.format(Locale.US, "k = %.3e, a = %.3e", a, 1.0 / b), horX1 + aSeries.displayX * horPixelsPerUnit + 5, verY1 - height + ascent);
+
+                    aSeries.calculatedK = a;
+                    aSeries.calculatedA = 1.0f / b;
+                    renderLeastSquare(aSeries, maxCommonTime, 1e-10f, false);
                 }
             }
             
             g.setClip(previousClip);
         }
+    }
+    
+    public void renderLeastSquare(Series aSeries, float width, float factor, boolean extra)
+    {
+        float b = 1.0f / aSeries.calculatedA;
+        line2D.x1 = horX1 + aSeries.displayX * horPixelsPerUnit;
+        line2D.x2 = horX1 + (width + aSeries.displayX) * horPixelsPerUnit;
+        line2D.y1 = verY1 - (b - verMinimum) * verPixelsPerUnit;
+        line2D.y2 = verY1 - (aSeries.calculatedK * width * factor + b - verMinimum) * verPixelsPerUnit;
+
+        g.setColor(Color.WHITE);
+        g.draw(line2D);
+
+        FontMetrics metrics = g.getFontMetrics();
+        float height = metrics.getHeight();
+        float ascent = metrics.getAscent();
+        String text = String.format(Locale.US, "k = %.3e, a = %.3e", aSeries.calculatedK, aSeries.calculatedA);
+        if (extra) text += String.format(Locale.US, ", Ea = %.3e, A = %.3e", -aSeries.calculatedK * 8.314, Math.exp(1.0 / aSeries.calculatedA));
+        g.drawString(text, horX1 + aSeries.displayX * horPixelsPerUnit + 5, verY1 - height + ascent);
     }
     
     private static class SampleInfo implements Comparable<SampleInfo>

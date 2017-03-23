@@ -67,7 +67,7 @@ public class ReactionChooserUI extends Imgui
     private void scroll()
     {
         if (context.mouseVerticalScrollDelta != 0)
-            scrollY -= context.mouseVerticalScrollDelta * 30.0f;
+            scrollY -= context.mouseVerticalScrollDelta * (BUTTON_HEIGHT + PADDING_VERTICAL);
         if (scrollY > 0) scrollY = 0;
     }
     

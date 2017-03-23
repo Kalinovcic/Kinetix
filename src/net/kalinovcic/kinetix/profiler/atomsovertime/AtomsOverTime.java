@@ -1,6 +1,10 @@
 package net.kalinovcic.kinetix.profiler.atomsovertime;
 
+import java.awt.Rectangle;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 import net.kalinovcic.kinetix.Kinetix;
 import net.kalinovcic.kinetix.imgui.ImguiContext;
@@ -47,6 +51,8 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
     
     private Chart firstChart = new Chart();
     private Chart secondChart = new Chart();
+    private Chart thirdChart = new Chart();
+    private boolean thirdChartActive = false;
     private int secondChartType = SECOND_CHART_NONE;
 
     private Object activeInstance = null;
@@ -89,14 +95,14 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
     
     public void rebuildSecondChart()
     {
-        secondChart.clear();
-
         synchronized (state)
         {
+            secondChart.clear();
             if (!state.readyToUse) return;
             for (Series aSeries : firstChart.series)
             {
                 secondChart.addSeries();
+                secondChart.activeSeries.temperature = aSeries.temperature;
                 for (DataSet dataSet : aSeries.dataSets)
                 {
                     secondChart.addDataSet();
@@ -115,6 +121,7 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             firstChart.addSeries();
             secondChart.addSeries();
             activeInstance = null;
+            secondChart.activeSeries.temperature = firstChart.activeSeries.temperature = (float) state.settings.temperature;
         }
         
         if (state.instanceID != activeInstance)
@@ -130,6 +137,7 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
                 previousCounts[unique] = state.atomTypes[unique].initialCount;
                 firstChart.uniqueColors[unique] = state.atomTypes[unique].color;
                 secondChart.uniqueColors[unique] = state.atomTypes[unique].color;
+                thirdChart.uniqueColors[unique] = state.atomTypes[unique].color;
             }
         }
         
@@ -175,7 +183,7 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
     public void update(ProfilerUI ui)
     {
         this.ui = ui;
-        secondChart.g = firstChart.g = ui.g;
+        thirdChart.g = secondChart.g = firstChart.g = ui.g;
         context = ui.context;
         
         context.resizable = true;
@@ -202,6 +210,22 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
                     secondChart.renderGraph();
                     secondChart.renderStructure();
                     secondChart.interactive(ui);
+                }
+                
+                if (thirdChartActive)
+                {
+                    float top = PADDING_TOP + (context.bounds.height - PADDING_BOTTOM - PADDING_TOP) / 2 + 4;
+                    float bottom = context.bounds.height;
+                    float left = 0;
+                    float right = context.bounds.width;
+                    
+                    ui.g.setColor(ProfilerUI.PROFILER_BACKGROUND);
+                    ui.g.fill(new Rectangle.Float(left, top, right - left, bottom - top));
+                    
+                    thirdChart.renderGraph();
+                    thirdChart.renderLeastSquare(thirdChart.activeSeries, thirdChart.horMaximum, 1, true);
+                    thirdChart.renderStructure();
+                    thirdChart.interactive(ui);
                 }
             }
         }
@@ -234,8 +258,8 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             secondChart.horMarkEvery /= 2.0f;
         }
 
-        secondChart.major = firstChart.major = ui.doCheckbox("major", 0, 18, firstChart.major);
-        secondChart.minor = firstChart.minor = ui.doCheckbox("minor", 0, 18, firstChart.minor);
+        thirdChart.major = secondChart.major = firstChart.major = ui.doCheckbox("major", 0, 18, firstChart.major);
+        thirdChart.minor = secondChart.minor = firstChart.minor = ui.doCheckbox("minor", 0, 18, firstChart.minor);
         
         String renderModeText = null;
         switch (firstChart.renderMode)
@@ -250,16 +274,21 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
         String secondChartTypeText = null;
         switch (secondChartType)
         {
-        case SECOND_CHART_NONE:         secondChartTypeText = "none"; break;
-        case SECOND_CHART_A_OVER_T:     secondChartTypeText = "A over t"; break;
-        case SECOND_CHART_INV_C_OVER_T: secondChartTypeText = "1⁄c over t"; break;
-        case SECOND_CHART_LN_C_OVER_T:  secondChartTypeText = "ln c over t"; break;
+        case SECOND_CHART_NONE:             secondChartTypeText = "none"; break;
+        case SECOND_CHART_A_OVER_T:         secondChartTypeText = "A over t"; break;
+        case SECOND_CHART_INV_C_OVER_T:     secondChartTypeText = "1⁄c over t"; break;
+        case SECOND_CHART_LN_C_OVER_T:      secondChartTypeText = "ln c over t"; break;
         }
         if (ui.doButton(secondChartTypeText, 0, 18))
         {
             secondChartType = (secondChartType + 1) % 4;
             rebuildSecondChart();
         }
+        
+        if (firstChart.renderMode != Chart.RENDER_AVERAGE || secondChartType == SECOND_CHART_NONE)
+            thirdChartActive = false;
+        else
+            thirdChartActive = ui.doCheckbox("ln k over 1⁄T", 0, 18, thirdChartActive);
         
         ui.endRow();
     }
@@ -309,6 +338,71 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             secondChart.horX1 = PADDING_LEFT;
             secondChart.horX2 = context.bounds.width - PADDING_RIGHT;
             secondChart.horPixelsPerUnit = (secondChart.horX2 - secondChart.horX1) / firstChart.horMaximum;
+        }
+        
+        if (thirdChartActive)
+        {
+            thirdChart.clear();
+            thirdChart.addSeries();
+            thirdChart.addDataSet();
+
+            float maxX = -Float.MAX_VALUE;
+            float n, sumX, sumY, sumXX, sumXY;
+            n = sumX = sumY = sumXX = sumXY = 0;
+            
+            class KPoint { float x, y; }
+            List<KPoint> points = new ArrayList<KPoint>();
+            for (Series aSeries : secondChart.series)
+            {
+                KPoint point = new KPoint();
+                point.x = 1.0f / aSeries.temperature;
+                point.y = (float) Math.log(aSeries.calculatedK);
+                points.add(point);
+                maxX = Math.max(maxX, point.x);
+                
+                n++;
+                sumX += point.x;
+                sumY += point.y;
+                sumXX += point.x * point.x;
+                sumXY += point.x * point.y;
+            }
+            points.sort(new Comparator<KPoint>(){ public int compare(KPoint arg0, KPoint arg1) { return Float.compare(arg0.x, arg1.x); }; });
+            if (maxX <= 0) maxX = 1;
+
+            {
+                float a = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+                float b = (sumXX * sumY - sumX * sumXY) / (n * sumXX - sumX * sumX);
+                thirdChart.activeSeries.calculatedK = a;
+                thirdChart.activeSeries.calculatedA = 1.0f / b;
+            }
+
+            int unique = state.reactions[0].reactant1_unique;
+            for (int i = 0; i < points.size() - 1; i++)
+            {
+                KPoint a = points.get(i);
+                KPoint b = points.get(i + 1);
+                thirdChart.addLine(unique, a.x, b.x, a.y, b.y);
+            }
+
+            float top = PADDING_TOP + (context.bounds.height - PADDING_BOTTOM - PADDING_MIDDLE - PADDING_TOP) / 2 + PADDING_MIDDLE;
+            float bottom = context.bounds.height - PADDING_BOTTOM;
+            
+            thirdChart.renderMode = Chart.RENDER_CONTINUE;
+            thirdChart.doLeastSquare = false;
+            
+            thirdChart.verLabel = "ln k";
+            thirdChart.verX = PADDING_LEFT;
+            thirdChart.verY1 = bottom;
+            thirdChart.verY2 = top;
+            thirdChart.scaleVerticalAxis();
+            
+            thirdChart.horLabel = "1⁄T";
+            thirdChart.horY = bottom;
+            thirdChart.horX1 = PADDING_LEFT;
+            thirdChart.horX2 = context.bounds.width - PADDING_RIGHT;
+            thirdChart.horMaximum = maxX;
+            thirdChart.horMarkEvery = maxX * 0.2f;
+            thirdChart.horPixelsPerUnit = (thirdChart.horX2 - thirdChart.horX1) / maxX;
         }
     }
 }
