@@ -20,13 +20,23 @@ public class ImguiContext
     public boolean focus;
     public float totalTranslationX;
     public float totalTranslationY;
+
+    public int WINDOW_LEFT  = 0;
+    public int WINDOW_RIGHT = 1;
+    public int WINDOW_UP    = 2;
+    public int WINDOW_DOWN  = 3;
+    
+    public boolean resizable;
     
     public boolean mouseBusy;
     public boolean mouseDragging;
+    public boolean mouseResize[] = new boolean[4];
     public int pressMouseScreenX;
     public int pressMouseScreenY;
     public int pressFrameX;
     public int pressFrameY;
+    public int pressFrameWidth;
+    public int pressFrameHeight;
 
     public int mouseX;
     public int mouseY;

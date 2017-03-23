@@ -181,6 +181,8 @@ public class AtomsOverVelocity extends Profiler implements SimulationUpdateListe
         g = ui.g;
         this.ui = ui;
         context = ui.context;
+        
+        context.resizable = true;
 
         updateInput();
 

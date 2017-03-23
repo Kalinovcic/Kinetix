@@ -2,6 +2,7 @@ package net.kalinovcic.kinetix.imgui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -34,6 +35,8 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
 {
     private static final long serialVersionUID = 1L;
 
+    private static final int RESIZE_EDGE = 20;
+    
     private boolean closable;
     public MainWindow mainWindow;
     public Imgui imgui;
@@ -100,10 +103,15 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
         context.mouseReleased = !context.mouseDown && context.mouseDownPrevious;
         context.mouseDownPrevious = context.mouseDown;
         
-        if (context.focus && context.mouseDown && !context.mousePressed && !context.mouseBusy)
+        if (context.focus && context.mouseDown && !context.mousePressed && !context.mouseBusy && !context.mouseDragging)
         {
             context.mouseBusy = true;
             context.mouseDragging = true;
+
+            context.mouseResize[context.WINDOW_LEFT]  = context.resizable && (context.mouseX < RESIZE_EDGE);
+            context.mouseResize[context.WINDOW_UP]    = context.resizable && (context.mouseY < RESIZE_EDGE);
+            context.mouseResize[context.WINDOW_RIGHT] = context.resizable && (context.currentFrameWidth - context.mouseX < RESIZE_EDGE);
+            context.mouseResize[context.WINDOW_DOWN]  = context.resizable && (context.currentFrameHeight - context.mouseY < RESIZE_EDGE);
         }
         
         if (context.mouseDragging)
@@ -116,11 +124,42 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
             {
                 int deltaX = context.mouseScreenX - context.pressMouseScreenX;
                 int deltaY = context.mouseScreenY - context.pressMouseScreenY;
-                int frameX = context.pressFrameX + deltaX;
-                int frameY = context.pressFrameY + deltaY;
-
-                context.currentFrameX = frameX;
-                context.currentFrameY = frameY;
+                
+                boolean resizing = false;
+                if (context.mouseResize[context.WINDOW_LEFT] || context.mouseResize[context.WINDOW_RIGHT])
+                {
+                    if (context.mouseResize[context.WINDOW_LEFT])
+                    {
+                        context.currentFrameX = context.pressFrameX + deltaX;
+                        context.nextFrameWidth = context.pressFrameWidth - deltaX;
+                    }
+                    else
+                    {
+                        context.nextFrameWidth = context.pressFrameWidth + deltaX;
+                    }
+                    if (context.nextFrameWidth < 50) context.nextFrameWidth = 50;
+                    resizing = true;
+                }
+                if (context.mouseResize[context.WINDOW_UP] || context.mouseResize[context.WINDOW_DOWN])
+                {
+                    if (context.mouseResize[context.WINDOW_UP])
+                    {
+                        context.currentFrameY = context.pressFrameY + deltaY;
+                        context.nextFrameHeight = context.pressFrameHeight - deltaY;
+                    }
+                    else
+                    {
+                        context.nextFrameHeight = context.pressFrameHeight + deltaY;
+                    }
+                    if (context.nextFrameHeight < 50) context.nextFrameHeight = 50;
+                    resizing = true;
+                }
+                
+                if (!resizing)
+                {
+                    context.currentFrameX = context.pressFrameX + deltaX;
+                    context.currentFrameY = context.pressFrameY + deltaY;
+                }
             }
         }
 
@@ -140,6 +179,8 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
             
             g.setStroke(defaultStroke);
         }
+
+        context.mouseBusy = false;
         
         if (closable)
             if (imgui.doButton("", new Rectangle2D.Float(w - 25, 5, 20, 20), true))
@@ -177,6 +218,7 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
                 if (context.currentFrameHeight > mainWindow.desktop.getHeight())
                     context.currentFrameHeight = mainWindow.desktop.getHeight();
             
+            moveToMatchContext();
             resizeToMatchContext();
         }
         
@@ -227,6 +269,8 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
         context.pressMouseScreenY = e.getYOnScreen();
         context.pressFrameX = getX();
         context.pressFrameY = getY();
+        context.pressFrameWidth = getWidth();
+        context.pressFrameHeight = getHeight();
         context.mouseDown = true;
         context.focus = true;
     }
@@ -243,6 +287,21 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
         context.mouseY = e.getY();
         context.mouseScreenX = e.getXOnScreen();
         context.mouseScreenY = e.getYOnScreen();
+
+        boolean inResizeRange = 
+            context.mouseX < RESIZE_EDGE ||
+            context.mouseY < RESIZE_EDGE ||
+            context.currentFrameWidth - context.mouseX < RESIZE_EDGE ||
+            context.currentFrameHeight - context.mouseY < RESIZE_EDGE;
+        
+        if (context.resizable && inResizeRange && !context.mouseBusy)
+        {
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+        else
+        {
+            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        }
     }
     
     @Override

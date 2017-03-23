@@ -209,6 +209,8 @@ public class Chart
         
         double base = Math.sqrt(10);
         verMarkEvery = (float) Math.pow(base, Math.round(Math.log(verMarkEvery) / Math.log(base))); // round to nearest power of 10
+        if (verMarkEvery == 0)
+            verMarkEvery = 1;
     }
     
     private void renderAxes()

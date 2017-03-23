@@ -27,7 +27,7 @@ public class SimulationInitialization
             if (state.atomTypes[i] == null) continue;
             AtomType type = state.atomTypes[i];
             if (type.initialCount == 0) continue;
-                
+
             double mass = type.mass;
             
             double velocity = 0;
