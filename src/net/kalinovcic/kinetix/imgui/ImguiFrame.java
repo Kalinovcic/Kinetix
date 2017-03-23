@@ -185,6 +185,7 @@ public class ImguiFrame extends JInternalFrame implements ActionListener, FocusL
         if (closable)
             if (imgui.doButton("", new Rectangle2D.Float(w - 25, 5, 20, 20), true))
             {
+                imgui.onClose();
                 dispose();
                 return;
             }
