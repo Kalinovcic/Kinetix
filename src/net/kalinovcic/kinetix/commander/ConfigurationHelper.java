@@ -25,6 +25,7 @@ public class ConfigurationHelper
         settings.doSteric = CommanderWindow.simulateSteric;
         settings.do2D = CommanderWindow.simulate2D;
         settings.doV = CommanderWindow.simulateV;
+        settings.doActive = CommanderWindow.simulateActive;
         settings.reactionStartTime = CommanderWindow.reactionStartTimeInput.value;
         settings.timeFactor = CommanderWindow.timeFactorInput.value;
         settings.temperature = CommanderWindow.temperatureInput.value;

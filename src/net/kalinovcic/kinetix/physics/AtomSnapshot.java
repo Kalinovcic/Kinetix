@@ -12,6 +12,7 @@ public class AtomSnapshot
 	public double vx;
     public double vy;
     public double vz;
+    public boolean active;
 	
 	public void set(Atom atom)
 	{
@@ -22,6 +23,7 @@ public class AtomSnapshot
 		vx = atom.velocity.x;
         vy = atom.velocity.y;
         vz = atom.velocity.z;
+        active = atom.isActive;
 	}
 	
 	public Shape toShape(double deltaTime, int depth)

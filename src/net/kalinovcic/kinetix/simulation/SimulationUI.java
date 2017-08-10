@@ -166,6 +166,12 @@ public class SimulationUI extends Imgui
                 
                 Shape shape = atom.toShape(snapshotTime, state.settings.depth);
                 g.fill(shape);
+                
+                if (atom.active)
+                {
+                    g.setColor(Color.WHITE);
+                    g.draw(shape);
+                }
             }
         }
         

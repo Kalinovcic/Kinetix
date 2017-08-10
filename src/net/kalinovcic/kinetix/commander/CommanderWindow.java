@@ -38,6 +38,7 @@ public class CommanderWindow extends ImguiFrame
     public static boolean simulate2D;
     public static boolean simulateV;
     public static boolean simulateRealtime = true;
+    public static boolean simulateActive = false;
     
     public static ImguiDoubleInput reactionStartTimeInput = new ImguiDoubleInput(0, 0, Double.MAX_VALUE);
     public static ImguiDoubleInput timeFactorInput = new ImguiDoubleInput(1, Double.MIN_VALUE, Double.MAX_VALUE);
@@ -228,10 +229,11 @@ public class CommanderWindow extends ImguiFrame
             doSpace(0, 320);
 
             beginRow();
-            simulateSteric = doCheckbox("Steric", columnWidth(4), 0, simulateSteric);
-            simulate2D = doCheckbox("2D", columnWidth(4), 0, simulate2D);
-            simulateV = doCheckbox("V", columnWidth(4), 0, simulateV);
-            simulateRealtime = doCheckbox("realtime", columnWidth(4), 0, simulateRealtime);
+            simulateSteric = doCheckbox("Steric", columnWidth(5), 0, simulateSteric);
+            simulate2D = doCheckbox("2D", columnWidth(5), 0, simulate2D);
+            simulateV = doCheckbox("V", columnWidth(5), 0, simulateV);
+            simulateRealtime = doCheckbox("realtime", columnWidth(5), 0, simulateRealtime);
+            simulateActive = doCheckbox("active", columnWidth(5), 0, simulateActive);
             endRow();
 
             beginRow();

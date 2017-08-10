@@ -17,8 +17,11 @@ public class Atom
 	
 	public double wallTime;
 	public int wall;
-	
-	public boolean toRemove = false;
+
+    public double decayTimer;
+    public boolean isActive = false;
+
+    public boolean toRemove = false;
 	
 	public Atom(AtomType type, Vector3 position, Vector3 velocity)
 	{
@@ -107,6 +110,18 @@ public class Atom
 	{
         if (state.simulationTime < state.settings.reactionStartTime)
             return false;
+
+        if (state.settings.doActive)
+        {
+            isActive = !isActive;
+            decayTimer = 0;
+            other.isActive = !other.isActive;
+            other.decayTimer = 0;
+            
+            if (!type.canBeActivated) isActive = false;
+            if (!other.type.canBeActivated) other.isActive = false;
+        }
+
         for (Reaction reaction : type.reactantInReactions)
         {
             if (reaction.product2 == null)

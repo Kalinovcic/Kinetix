@@ -178,12 +178,9 @@ public class SimulationState
 	
 	public void update(double deltaTime)
 	{
-        for (AtomType type : atomTypes)
-        {
-            if (type == null) continue;
-            type.decayTimer += deltaTime;
-        }
-
+	    for (Atom atom : atoms)
+	        atom.decayTimer += deltaTime;
+	    
 	    for (Reaction reaction : reactions)
 	    {
 	        if (reaction.product2 == null) continue;
@@ -194,27 +191,24 @@ public class SimulationState
             int typeC = reaction.product2_unique;
             
             AtomType reactantType = atomTypes[typeA];
-	        
-	        if (reactantType.currentCount == 0)
-	        {
-	            reactantType.decayTimer = 0;
-	            continue;
-	        }
-
-            while (reactantType.currentCount != 0)
+            reactantType.canBeActivated = true;
+            
+            while (true)
             {
                 double k = reaction.A_exp * Math.pow(reaction.temperature / 298, reaction.n) * Math.exp(-reaction.Ea / Reaction.IDEAL_GAS / reaction.temperature);
                 k /= 1e10;
                 k *= reactantType.currentCount / (double) reactantType.initialCount;
-                
+
                 double time = 1.0 / k;
-                if (reactantType.decayTimer < time)
-                    break;
-                reactantType.decayTimer -= time;
-                
+
+                boolean success = false;
                 for (Atom atom : atoms)
                 {
                     if (atom.type != reactantType) continue;
+                    if (settings.doActive && !atom.isActive) continue;
+                    if (atom.decayTimer < time) continue;
+                    
+                    success = true;
 
                     atomTypes[typeB].currentCount++;
                     atomTypes[typeC].currentCount++;
@@ -227,9 +221,10 @@ public class SimulationState
                     
                     addAtom(atomB);
                     addAtom(atomC);
-                    
                     break;
                 }
+                
+                if (!success) break;
             }
 	    }
 	    

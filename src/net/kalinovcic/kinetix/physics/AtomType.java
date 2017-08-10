@@ -21,7 +21,7 @@ public class AtomType
     public List<Reaction> reactantInReactions = new ArrayList<Reaction>();
 
     public int currentCount;
-    public double decayTimer;
+    public boolean canBeActivated;
 
     public ImguiIntegerInput initialCountInput;
     public ImguiDoubleInput massInput;

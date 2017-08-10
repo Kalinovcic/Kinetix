@@ -5,6 +5,7 @@ public class SimulationSettings
     public boolean doSteric;
     public boolean do2D;
     public boolean doV;
+    public boolean doActive;
     public double reactionStartTime = 0.0;
     public double timeFactor;
     public double temperature;
