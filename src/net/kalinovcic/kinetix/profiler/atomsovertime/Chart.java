@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Locale;
 
 import net.kalinovcic.kinetix.imgui.Imgui;
+import net.kalinovcic.kinetix.physics.reaction.Reaction;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
 
 public class Chart
@@ -62,9 +63,10 @@ public class Chart
         public float continuationX;
         public float displayX;
 
-        public float temperature;
-        public float calculatedK;
-        public float calculatedA;
+        public double temperature;
+        public Reaction reaction;
+        public double calculatedK;
+        public double calculatedA;
         
         public Shape clip(float offset, boolean clipVertical)
         {
@@ -514,11 +516,11 @@ public class Chart
     
     public void renderLeastSquare(Series aSeries, float width, float factor, boolean extra)
     {
-        float b = 1.0f / aSeries.calculatedA;
+        double b = 1.0 / aSeries.calculatedA;
         line2D.x1 = horX1 + aSeries.displayX * horPixelsPerUnit;
         line2D.x2 = horX1 + (width + aSeries.displayX) * horPixelsPerUnit;
-        line2D.y1 = verY1 - (b - verMinimum) * verPixelsPerUnit;
-        line2D.y2 = verY1 - (aSeries.calculatedK * width * factor + b - verMinimum) * verPixelsPerUnit;
+        line2D.y1 = (float)(verY1 - (b - verMinimum) * verPixelsPerUnit);
+        line2D.y2 = (float)(verY1 - (aSeries.calculatedK * width * factor + b - verMinimum) * verPixelsPerUnit);
 
         g.setColor(Color.WHITE);
         g.draw(line2D);
@@ -527,7 +529,16 @@ public class Chart
         float height = metrics.getHeight();
         float ascent = metrics.getAscent();
         String text = String.format(Locale.US, "k = %.3e, a = %.3e", aSeries.calculatedK, aSeries.calculatedA);
-        if (extra) text += String.format(Locale.US, ", Ea = %.3e, A = %.3e", -aSeries.calculatedK * 8.314, Math.exp(1.0 / aSeries.calculatedA));
+        if (extra)
+        {
+            double Ea = -aSeries.calculatedK * 8.314 / 1000.0;
+            double R_Ea = Math.abs((Ea - aSeries.reaction.Ea) / aSeries.reaction.Ea);
+            text += String.format(Locale.US, ",    Ea = %.2f [kJ⁄mol], R(Ea) = %.2f%%", Ea, R_Ea * 100);
+
+            double A = Math.exp(1.0 / aSeries.calculatedA);
+            double R_A = Math.abs((A - aSeries.reaction.A_teor) / aSeries.reaction.A_teor);
+            text += String.format(Locale.US, ",    A = %.3e, R(A) = %.2f%%", A, R_A * 100);
+        }
         g.drawString(text, horX1 + aSeries.displayX * horPixelsPerUnit + 5, verY1 - height + ascent);
     }
     

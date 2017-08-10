@@ -1,14 +1,13 @@
 package net.kalinovcic.kinetix.profiler.atomsovertime;
 
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
 import net.kalinovcic.kinetix.Kinetix;
 import net.kalinovcic.kinetix.imgui.ImguiContext;
-import net.kalinovcic.kinetix.physics.Atom;
 import net.kalinovcic.kinetix.physics.SimulationState;
 import net.kalinovcic.kinetix.physics.SimulationUpdateListener;
 import net.kalinovcic.kinetix.physics.reaction.Reactions;
@@ -103,6 +102,7 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             {
                 secondChart.addSeries();
                 secondChart.activeSeries.temperature = aSeries.temperature;
+                secondChart.activeSeries.reaction = aSeries.reaction;
                 for (DataSet dataSet : aSeries.dataSets)
                 {
                     secondChart.addDataSet();
@@ -122,6 +122,7 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             secondChart.addSeries();
             activeInstance = null;
             secondChart.activeSeries.temperature = firstChart.activeSeries.temperature = (float) state.settings.temperature;
+            secondChart.activeSeries.reaction = firstChart.activeSeries.reaction = state.reactions[0];
         }
         
         if (state.instanceID != activeInstance)
@@ -141,11 +142,14 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             }
         }
         
-        Arrays.fill(newCounts, 0);
-        
         newTime = (float) state.simulationTime;
-        for (Atom atom : state.atoms)
-            newCounts[atom.type.unique]++;
+        for (int unique = 0; unique < Reactions.ATOM_TYPE_COUNT; unique++)
+        {
+            if (state.atomTypes[unique] == null)
+                newCounts[unique] = 0;
+            else
+                newCounts[unique] = state.atomTypes[unique].currentCount;
+        }
         
         for (int unique = 0; unique < newCounts.length; unique++)
         {
@@ -221,9 +225,16 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
                     
                     ui.g.setColor(ProfilerUI.PROFILER_BACKGROUND);
                     ui.g.fill(new Rectangle.Float(left, top, right - left, bottom - top));
-                    
+
                     thirdChart.renderGraph();
-                    thirdChart.renderLeastSquare(thirdChart.activeSeries, thirdChart.horMaximum, 1, true);
+                    Shape previousClip = ui.g.getClip();
+                    Shape newClip = thirdChart.activeSeries.clip(thirdChart.activeSeries.displayX, true);
+                    if (newClip != null)
+                    {
+                        ui.g.setClip(newClip);
+                        thirdChart.renderLeastSquare(thirdChart.activeSeries, thirdChart.horMaximum, 1, true);
+                        ui.g.setClip(previousClip);
+                    }
                     thirdChart.renderStructure();
                     thirdChart.interactive(ui);
                 }
@@ -242,6 +253,7 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             activeSeries = null;
             firstChart.clear();
             rebuildSecondChart();
+            thirdChartActive = false;
         }
         if (ui.doButton("+ R", 0, 18))
         {
@@ -354,8 +366,10 @@ public class AtomsOverTime extends Profiler implements SimulationUpdateListener
             List<KPoint> points = new ArrayList<KPoint>();
             for (Series aSeries : secondChart.series)
             {
+                thirdChart.activeSeries.reaction = aSeries.reaction;
+                
                 KPoint point = new KPoint();
-                point.x = 1.0f / aSeries.temperature;
+                point.x = (float)(1.0 / aSeries.temperature);
                 point.y = (float) Math.log(aSeries.calculatedK);
                 points.add(point);
                 maxX = Math.max(maxX, point.x);

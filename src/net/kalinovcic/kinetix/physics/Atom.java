@@ -109,6 +109,11 @@ public class Atom
             return false;
         for (Reaction reaction : type.reactantInReactions)
         {
+            if (reaction.product2 == null)
+                continue;
+            if (reaction.reactant2 == null)
+                continue;
+            
             int typeA = reaction.reactant1_unique;
             int typeB = reaction.reactant2_unique;
             int typeC = reaction.product1_unique;
@@ -151,6 +156,12 @@ public class Atom
                 velocityC = Math.sqrt(2 * kineticC / massC);
                 velocityD = Math.sqrt(2 * kineticD / massD);
             }
+
+            this.type.currentCount--;
+            other.type.currentCount--;
+
+            state.atomTypes[typeC].currentCount++;
+            state.atomTypes[typeD].currentCount++;
     
     		state.removeAtom(this);
     		state.removeAtom(other);

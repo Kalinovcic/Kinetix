@@ -45,6 +45,7 @@ public class ConfigurationHelper
             atomTypes[unique].mass = type.mass;
             atomTypes[unique].radius = type.radius;
             atomTypes[unique].color = type.color;
+            atomTypes[unique].currentCount = atomTypes[unique].initialCount;
         }
         
         // Reactions
@@ -52,20 +53,26 @@ public class ConfigurationHelper
         for (int index = 0; index < CommanderWindow.reactions.size(); index++)
         {
             Reaction reaction = CommanderWindow.reactions.get(index);
-            int unique1 = reaction.reactant1_unique;
-            int unique2 = reaction.reactant2_unique;
-            
             reactions[index] = reaction.clone();
+
+            int unique1 = reaction.reactant1_unique;
             reactions[index].mass1 = atomTypes[unique1].mass;
-            reactions[index].mass2 = atomTypes[unique2].mass;
             reactions[index].radius1 = atomTypes[unique1].radius;
-            reactions[index].radius2 = atomTypes[unique2].radius;
+            atomTypes[unique1].reactantInReactions.add(reactions[index]);
+
+            reactions[index] = reaction.clone();
             reactions[index].temperature = settings.temperature;
+
+            if (reaction.reactant2 != null)
+            {
+                int unique2 = reaction.reactant2_unique;
+                reactions[index].mass2 = atomTypes[unique2].mass;
+                reactions[index].radius2 = atomTypes[unique2].radius;
+                atomTypes[unique2].reactantInReactions.add(reactions[index]);
+            }
+
             reactions[index].recalculate();
             reactions[index].Ea = reaction.activationEnergyInput.value;
-            
-            atomTypes[unique1].reactantInReactions.add(reactions[index]);
-            atomTypes[unique2].reactantInReactions.add(reactions[index]);
         }
     }
     

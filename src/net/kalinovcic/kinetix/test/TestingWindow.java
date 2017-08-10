@@ -71,11 +71,17 @@ public class TestingWindow extends JInternalFrame
 	
 	public void unitUpdate()
 	{
-	    formula.setText(tester.unit.reactions[0].reactant1 + " + " + tester.unit.reactions[0].reactant2 + " → " + tester.unit.reactions[0].product1 + " + " + tester.unit.reactions[0].product2);
-        status2.setText(String.format("time=%.2f, temp=%.2f, N(%s)=%d, N(%s)=%d",
-                tester.stepTime, tester.unit.reactions[0].temperature,
-                tester.unit.reactions[0].reactant1, tester.state.atomTypes[tester.unit.reactions[0].reactant1_unique].initialCount,
-                tester.unit.reactions[0].reactant2, tester.state.atomTypes[tester.unit.reactions[0].reactant2_unique].initialCount));
+	    formula.setText(tester.unit.reactions[0].getFormula());
+	    
+	    String text = String.format("time=%.2f, temp=%.2f, N(%s)=%d",
+	            tester.stepTime, tester.unit.reactions[0].temperature,
+                tester.unit.reactions[0].reactant1, tester.state.atomTypes[tester.unit.reactions[0].reactant1_unique].initialCount);
+	    if (text == tester.unit.reactions[0].reactant2)
+	    {
+	        text += String.format(", N(%s)=%d",
+	            tester.unit.reactions[0].reactant2, tester.state.atomTypes[tester.unit.reactions[0].reactant2_unique].initialCount);
+	    }
+        status2.setText(text);
 	}
 	
 	public void stepUpdate()

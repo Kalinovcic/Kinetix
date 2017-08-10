@@ -29,6 +29,7 @@ public class TestAll
         unit.atomTypes[unique].mass = AtomData.calculateMass(type);
         unit.atomTypes[unique].radius = AtomData.getRadius(type);
         unit.atomTypes[unique].color = Color.BLACK;
+        unit.atomTypes[unique].currentCount = unit.atomTypes[unique].initialCount;
 
         if (unit.atomTypes[unique].mass < 0) throw new IllegalStateException();
         if (unit.atomTypes[unique].radius < 0) throw new IllegalStateException();
@@ -55,11 +56,14 @@ public class TestAll
         
         unit.atomTypes = new AtomType[Reactions.ATOM_TYPE_COUNT];
         initAtom(unit, unit.reactions[0].reactant1, count);
-        initAtom(unit, unit.reactions[0].reactant2, count);
         initAtom(unit, unit.reactions[0].product1, 0);
-        initAtom(unit, unit.reactions[0].product2, 0);
+        if (unit.reactions[0].reactant2 != null)
+            initAtom(unit, unit.reactions[0].reactant2, count);
+        if (unit.reactions[0].product2 != null)
+            initAtom(unit, unit.reactions[0].product2, 0);
         unit.atomTypes[Reactions.findUnique(unit.reactions[0].reactant1)].reactantInReactions.add(unit.reactions[0]);
-        unit.atomTypes[Reactions.findUnique(unit.reactions[0].reactant2)].reactantInReactions.add(unit.reactions[0]);
+        if (unit.reactions[0].reactant2 != null)
+            unit.atomTypes[Reactions.findUnique(unit.reactions[0].reactant2)].reactantInReactions.add(unit.reactions[0]);
     }
     
     public static void testAll(MainWindow mainWindow)

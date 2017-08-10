@@ -4,6 +4,7 @@ encoding//src/net/kalinovcic/kinetix/physics/reaction/Reaction.java=UTF-8
 encoding//src/net/kalinovcic/kinetix/physics/reaction/Reactions.java=UTF-8
 encoding//src/net/kalinovcic/kinetix/physics/reaction/chooser/ReactionChooserUI.java=UTF-8
 encoding//src/net/kalinovcic/kinetix/profiler/atomsovertime/AtomsOverTime.java=UTF-8
+encoding//src/net/kalinovcic/kinetix/profiler/atomsovertime/Chart.java=UTF-8
 encoding//src/net/kalinovcic/kinetix/profiler/atomsovervelocity/AtomsOverVelocity.java=UTF-8
 encoding//src/net/kalinovcic/kinetix/profiler/collisioninfo/CollisionInfo.java=UTF-8
 encoding//src/net/kalinovcic/kinetix/test/TestingWindow.java=UTF-8

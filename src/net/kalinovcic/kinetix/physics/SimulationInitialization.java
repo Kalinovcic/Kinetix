@@ -190,6 +190,10 @@ public class SimulationInitialization
             state.addAtom(new Atom(type, new Vector3(x, y, z), vel));
         }
 
+        for (AtomType type : state.atomTypes)
+            if (type != null)
+                type.currentCount = type.initialCount;
+
         state.paused = true;
         state.informListeners();
     }

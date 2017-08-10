@@ -147,13 +147,15 @@ public class CommanderWindow extends ImguiFrame
         for (Reaction reaction : reactions)
         {
             addAtom(reaction.reactant1, 100).reactantInReactions.add(reaction);
-            addAtom(reaction.reactant2, 100).reactantInReactions.add(reaction);
+            if (reaction.reactant2 != null)
+                addAtom(reaction.reactant2, 100).reactantInReactions.add(reaction);
             reaction.activationEnergyInput = new ImguiDoubleInput(reaction.Ea, 0, Double.MAX_VALUE);
         }
         for (Reaction reaction : reactions)
         {
             addAtom(reaction.product1, 0);
-            addAtom(reaction.product2, 0);
+            if (reaction.product2 != null)
+                addAtom(reaction.product2, 0);
         }
         for (int i = 0; i < atomTypes.size(); i++)
         {
@@ -187,7 +189,7 @@ public class CommanderWindow extends ImguiFrame
             {
                 for (Reaction reaction : reactions)
                 {
-                    String formula = reaction.reactant1 + " + " + reaction.reactant2 + " → " + reaction.product1 + " + " + reaction.product2;
+                    String formula = reaction.getFormula();
                     beginRow();
                     doLabel(formula, (context.bounds.width - PADDING_HORIZONTAL) * 0.6f, 0.5f, FONT, null);
                     doInput("Eₐ:", (context.bounds.width - PADDING_HORIZONTAL) * 0.4f, reaction.activationEnergyInput, "kJ ⁄ mol");

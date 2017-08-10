@@ -25,9 +25,11 @@ public class Reactions
 	    for (Reaction reaction : reactions)
 	    {
             names.add(toSimpleName(reaction.reactant1).replaceAll("\\*", ""));
-            names.add(toSimpleName(reaction.reactant2).replaceAll("\\*", ""));
+            if (reaction.reactant2 != null)
+                names.add(toSimpleName(reaction.reactant2).replaceAll("\\*", ""));
             names.add(toSimpleName(reaction.product1).replaceAll("\\*", ""));
-            names.add(toSimpleName(reaction.product2).replaceAll("\\*", ""));
+            if (reaction.product2 != null)
+                names.add(toSimpleName(reaction.product2).replaceAll("\\*", ""));
 	    }
 	    
 	    int id = 0;
@@ -39,9 +41,11 @@ public class Reactions
         for (Reaction reaction : reactions)
         {
             reaction.reactant1_unique = findUnique(reaction.reactant1);
-            reaction.reactant2_unique = findUnique(reaction.reactant2);
+            if (reaction.reactant2 != null)
+                reaction.reactant2_unique = findUnique(reaction.reactant2);
             reaction.product1_unique = findUnique(reaction.product1);
-            reaction.product2_unique = findUnique(reaction.product2);
+            if (reaction.product2 != null)
+                reaction.product2_unique = findUnique(reaction.product2);
         }
 	}
     
@@ -71,19 +75,24 @@ public class Reactions
                 reaction.product2 = toPrettyName(tokens[3].equals("*") ? null : tokens[3]);
 
                 if (reaction.reactant1 == null) { System.err.println("missing A? " + line); continue; }
-                if (reaction.reactant2 == null) { System.err.println("missing B? " + line); continue; }
                 if (reaction.product1 == null)  { System.err.println("missing C? " + line); continue; }
-                if (reaction.product2 == null)  { System.err.println("missing D? " + line); continue; }
+
+                if (reaction.reactant2 != null)
+                {
+                    if ((reaction.mass2 = AtomData.calculateMass(reaction.reactant2)) < 0) { System.err.println("mass B? " + line); continue; }
+                    if ((reaction.radius2 = AtomData.getRadius(reaction.reactant2)) < 0) { System.err.println("radius B? " + line); continue; }
+                }
+                if (reaction.product2 != null)
+                {
+                    if (AtomData.calculateMass(reaction.product2) < 0) { System.err.println("mass D? " + line); continue; }
+                    if (AtomData.getRadius(reaction.product2) < 0) { System.err.println("radius D? " + line); continue; }                    
+                }
 
                 if ((reaction.mass1 = AtomData.calculateMass(reaction.reactant1)) < 0) { System.err.println("mass A? " + line); continue; }
-                if ((reaction.mass2 = AtomData.calculateMass(reaction.reactant2)) < 0) { System.err.println("mass B? " + line); continue; }
                 if (AtomData.calculateMass(reaction.product1) < 0) { System.err.println("mass C? " + line); continue; }
-                if (AtomData.calculateMass(reaction.product2) < 0) { System.err.println("mass D? " + line); continue; }
 
                 if ((reaction.radius1 = AtomData.getRadius(reaction.reactant1)) < 0) { System.err.println("radius A? " + line); continue; }
-                if ((reaction.radius2 = AtomData.getRadius(reaction.reactant2)) < 0) { System.err.println("radius B? " + line); continue; }
                 if (AtomData.getRadius(reaction.product1) < 0) { System.err.println("radius C? " + line); continue; }
-                if (AtomData.getRadius(reaction.product2) < 0) { System.err.println("radius D? " + line); continue; }
                 
                 String[] tTokens = tokens[4].split("-");
                 if (tTokens.length != 2) throw new RuntimeException("Invalid TABA line: " + line);

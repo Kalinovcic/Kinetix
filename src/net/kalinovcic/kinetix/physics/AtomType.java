@@ -20,6 +20,9 @@ public class AtomType
     public Color color;
     public List<Reaction> reactantInReactions = new ArrayList<Reaction>();
 
+    public int currentCount;
+    public double decayTimer;
+
     public ImguiIntegerInput initialCountInput;
     public ImguiDoubleInput massInput;
     public ImguiDoubleInput radiusInput;

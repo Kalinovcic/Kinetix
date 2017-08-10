@@ -64,8 +64,7 @@ public class TestingThread extends Thread
         bufferedWriter.write("\n");
         for (Reaction reaction : unit.reactions)
         {
-            bufferedWriter.write(String.format("%s + %s -> %s + %s\n", Reactions.toSimpleName(reaction.reactant1), Reactions.toSimpleName(reaction.reactant2),
-                                                                       Reactions.toSimpleName(reaction.product1), Reactions.toSimpleName(reaction.product2)));
+            bufferedWriter.write(reaction.getSimpleFormula());
         }
         bufferedWriter.write("\n");
 	}

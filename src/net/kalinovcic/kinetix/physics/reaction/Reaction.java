@@ -68,7 +68,7 @@ public class Reaction
 	public double relativeSpeed;
 	public double x;
 	public double expMinusX;
-	public double preExponentialFactor_theoretical;
+	public double A_teor;
 	public double speedCoefficient_experimental;
 	public double speedCoefficient_theoretical;
 	public double steric;
@@ -129,6 +129,28 @@ public class Reaction
 		}
 	}
 	
+	public String getFormula()
+	{
+	    String formula = reactant1;
+        if (reactant2 != null)
+            formula += " + " + reactant2;
+        formula += " → " + product1;
+        if (product2 != null)
+            formula += " + " + product2;
+        return formula;
+	}
+	
+	public String getSimpleFormula()
+	{
+        String formula = Reactions.toSimpleName(reactant1);
+        if (reactant2 != null)
+            formula += " + " + Reactions.toSimpleName(reactant2);
+        formula += " → " + Reactions.toSimpleName(product1);
+        if (product2 != null)
+            formula += " + " + Reactions.toSimpleName(product2);
+        return formula;
+	}
+	
 	public String toString()
 	{
 		String full = "Reaction(";
@@ -148,9 +170,9 @@ public class Reaction
 		relativeSpeed = Math.sqrt((8 * BOLTZMANN * temperature) / (Math.PI * reducedMass));
 		x = (Ea * 1000) / (IDEAL_GAS * temperature);
 		expMinusX = Math.exp(-x);
-		preExponentialFactor_theoretical = sigma * relativeSpeed * AVOGADRO * Math.exp(0.5) * 1000;
+		A_teor = sigma * relativeSpeed * AVOGADRO * 1000;
 		speedCoefficient_experimental = A_exp * Math.pow(temperature, n) * expMinusX;
-		speedCoefficient_theoretical = preExponentialFactor_theoretical * expMinusX;
+		speedCoefficient_theoretical = A_teor * expMinusX;
 		steric = speedCoefficient_experimental / speedCoefficient_theoretical;
 
 		rate_experimental = speedCoefficient_experimental * concentration1 * concentration2;
@@ -181,7 +203,7 @@ public class Reaction
 	    nn.relativeSpeed = relativeSpeed;
 	    nn.x = x;
 	    nn.expMinusX = expMinusX;
-	    nn.preExponentialFactor_theoretical = preExponentialFactor_theoretical;
+	    nn.A_teor = A_teor;
 	    nn.speedCoefficient_experimental = speedCoefficient_experimental;
 	    nn.speedCoefficient_theoretical = speedCoefficient_theoretical;
 	    nn.steric = steric;

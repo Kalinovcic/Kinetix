@@ -144,7 +144,8 @@ public class ReactionChooserUI extends Imgui
         {
             Reaction reaction = Reactions.reactions.get(reactionIndex);
             
-            String formula = reaction.reactant1 + " + " + reaction.reactant2 + " → " + reaction.product1 + " + " + reaction.product2;
+            String formula = reaction.getFormula();
+            
             beginRow();
             doLabel(formula, 320.0f, 1.0f, SLIGHTLY_BIGGER_FONT, null);
             doSpace(10, 0);
